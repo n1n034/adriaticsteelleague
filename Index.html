@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="hr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ADRIATIC STEEL LEAGUE</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet"> 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="icon" type="image/png" href="https://i.imgur.com/XHQiYad.png">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta name="theme-color" content="#0a1628">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="mobile-web-app-status-bar-style" content="black-translucent">
+	<title>Adriatic Steel League</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet"> 
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+	<link rel="icon" type="image/png" href="https://i.imgur.com/XHQiYad.png">
 
   <style>
       :root {
@@ -36,7 +39,7 @@
         width: 100%;
         min-height: 100%;
         overflow-x: hidden;
-        background: #05090f;
+        background: #1a3a5c;
         font-family: 'Lexend', sans-serif;
         font-weight: 400;
         color: var(--text);
@@ -102,8 +105,9 @@
       }
 
       .tab-btn.active {
-        background: rgba(21, 49, 99, 0.95);
-        border-color: rgba(255,255,255,0.5);
+		box-shadow: 0 0 12px rgba(255, 255, 255, 0.55);
+		background: rgba(21, 49, 99, 1);
+		border-color: rgba(255, 255, 255, 0.8)
       }
 
       .tab-panel {
@@ -543,7 +547,6 @@
         }
 
         .tab-btn {
-          padding: 10px 20px;
           font-size: 0.85rem;
         }
       }
@@ -615,8 +618,8 @@
         }
 
         .tab-btn {
-          padding: 8px 10px;
           font-size: 0.75rem;
+		  padding: 10px 20px;
         }
       }
 
@@ -897,7 +900,6 @@
     }
 
     function renderBracket(rows, containerId) {
-	  console.log('Bracket rows:', JSON.stringify(rows));
       const bc = document.getElementById(containerId);
       if (!bc) return;
 
