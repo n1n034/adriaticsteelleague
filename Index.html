@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet"> 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="icon" type="image/png" href="https://i.imgur.com/XHQiYad.png">
 
   <style>
       :root {
@@ -704,26 +705,32 @@
 		  <span class="loading-text">Učitavanje podataka...</span>
 		</div>
 	  `;
-
 	  document.getElementById('content').innerHTML = loadingHtml;
 	  document.getElementById('najbolji-content').innerHTML = loadingHtml;
 	  document.getElementById('gornji-zdrijeb-content').innerHTML = loadingHtml;
+	  document.getElementById('donji-zdrijeb-content').innerHTML = loadingHtml;
 
 	  fetch('https://getleaguedata-269059044337.us-central1.run.app')
 		.then(r => r.json())
 		.then(render)
 		.catch(err => showError(err));
 
-	  fetch('https://getbracketdata-269059044337.us-central1.run.app')
+	  fetch('https://getlastupdated-269059044337.us-central1.run.app')
 		.then(r => r.json())
 		.then(data => document.getElementById('updated-time').textContent = data.time)
 		.catch(() => document.getElementById('updated-time').textContent = 'Greška');
 
-	  fetch('https://getlastupdated-269059044337.us-central1.run.app')
+	  fetch('https://getbracketdata-269059044337.us-central1.run.app')
 		.then(r => r.json())
-		.then(renderBracket)
+		.then(data => renderBracket(data, 'gornji-zdrijeb-content'))
+		.catch(err => showError(err));
+
+	  fetch('https://getdonjibracketdata-269059044337.us-central1.run.app')
+		.then(r => r.json())
+		.then(data => renderBracket(data, 'donji-zdrijeb-content'))
 		.catch(err => showError(err));
 	}
+
 
     function render(data) {
       const content = document.getElementById('content');
@@ -890,6 +897,7 @@
     }
 
     function renderBracket(rows, containerId) {
+	  console.log('Bracket rows:', JSON.stringify(rows));
       const bc = document.getElementById(containerId);
       if (!bc) return;
 

@@ -67,8 +67,36 @@ exports.getBracketData = functions.https.onRequest(async (req, res) => {
   }
 });
 
+exports.getDonjiBracketData = functions.https.onRequest(async (req, res) => {
+  setCORS(res);
+  if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+
+  try {
+    const auth = getAuth();
+    const sheets = google.sheets({ version: 'v4', auth });
+    const response = await sheets.spreadsheets.values.get({
+      spreadsheetId: SPREADSHEET_ID,
+      range: 'Donji ždrijeb',
+    });
+    res.json(response.data.values || []);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 exports.getLastUpdated = functions.https.onRequest(async (req, res) => {
   setCORS(res);
   if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
-  res.json({ time: new Date().toLocaleString('hr-HR') });
+  try {
+    const auth = getAuth();
+    const drive = google.drive({ version: 'v3', auth });
+    const response = await drive.files.get({
+      fileId: SPREADSHEET_ID,
+      fields: 'modifiedTime'
+    });
+    const date = new Date(response.data.modifiedTime);
+    res.json({ time: date.toLocaleString('hr-HR') });
+  } catch (e) {
+    res.json({ time: new Date().toLocaleString('hr-HR') });
+  }
 });
