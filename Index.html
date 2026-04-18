@@ -698,38 +698,32 @@
     }
 
     function loadData() {
-      const loadingHtml = `
-        <div class="loading-state">
-          <div class="loading-spinner"></div>
-          <span class="loading-text">Učitavanje podataka...</span>
-        </div>
-      `;
+	  const loadingHtml = `
+		<div class="loading-state">
+		  <div class="loading-spinner"></div>
+		  <span class="loading-text">Učitavanje podataka...</span>
+		</div>
+	  `;
 
-      document.getElementById('content').innerHTML = loadingHtml;
-      document.getElementById('najbolji-content').innerHTML = loadingHtml;
-      document.getElementById('gornji-zdrijeb-content').innerHTML = loadingHtml;
-      document.getElementById('donji-zdrijeb-content').innerHTML = loadingHtml;
+	  document.getElementById('content').innerHTML = loadingHtml;
+	  document.getElementById('najbolji-content').innerHTML = loadingHtml;
+	  document.getElementById('gornji-zdrijeb-content').innerHTML = loadingHtml;
 
-      google.script.run
-        .withSuccessHandler(render)
-        .withFailureHandler(showError)
-        .getLeagueData();
+	  fetch('https://getleaguedata-269059044337.us-central1.run.app')
+		.then(r => r.json())
+		.then(render)
+		.catch(err => showError(err));
 
-      google.script.run
-        .withFailureHandler(err => document.getElementById('updated-time').textContent = 'Greška: ' + err.message)
-        .withSuccessHandler(t => document.getElementById('updated-time').textContent = t)
-        .getLastUpdated();
+	  fetch('https://getbracketdata-269059044337.us-central1.run.app')
+		.then(r => r.json())
+		.then(data => document.getElementById('updated-time').textContent = data.time)
+		.catch(() => document.getElementById('updated-time').textContent = 'Greška');
 
-      google.script.run
-        .withSuccessHandler(data => renderBracket(data, 'gornji-zdrijeb-content'))
-        .withFailureHandler(showError)
-        .getGornjiZdrijeb();
-
-      google.script.run
-        .withSuccessHandler(data => renderBracket(data, 'donji-zdrijeb-content'))
-        .withFailureHandler(showError)
-        .getDonjiZdrijeb();
-    }
+	  fetch('https://getlastupdated-269059044337.us-central1.run.app')
+		.then(r => r.json())
+		.then(renderBracket)
+		.catch(err => showError(err));
+	}
 
     function render(data) {
       const content = document.getElementById('content');

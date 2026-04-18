@@ -4,7 +4,14 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "functions/**",
+      "*.json",
+      "*.js",
+      "404.html"
     ]
+  },
+  "functions": {
+    "source": "functions"
   }
 }
