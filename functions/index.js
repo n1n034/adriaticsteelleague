@@ -13,7 +13,10 @@ function setCORS(res) {
 function getAuth() {
   return new google.auth.GoogleAuth({
     keyFile: path.join(__dirname, 'service-account.json'),
-    scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
+    scopes: [
+      'https://www.googleapis.com/auth/spreadsheets.readonly',
+      'https://www.googleapis.com/auth/drive.readonly'
+    ],
   });
 }
 
@@ -95,8 +98,11 @@ exports.getLastUpdated = functions.https.onRequest(async (req, res) => {
       fields: 'modifiedTime'
     });
     const date = new Date(response.data.modifiedTime);
-    res.json({ time: date.toLocaleString('hr-HR') });
-  } catch (e) {
-    res.json({ time: new Date().toLocaleString('hr-HR') });
+    console.log('UTC time:', response.data.modifiedTime);
+    console.log('Zagreb time:', date.toLocaleString('hr-HR', { timeZone: 'Europe/Zagreb' }));
+    res.json({ time: date.toLocaleString('hr-HR', { timeZone: 'Europe/Zagreb' }) });
+	} catch (e) {
+    console.log('Error:', e.message);
+    res.json({ time: new Date().toLocaleString('hr-HR', { timeZone: 'Europe/Zagreb' }) });
   }
 });
