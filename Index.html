@@ -951,22 +951,20 @@
         `;
       }
 
-      // Finale — kolona M(12) i N(13)
-      const finaleRows = getFilledRows(12);
+      const finaleRows = getFilledRows(11);
       const finaleMatch = {
-        p1: finaleRows[0] ? finaleRows[0][12] : '',
-        s1: finaleRows[0] ? finaleRows[0][13] : '',
-        p2: finaleRows[1] ? finaleRows[1][12] : '',
-        s2: finaleRows[1] ? finaleRows[1][13] : ''
+        p1: finaleRows[0] ? finaleRows[0][11] : '',
+        s1: finaleRows[0] ? finaleRows[0][12] : '',
+        p2: finaleRows[1] ? finaleRows[1][11] : '',
+        s2: finaleRows[1] ? finaleRows[1][12] : ''
       };
 
-      // 3. mjesto — kolona L(11) i O(14)
       const thirdRows = getFilledRows(11);
-      const thirdMatch = thirdRows.length >= 2 ? {
-        p1: thirdRows[0][11],
-        s1: thirdRows[0][14],
-        p2: thirdRows[1][11],
-        s2: thirdRows[1][14]
+      const thirdMatch = finaleRows.length >= 4 ? {
+        p1: thirdRows[2][11],
+        s1: thirdRows[2][12],
+        p2: thirdRows[3][11],
+        s2: thirdRows[3][12]
       } : null;
 
       const finaleWinner = determineWinner(finaleMatch) === 1 ? finaleMatch.p1 : determineWinner(finaleMatch) === 2 ? finaleMatch.p2 : null;
