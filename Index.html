@@ -11,7 +11,7 @@
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 	<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet"> 
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-	<link rel="icon" type="image/png" href="https://i.imgur.com/XHQiYad.png">
+	<link rel="icon" href="images/ASL-logo.png">
 
   <style>
       :root {
@@ -49,7 +49,7 @@
         position: fixed;
         inset: 0;
         z-index: 0;
-        background-image: url("https://i.imgur.com/LPKCVEc.jpeg");
+        background-image: url("images/background.jpeg");
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;
@@ -70,8 +70,9 @@
       }
 
       .container {
-        max-width: 1200px;
+        max-width: 1300px;
         margin: 0 auto;
+        animation: fadeInUp 0.5s ease both;
       }
 
       .hero {
@@ -105,9 +106,9 @@
       }
 
       .tab-btn.active {
-		box-shadow: 0 0 12px rgba(255, 255, 255, 0.55);
-		background: rgba(21, 49, 99, 1);
-		border-color: rgba(255, 255, 255, 0.8)
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.55);
+        background: rgba(21, 49, 99, 1);
+        border-color: rgba(255, 255, 255, 0.8)
       }
 
       .tab-panel {
@@ -632,7 +633,7 @@
   <div class="page">
     <div class="container">
       <div class="hero">
-        <img class="league-logo" src="https://i.imgur.com/NeJoFP9.png" alt="Adriatic Steel League Logo">
+        <a href="index-admin.html"><img class="league-logo" src="images/ASL-logo.png" alt="Adriatic Steel League Logo"></a>  
 
         <h1>ADRIATIC STEEL LEAGUE</h1>
 
@@ -643,13 +644,13 @@
           <a href="https://www.instagram.com/adriaticsteelleague" target="_blank" aria-label="Instagram">
             <i class="fab fa-instagram"></i>
           </a>
-          <a href="https://www.tiktok.com/@adriaticsteel?_r=1&_t=ZN-943IOS3qVEc" target="_blank" aria-label="TikTok">
+          <a href="https://www.tiktok.com/@adriaticsteel" target="_blank" aria-label="TikTok">
             <i class="fab fa-tiktok"></i>
           </a>
           <a href="https://discord.gg/crEnfmDThb" target="_blank" aria-label="Discord">
             <i class="fab fa-discord"></i>
           </a>
-          <a href="https://www.youtube.com/@AdriaticSteelLeague" target="_blank" aria-label="YouTube">
+          <a href="https://www.youtube.com/@Adriatic-Steel-League" target="_blank" aria-label="YouTube">
             <i class="fab fa-youtube"></i>
           </a>
         </div>
@@ -664,21 +665,37 @@
         <button class="tab-btn" onclick="switchTab('gornji-zdrijeb')">GORNJI ŽDRIJEB</button>
         <button class="tab-btn" onclick="switchTab('donji-zdrijeb')">DONJI ŽDRIJEB</button>
       </div>
-
+      
       <div id="tab-tablice" class="tab-panel active">
-        <div id="content"></div>
+        <div style="background: rgba(8, 14, 28, 0.82); border: 1px solid rgba(255,255,255,0.10); border-radius: 18px; padding: 2rem; text-align: center; margin-bottom: 24px;">
+          <p style="font-size: 1.5rem; font-weight: 700; color: #ffffff; margin: 0 0 8px;">Sezona 2 — uskoro</p>
+          <p style="font-size: 1rem; color: #c8d3ea; margin: 0;">Stranica je trenutno u izradi. Pratite nas za više informacija.</p>
+        </div>
+        <div id="content" style="display: none;"></div>
       </div>
 
       <div id="tab-najbolji" class="tab-panel">
-        <div id="najbolji-content"></div>
+        <div style="background: rgba(8, 14, 28, 0.82); border: 1px solid rgba(255,255,255,0.10); border-radius: 18px; padding: 2rem; text-align: center; margin-bottom: 24px;">
+          <p style="font-size: 1.5rem; font-weight: 700; color: #ffffff; margin: 0 0 8px;">Sezona 2 — uskoro</p>
+          <p style="font-size: 1rem; color: #c8d3ea; margin: 0;">Stranica je trenutno u izradi. Pratite nas za više informacija.</p>
+        </div>
+        <div id="najbolji-content" style="display: none;"></div>
       </div>
 
       <div id="tab-gornji-zdrijeb" class="tab-panel">
-        <div id="gornji-zdrijeb-content"></div>
+        <div style="background: rgba(8, 14, 28, 0.82); border: 1px solid rgba(255,255,255,0.10); border-radius: 18px; padding: 2rem; text-align: center; margin-bottom: 24px;">
+          <p style="font-size: 1.5rem; font-weight: 700; color: #ffffff; margin: 0 0 8px;">Sezona 2 — uskoro</p>
+          <p style="font-size: 1rem; color: #c8d3ea; margin: 0;">Stranica je trenutno u izradi. Pratite nas za više informacija.</p>
+        </div>
+        <div id="gornji-zdrijeb-content" style="display: none;"></div>
       </div>
 
       <div id="tab-donji-zdrijeb" class="tab-panel">
-        <div id="donji-zdrijeb-content"></div>
+        <div style="background: rgba(8, 14, 28, 0.82); border: 1px solid rgba(255,255,255,0.10); border-radius: 18px; padding: 2rem; text-align: center; margin-bottom: 24px;">
+          <p style="font-size: 1.5rem; font-weight: 700; color: #ffffff; margin: 0 0 8px;">Sezona 2 — uskoro</p>
+          <p style="font-size: 1rem; color: #c8d3ea; margin: 0;">Stranica je trenutno u izradi. Pratite nas za više informacija.</p>
+        </div>
+        <div id="donji-zdrijeb-content" style="display: none;"></div>
       </div>
     </div>
   </div>
@@ -713,26 +730,26 @@
 	  document.getElementById('gornji-zdrijeb-content').innerHTML = loadingHtml;
 	  document.getElementById('donji-zdrijeb-content').innerHTML = loadingHtml;
 
-	  fetch('https://getleaguedata-269059044337.us-central1.run.app')
-		.then(r => r.json())
-		.then(render)
-		.catch(err => showError(err));
+	  fetch('https://getleaguedata-wfud75wkwq-uc.a.run.app')
+        .then(r => r.json())
+        .then(render)
+        .catch(err => showError(err));
 
-	  fetch('https://getlastupdated-269059044337.us-central1.run.app')
-		.then(r => r.json())
-		.then(data => document.getElementById('updated-time').textContent = data.time)
-		.catch(() => document.getElementById('updated-time').textContent = 'Greška');
+    fetch('https://getlastupdated-wfud75wkwq-uc.a.run.app')
+        .then(r => r.json())
+        .then(data => document.getElementById('updated-time').textContent = data.time)
+        .catch(() => document.getElementById('updated-time').textContent = 'Greška');
 
-	  fetch('https://getbracketdata-269059044337.us-central1.run.app')
-		.then(r => r.json())
-		.then(data => renderBracket(data, 'gornji-zdrijeb-content'))
-		.catch(err => showError(err));
+    fetch('https://getbracketdata-wfud75wkwq-uc.a.run.app')
+        .then(r => r.json())
+        .then(data => renderBracket(data, 'gornji-zdrijeb-content'))
+        .catch(err => showError(err));
 
-	  fetch('https://getdonjibracketdata-269059044337.us-central1.run.app')
-		.then(r => r.json())
-		.then(data => renderBracket(data, 'donji-zdrijeb-content'))
-		.catch(err => showError(err));
-	}
+    fetch('https://getdonjibracketdata-wfud75wkwq-uc.a.run.app')
+        .then(r => r.json())
+        .then(data => renderBracket(data, 'donji-zdrijeb-content'))
+        .catch(err => showError(err));
+	  }
 
 
     function render(data) {
@@ -998,27 +1015,27 @@
         
         <div class="finale-container">
 
-          <div style="text-align:center; font-size:1.2rem; font-weight:800; letter-spacing:1.5px; color:#FFD700; margin-bottom:8px; text-shadow: 0 0 8px #FFD700;">
+          <div style="text-align:center; font-size:1.2rem; font-weight:800; letter-spacing:1.5px; color:#FFD700; margin: 10px; text-shadow: 0 0 8px #FFD700;">
             🏆 VELIKO FINALE
           </div>
           ${renderMatch(finaleMatch)}
           
           ${finaleWinner ? `
-          <div style="text-align:center; margin-top:12px; padding:10px; background:linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.05)); border:1px solid rgba(255,215,0,0.4); border-radius:8px;">
-            <div style="font-size:0.65rem; color:#FFD700; opacity:0.8; letter-spacing:1px; margin-bottom:4px; text-transform:uppercase;">Pobjednik ASL</div>
-            <div style="font-size:1.1rem; font-weight:900; color:#fff; text-shadow: 0 0 10px #FFD700;">${escapeHtml(finaleWinner)}</div>
+          <div style="text-align:center; margin:10px; padding:10px; background:linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.05)); border:1px solid rgba(255,215,0,0.4); border-radius:8px;">
+            <div style="font-size:0.9rem; color:#FFD700; opacity:0.8; letter-spacing:1px; margin-bottom:4px; text-transform:uppercase;">Pobjednik ASL</div>
+            <div style="font-size:1.5rem; font-weight:900; color:#fff; text-shadow: 0 0 10px #FFD700;">${escapeHtml(finaleWinner)}</div>
           </div>` : ''}
 
           ${thirdMatch ? `
           <div class="third-place-container">
-            <div style="text-align:center; font-size:1.2rem; font-weight:800; letter-spacing:1.5px; color:#CD7F32; margin-bottom:8px; text-shadow: 0 0 8px #CD7F32;">
+            <div style="text-align:center; font-size:1.2rem; font-weight:800; letter-spacing:1.5px; color:#CD7F32; margin: 10px; text-shadow: 0 0 8px #CD7F32;">
               🥉 3. MJESTO
             </div>
             ${renderMatch(thirdMatch)}
 
             ${thirdWinner ? `
-            <div style="text-align:center; margin-top:10px; padding:8px; background:rgba(205,127,50,0.1); border:1px solid rgba(205,127,50,0.2); border-radius:8px;">
-              <div style="font-size:0.9rem; font-weight:800; color:#CD7F32;">${escapeHtml(thirdWinner)}</div>
+            <div style="text-align:center; margin:10px; padding:8px; background:rgba(205,127,50,0.1); border:1px solid rgba(205,127,50,0.2); border-radius:8px; text-shadow: 0 0 10px #CD7F32;">
+              <div style="font-size:1.2rem; font-weight:800; color:#CD7F32;">${escapeHtml(thirdWinner)}</div>
             </div>` : ''}
           </div>` : ''}
 

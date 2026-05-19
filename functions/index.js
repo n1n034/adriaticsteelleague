@@ -2,7 +2,7 @@ const functions = require('firebase-functions');
 const { google } = require('googleapis');
 const path = require('path');
 
-const SPREADSHEET_ID = '1H--KLRWZh2MFJ6Z134dC_foirh0DYa3TGm5WsewFs_Q';
+const SPREADSHEET_ID = '1GHLwE5t65qbz7HhQ4V2e2x-DfpuI39d3wJfMkDdhUZc';
 
 function setCORS(res) {
   res.set('Access-Control-Allow-Origin', '*');
@@ -24,22 +24,32 @@ exports.getLeagueData = functions.https.onRequest(async (req, res) => {
   setCORS(res);
   if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
 
-  const wantedSheets = [
-    'Najbolji u ligi', 'Grupa A Tablica', 'Grupa B Tablica',
-    'Grupa C Tablica', 'Grupa D Tablica', 'Grupa E Tablica',
-    'Grupa F Tablica', 'Grupa G Tablica', 'Grupa H Tablica'
-  ];
+  const groupLetters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
 
   try {
     const auth = getAuth();
     const sheets = google.sheets({ version: 'v4', auth });
     const result = [];
 
-    for (const sheetName of wantedSheets) {
+    // Najbolji u ligi - čita cijeli sheet
+    try {
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: 'Najbolji u ligi',
+      });
+      const values = response.data.values || [];
+      result.push({ name: 'Najbolji u ligi', headers: values[0] || [], rows: values.slice(1), error: null });
+    } catch (e) {
+      result.push({ name: 'Najbolji u ligi', headers: [], rows: [], error: e.message });
+    }
+
+    // Grupe A–P, raspon O2:AA10
+    for (const letter of groupLetters) {
+      const sheetName = `Grupa ${letter}`;
       try {
         const response = await sheets.spreadsheets.values.get({
           spreadsheetId: SPREADSHEET_ID,
-          range: sheetName,
+          range: `${sheetName}!Q2:AB11`,
         });
         const values = response.data.values || [];
         result.push({ name: sheetName, headers: values[0] || [], rows: values.slice(1), error: null });
@@ -47,6 +57,7 @@ exports.getLeagueData = functions.https.onRequest(async (req, res) => {
         result.push({ name: sheetName, headers: [], rows: [], error: e.message });
       }
     }
+
     res.json(result);
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -98,11 +109,8 @@ exports.getLastUpdated = functions.https.onRequest(async (req, res) => {
       fields: 'modifiedTime'
     });
     const date = new Date(response.data.modifiedTime);
-    console.log('UTC time:', response.data.modifiedTime);
-    console.log('Zagreb time:', date.toLocaleString('hr-HR', { timeZone: 'Europe/Zagreb' }));
     res.json({ time: date.toLocaleString('hr-HR', { timeZone: 'Europe/Zagreb' }) });
-	} catch (e) {
-    console.log('Error:', e.message);
+  } catch (e) {
     res.json({ time: new Date().toLocaleString('hr-HR', { timeZone: 'Europe/Zagreb' }) });
   }
 });
