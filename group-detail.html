@@ -4,12 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0a1628">
-  <title>Adriatic Steel League - Admin grupe</title>
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Adriatic Steel League - Admin</title>
+  <meta name="description" content="Adriatic Steel League - službena darts liga sa 8 grupa, uživo rezultati, tablice i statistike igrača. Pratite ždrijeb, najbolje u ligi i sve matcheve Sezone 2.">
+  <meta name="keywords" content="Adriatic Steel League, ASL, darts liga, darts rezultati, darts tablice, darts Croatia, darts Hrvatska, steel tip darts">
+  <meta name="author" content="Adriatic Steel League">
+  <!-- Preconnect to external domains -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="icon" href="images/ASL-logo.png">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <!-- Google Fonts -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
+  <!-- Font Awesome -->
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
+	<link rel="icon" href="images/ASL-logo.webp">
 
   <style>
     :root {
@@ -44,7 +55,7 @@
 
     .bg-image {
       position: fixed; inset: 0; z-index: 0;
-      background-image: url("images/background.jpeg");
+      background-image: url("images/background.webp");
       background-size: cover;
       background-position: center center;
     }
@@ -378,6 +389,20 @@
     .btn-save.saving { opacity: 0.7; }
     .btn-save.saved  { background: rgba(46,204,113,0.2); border-color: rgba(46,204,113,0.4); color: #2ecc71; }
 
+    .btn-delete {
+      padding: 6px 18px;
+      background: rgba(231,76,60,0.12);
+      border: 1px solid rgba(231,76,60,0.3);
+      border-radius: 999px;
+      color: #e74c3c;
+      font-family: 'Lexend', sans-serif;
+      font-size: 0.75rem; font-weight: 700;
+      cursor: pointer; transition: 0.2s ease;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .btn-delete:hover { background: rgba(231,76,60,0.25); }
+    .btn-delete:disabled { opacity: 0.5; cursor: not-allowed; }
+
     /* ── LOADING ── */
     .loading-state {
       display: flex; flex-direction: column; align-items: center;
@@ -439,7 +464,7 @@
           </a>
           <div>
             <div class="group-name" id="group-name">Učitavanje...</div>
-            <div class="group-sub">Adriatic Steel League · Sezona 2</div>
+            <div class="group-sub">Adriatic Steel League - Sezona 2</div>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
@@ -487,7 +512,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, getDocs, setDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, setDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDyG6WN60VOhp-iHq_18vOLDcHP6zHNoRk",
@@ -523,11 +548,13 @@
       document.getElementById('user-email-label').textContent = user.email;
 
       const userDoc = await getDoc(doc(db, 'users', user.uid));
-      const userData = userDoc.exists() ? userDoc.data() : { role: 'operator', groups: [] };
-      isAdmin = userData.role === 'admin' || (userData.groups || []).includes(groupId);
+      const userData = userDoc.exists() ? userDoc.data() : { role: 'user', groups: [] };
+      isAdmin = userData.role === 'admin';
 
+      const badge = document.getElementById('role-badge');
       if (isAdmin) {
-        document.getElementById('role-badge').style.display = 'inline-flex';
+        badge.style.display = 'inline-flex';
+        badge.textContent = 'Admin';
       }
 
       await loadGroup();
@@ -551,10 +578,12 @@
       document.getElementById('group-name').textContent = groupData.name || groupId;
 
       // Load players
-      const playersSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups', groupId, 'players'));
+      const playersSnap = await getDocs(query(
+        collection(db, 'seasons', 'sezona-2', 'groups', groupId, 'players'),
+        orderBy('position')
+      ));
       players = [];
       playersSnap.forEach(p => players.push(p.data().name));
-      players.sort();
 
       // Load existing matches
       const matchesSnap = await getDocs(query(
@@ -575,28 +604,57 @@
       renderRaspored();
     }
 
-    // ── ROUND ROBIN ──
-    function generateSchedule(p) {
-      const n = p.length;
-      const arr = n % 2 === 0 ? [...p] : [...p, 'BYE'];
-      const total = arr.length;
-      const rounds = [];
+    // ── BERGER TABLES ──
+  function generateSchedule(players) {
+    const n = players.length;
 
-      for (let r = 0; r < total - 1; r++) {
-        const matches = [];
-        let bye = null;
-        let mecNum = 1;
-        for (let i = 0; i < total / 2; i++) {
-          const p1 = arr[i], p2 = arr[total - 1 - i];
-          if (p1 === 'BYE') { bye = p2; continue; }
-          if (p2 === 'BYE') { bye = p1; continue; }
-          matches.push({ mec: mecNum++, player1: p1, player2: p2 });
-        }
-        rounds.push({ kolo: r + 1, matches, bye });
-        arr.splice(1, 0, arr.pop());
-      }
-      return rounds;
+    const berger8 = [
+      [[8,1],[2,7],[3,6],[4,5]],
+      [[6,4],[5,8],[7,3],[1,2]],
+      [[4,7],[3,1],[8,2],[5,6]],
+      [[2,3],[7,5],[1,4],[6,8]],
+      [[6,7],[4,2],[5,1],[8,3]],
+      [[2,5],[1,6],[7,8],[3,4]],
+      [[5,3],[8,4],[6,2],[7,1]]
+    ];
+
+    const berger9 = [
+      { bye:1, matches:[[2,9],[3,8],[4,7],[5,6]] },
+      { bye:6, matches:[[7,5],[8,4],[9,3],[1,2]] },
+      { bye:2, matches:[[3,1],[4,9],[5,8],[6,7]] },
+      { bye:7, matches:[[8,6],[9,5],[1,4],[2,3]] },
+      { bye:3, matches:[[4,2],[5,1],[6,9],[7,8]] },
+      { bye:8, matches:[[9,7],[1,6],[2,5],[3,4]] },
+      { bye:4, matches:[[5,3],[6,2],[7,1],[8,9]] },
+      { bye:9, matches:[[1,8],[2,7],[3,6],[4,5]] },
+      { bye:5, matches:[[6,4],[7,3],[8,2],[9,1]] }
+    ];
+
+    const rounds = [];
+
+    if (n === 8) {
+      berger8.forEach((pairs, ri) => {
+        const matches = pairs.map((pair, mi) => ({
+          mec: mi + 1,
+          player1: players[pair[0] - 1],
+          player2: players[pair[1] - 1]
+        }));
+        rounds.push({ kolo: ri + 1, matches, bye: null });
+      });
+    } else if (n === 9) {
+      berger9.forEach((round, ri) => {
+        const matches = round.matches.map((pair, mi) => ({
+          mec: mi + 1,
+          player1: players[pair[0] - 1],
+          player2: players[pair[1] - 1]
+        }));
+        const bye = round.bye ? players[round.bye - 1] : null;
+        rounds.push({ kolo: ri + 1, matches, bye });
+      });
     }
+
+    return rounds;
+  }
 
     // ── STANDINGS ──
     function computeStandings() {
@@ -770,9 +828,7 @@
               <div class="stats-col">
                 <div class="stat-row">
                   <span class="stat-label">Score</span>
-                  <div class="score-input-wrap">
-                    <input class="score-input" type="number" min="0" max="9" id="s1-${kolo}-${mec}" value="${saved.score ? saved.score.split('-')[0] : ''}" ${disabled} placeholder="0">
-                  </div>
+                  <input class="score-input" type="number" min="0" max="9" id="s1-${kolo}-${mec}" value="${saved.score ? saved.score.split('-')[0] : ''}" ${disabled} placeholder="0">
                 </div>
                 <div class="stat-row">
                   <span class="stat-label">AVG</span>
@@ -798,12 +854,7 @@
 
               <!-- Divider -->
               <div class="stats-divider">
-                <div class="stats-divider-line"></div>
-                <div class="score-input-wrap" style="flex-direction:column;align-items:center;gap:4px;">
-                  <input class="score-input" type="number" min="0" max="9" id="s1-${kolo}-${mec}" value="${saved.score ? saved.score.split('-')[0] : ''}" style="display:none">
-                  <span class="score-sep">:</span>
-                  <input class="score-input" type="number" min="0" max="9" id="s2-${kolo}-${mec}" value="${saved.score ? saved.score.split('-')[1] : ''}" ${disabled} placeholder="0">
-                </div>
+                <span class="score-sep">:</span>
                 <div class="stats-divider-line"></div>
               </div>
 
@@ -811,9 +862,7 @@
               <div class="stats-col right">
                 <div class="stat-row right">
                   <span class="stat-label right">Score</span>
-                  <div class="score-input-wrap">
-                    <input class="score-input" type="number" min="0" max="9" id="s1b-${kolo}-${mec}" value="${saved.score ? saved.score.split('-')[0] : ''}" style="display:none">
-                  </div>
+                  <input class="score-input" type="number" min="0" max="9" id="s2-${kolo}-${mec}" value="${saved.score ? saved.score.split('-')[1] : ''}" ${disabled} placeholder="0">
                 </div>
                 <div class="stat-row right">
                   <span class="stat-label right">AVG</span>
@@ -842,9 +891,12 @@
           <div class="match-actions">
             <button class="btn-toggle-stats" onclick="toggleStats(${kolo}, ${mec})">
               <i class="fas fa-chart-bar" style="margin-right:4px;"></i>
-              ${hasScore ? 'Sakrij statistiku' : 'Unesi statistiku'}
+              ${hasScore ? 'Sakrij statistiku' : 'Prikaži statistiku'}
             </button>
             ${isAdmin ? `
+            <button class="btn-delete" id="delete-${kolo}-${mec}" onclick="deleteMatch(${kolo}, ${mec})">
+              <i class="fas fa-trash"></i> Izbriši
+            </button>
             <button class="btn-save" id="save-${kolo}-${mec}" onclick="saveMatch(${kolo}, ${mec}, '${esc(player1)}', '${esc(player2)}')">
               <i class="fas fa-save"></i> Spremi
             </button>` : ''}
@@ -874,7 +926,7 @@
       const card = document.getElementById(`match-${kolo}-${mec}`);
       const toggleBtn = card.querySelector('.btn-toggle-stats');
       if (toggleBtn) {
-        toggleBtn.innerHTML = `<i class="fas fa-chart-bar" style="margin-right:4px;"></i>${open ? 'Unesi statistiku' : 'Sakrij statistiku'}`;
+        toggleBtn.innerHTML = `<i class="fas fa-chart-bar" style="margin-right:4px;"></i>${open ? 'Prikaži statistiku' : 'Sakrij statistiku'}`;
       }
     };
 
@@ -940,6 +992,46 @@
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-save"></i> Spremi';
         showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
+    // ── DELETE MATCH ──
+    window.deleteMatch = async function(kolo, mec) {
+      if (!confirm('Jesi li siguran da želiš izbrisati sve podatke ovog meča?')) return;
+
+      const btn = document.getElementById(`delete-${kolo}-${mec}`);
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+      try {
+        const matchId = `k${kolo}_m${mec}`;
+        await deleteDoc(doc(db, 'seasons', 'sezona-2', 'groups', groupId, 'matches', matchId));
+
+        delete matchesMap[`${kolo}_${mec}`];
+
+        // Reset card UI
+        const card = document.getElementById(`match-${kolo}-${mec}`);
+        const scoreEl = card.querySelector('.score-display');
+        if (scoreEl) { scoreEl.textContent = '- : -'; scoreEl.classList.add('empty'); }
+        card.classList.remove('has-score');
+
+        // Reset inputs
+        [`s1-${kolo}-${mec}`, `s2-${kolo}-${mec}`, `avg1-${kolo}-${mec}`, `avg2-${kolo}-${mec}`,
+         `f9_1-${kolo}-${mec}`, `f9_2-${kolo}-${mec}`, `bl1-${kolo}-${mec}`, `bl2-${kolo}-${mec}`,
+         `bco1-${kolo}-${mec}`, `bco2-${kolo}-${mec}`, `180_1-${kolo}-${mec}`, `180_2-${kolo}-${mec}`
+        ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+
+        // Hide stats
+        const stats = document.getElementById(`stats-${kolo}-${mec}`);
+        if (stats) stats.classList.remove('visible');
+
+        renderStandings();
+        showToast('Meč izbrisan!', 'success');
+      } catch (err) {
+        showToast('Greška: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-trash"></i> Izbriši';
       }
     };
 

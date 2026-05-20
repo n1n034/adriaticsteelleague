@@ -23,6 +23,7 @@ function getAuth() {
 exports.getLeagueData = functions.https.onRequest(async (req, res) => {
   setCORS(res);
   if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+  res.set('Cache-Control', 'public, max-age=300, s-maxage=600');
 
   const groupLetters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P'];
 
@@ -30,35 +31,43 @@ exports.getLeagueData = functions.https.onRequest(async (req, res) => {
     const auth = getAuth();
     const sheets = google.sheets({ version: 'v4', auth });
     const result = [];
-
-    // Najbolji u ligi - čita cijeli sheet
+    const rangesToFetch = [
+      'Najbolji u ligi',
+      ...groupLetters.map(letter => `Grupa ${letter}!Q2:AB11`)
+    ];
+    let valueRanges = [];
     try {
-      const response = await sheets.spreadsheets.values.get({
+      const response = await sheets.spreadsheets.values.batchGet({
         spreadsheetId: SPREADSHEET_ID,
-        range: 'Najbolji u ligi',
+        ranges: rangesToFetch,
+        valueRenderOption: 'FORMATTED_VALUE'
       });
-      const values = response.data.values || [];
-      result.push({ name: 'Najbolji u ligi', headers: values[0] || [], rows: values.slice(1), error: null });
+      valueRanges = response.data.valueRanges || [];
     } catch (e) {
-      result.push({ name: 'Najbolji u ligi', headers: [], rows: [], error: e.message });
+      res.status(500).json({ error: "BatchGet greška: " + e.message });
+      return;
     }
-
-    // Grupe A–P, raspon O2:AA10
-    for (const letter of groupLetters) {
+    const specialData = valueRanges[0];
+    const specialValues = specialData && specialData.values ? specialData.values : [];
+    
+    if (specialValues.length === 0) {
+      result.push({ name: 'Najbolji u ligi', headers: [], rows: [], error: 'Sheet je prazan ili ne postoji.' });
+    } else {
+      result.push({ name: 'Najbolji u ligi', headers: specialValues[0], rows: specialValues.slice(1), error: null });
+    }
+    groupLetters.forEach((letter, index) => {
       const sheetName = `Grupa ${letter}`;
-      try {
-        const response = await sheets.spreadsheets.values.get({
-          spreadsheetId: SPREADSHEET_ID,
-          range: `${sheetName}!Q2:AB11`,
-        });
-        const values = response.data.values || [];
-        result.push({ name: sheetName, headers: values[0] || [], rows: values.slice(1), error: null });
-      } catch (e) {
-        result.push({ name: sheetName, headers: [], rows: [], error: e.message });
-      }
-    }
+      const groupData = valueRanges[index + 1]; // +1 jer je na indeksu 0 'Najbolji u ligi'
+      const values = groupData && groupData.values ? groupData.values : [];
 
+      if (values.length === 0) {
+        result.push({ name: sheetName, headers: [], rows: [], error: 'Sheet je prazan ili ne postoji.' });
+      } else {
+        result.push({ name: sheetName, headers: values[0], rows: values.slice(1), error: null });
+      }
+    });
     res.json(result);
+
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

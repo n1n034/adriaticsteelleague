@@ -1,17 +1,26 @@
 <!DOCTYPE html>
 <html lang="hr">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="theme-color" content="#0a1628">
-	<meta name="mobile-web-app-capable" content="yes">
-	<meta name="mobile-web-app-status-bar-style" content="black-translucent">
-	<title>Adriatic Steel League</title>
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet"> 
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-	<link rel="icon" href="images/ASL-logo.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a1628">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Adriatic Steel League</title>
+  <meta name="description" content="Adriatic Steel League - službena darts liga sa 8 grupa, uživo rezultati, tablice i statistike igrača. Pratite ždrijeb, najbolje u ligi i sve matcheve Sezone 2.">
+  <meta name="keywords" content="Adriatic Steel League, ASL, darts liga, darts rezultati, darts tablice, darts Croatia, darts Hrvatska, steel tip darts">
+  <meta name="author" content="Adriatic Steel League">
+  <!-- Preconnect to external domains -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <!-- Google Fonts -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
+  <!-- Font Awesome -->
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
+	<link rel="icon" href="images/ASL-logo.webp">
 
   <style>
       :root {
@@ -49,7 +58,7 @@
         position: fixed;
         inset: 0;
         z-index: 0;
-        background-image: url("images/background.jpeg");
+        background-image: url("images/background.webp");
         background-size: cover;
         background-position: center center;
         background-repeat: no-repeat;
@@ -78,6 +87,15 @@
       .hero {
         text-align: center;
         margin-bottom: 28px;
+      }
+
+      .hero p{
+        margin: 15px 0 15px 0; 
+        font-size: 2rem; 
+        font-weight: 600; 
+        letter-spacing: 1px; 
+        text-align: center; 
+        text-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
       }
 
       .tabs {
@@ -122,8 +140,6 @@
       .league-logo {
         display: block;
         margin: 0 auto 0 auto;
-        max-width: 240px;
-        width: 100%;
         height: auto;
         filter:
           drop-shadow(0 10px 15px rgba(0,0,0,0.75))
@@ -474,7 +490,7 @@
 
       @media (max-width: 768px) {
         .page {
-          padding: 15px;
+          padding: 20px;
         }
 
         h1 {
@@ -554,17 +570,23 @@
 
       @media (max-width: 480px) {
         .page {
-          padding: 15px;
+          padding: 20px;
         }
 
         h1 {
-          font-size: 1.45rem;
+          font-size: 1.5rem;
+        }
+        
+        .hero p {
+          font-size: 1.3rem;
+          margin: 0 0 15px 0;
         }
 
         .league-logo {
           max-width: 135px;
         }
 
+      
         .social a {
           width: 40px;
           height: 40px;
@@ -620,23 +642,24 @@
 
         .tab-btn {
           font-size: 0.75rem;
-		  padding: 10px 20px;
+		      padding: 10px 20px;
         }
       }
 
   </style>
 </head>
 <body>
-  <div class="bg-image"></div>
-  <div class="bg-overlay"></div>
+  <div class="bg-image" fetchpriority="high"></div>
+  <div class="bg-overlay" fetchpriority="high"></div>
 
   <div class="page">
     <div class="container">
       <div class="hero">
-        <a href="index-admin.html"><img class="league-logo" src="images/ASL-logo.png" alt="Adriatic Steel League Logo"></a>  
-
+        <a href="index-admin.html"><img class="league-logo" src="images/ASL-logo.webp" alt="ASL Logo" width="240"  height="240"  fetchpriority="high" loading="eager"></a>  
         <h1>ADRIATIC STEEL LEAGUE</h1>
-
+          <p>
+            2. SEZONA
+          </p>
         <div class="social">
           <a href="https://www.facebook.com/profile.php?id=61588443060120" target="_blank" aria-label="Facebook">
             <i class="fab fa-facebook-f"></i>

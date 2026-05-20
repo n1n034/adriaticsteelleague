@@ -9,6 +9,17 @@
       "*.json",
       "*.js",
       "404.html"
+    ],
+    "headers": [
+      {
+        "source": "/images/**/*.{jpg,jpeg,png,gif,webp,svg}",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      }
     ]
   },
   "functions": {
