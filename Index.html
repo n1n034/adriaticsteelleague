@@ -10,636 +10,402 @@
   <meta name="description" content="Adriatic Steel League - službena darts liga sa 8 grupa, uživo rezultati, tablice i statistike igrača. Pratite ždrijeb, najbolje u ligi i sve matcheve Sezone 2.">
   <meta name="keywords" content="Adriatic Steel League, ASL, darts liga, darts rezultati, darts tablice, darts Croatia, darts Hrvatska, steel tip darts">
   <meta name="author" content="Adriatic Steel League">
-  <!-- Preconnect to external domains -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <!-- Google Fonts -->
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
-  <!-- Font Awesome -->
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
-	<link rel="icon" href="images/ASL-logo.webp">
+  <link rel="icon" href="images/ASL-logo.webp">
 
   <style>
-      :root {
-        --text: #ffffff;
-        --muted: #c8d3ea;
-        --panel: rgba(8, 14, 28, 0.82);
-        --panel-2: rgba(12, 20, 38, 0.96);
-        --header: rgba(21, 49, 99, 0.95);
-        --header-hover: rgba(39, 81, 159, 0.98);
-        --line: rgba(255,255,255,0.10);
-        --shadow: 0 18px 50px rgba(0,0,0,0.35);
-        --radius: 18px;
-        --table-head: #183a78;
-        --table-row-hover: rgba(110, 168, 255, 0.14);
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        width: 100%;
-        min-height: 100%;
-        overflow-x: hidden;
-        background: #1a3a5c;
-        font-family: 'Lexend', sans-serif;
-        font-weight: 400;
-        color: var(--text);
-      }
-
-      .bg-image {
-        position: fixed;
-        inset: 0;
-        z-index: 0;
-        background-image: url("images/background.webp");
-        background-size: cover;
-        background-position: center center;
-        background-repeat: no-repeat;
-      }
-
-      .bg-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: -1;
-        background: linear-gradient(rgba(3, 8, 18, 0.55), rgba(3, 8, 18, 0.78));
-      }
-
-      .page {
-        position: relative;
-        min-height: 100vh;
-        width: 100%;
-        padding: 24px 16px 48px;
-      }
-
-      .container {
-        max-width: 1300px;
-        margin: 0 auto;
-        animation: fadeInUp 0.5s ease both;
-      }
-
-      .hero {
-        text-align: center;
-        margin-bottom: 30px;
-      }
-
-      .hero p{
-        margin: 15px 0 15px 0; 
-        font-size: 2rem; 
-        font-weight: 600; 
-        letter-spacing: 1px; 
-        text-align: center; 
-        text-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
-      }
-
-      .tabs {
-        display: flex;
-        justify-content: space-evenly;
-        flex-wrap: wrap;
-        margin-bottom: 24px;
-      }
-
-      .tab-btn {
-        background: rgba(10, 19, 38, 0.78);
-        border: 1px solid rgba(255,255,255,0.18);
-        color: #fff;
-        padding: 10px 40px;
-        border-radius: 999px;
-        font-family: 'Lexend', sans-serif;
-        font-size: 1rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        cursor: pointer;
-        transition: 0.25s ease;
-      }
-
-      .tab-btn:hover {
-        background: rgba(38, 74, 138, 0.92);
-      }
-
-      .tab-btn.active {
-        box-shadow: 0 0 12px rgba(255, 255, 255, 0.55);
-        background: rgba(21, 49, 99, 1);
-        border-color: rgba(255, 255, 255, 0.8)
-      }
-
-      .tab-panel {
-        display: none;
-      }
-
-      .tab-panel.active {
-        display: block;
-      }
-
-      .league-logo {
-        display: block;
-        margin: 0 auto 0 auto;
-        height: auto;
-        filter:
-          drop-shadow(0 10px 15px rgba(0,0,0,0.75))
-          drop-shadow(0 0 18px rgba(120,170,255,0.18));
-      }
-
-      h1 {
-        margin: 15px 0 15px 0;
-        font-size: 3.5rem;
-        letter-spacing: 1px;
-        text-align: center;
-        text-shadow: 0 4px 18px rgba(0,0,0,0.45);
-      }
-
-      .social {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 14px;
-        flex-wrap: wrap;
-      }
-
-      .social a {
-        width: 50px;
-        height: 50px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 999px;
-        text-decoration: none;
-        color: #fff;
-        background: rgba(10, 19, 38, 0.78);
-        border: 1px solid rgba(255,255,255,0.12);
-        transition: 0.25s ease;
-        box-shadow: 0 8px 20px rgba(0,0,0,0.20);
-        font-size: 1.2rem;
-      }
-
-      .social a:hover {
-        transform: translateY(-2px);
-        background: rgba(38, 74, 138, 0.92);
-      }
-
-      .last-updated {
-        text-align: left; 
-        font-size: 1rem; 
-        margin: 20px;
-      }
-
-      .loading-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 10px 20px;
-        gap: 16px;
-      }
-
-      .loading-spinner {
-        width: 34px;
-        height: 34px;
-        border: 4px solid rgba(255,255,255,0.1);
-        border-top: 4px solid rgba(120,170,255,0.85);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
-
-      .loading-text {
-        font-size: 1rem;
-        font-weight: 500;
-        letter-spacing: 0.5px;
-      }
-
-      @keyframes spin {
-        to { transform: rotate(360deg); }
-      }
-
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(18px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .accordion-item {
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        overflow: hidden;
-        margin-bottom: 16px;
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(7px);
-        animation: fadeInUp 0.5s ease both;
-      }
-
-      .accordion-item.open {
-        border: 1px solid #c7d2eb;
-        box-shadow: 0 0 12px rgba(255, 255, 255, 0.55);
-      }
-
-      .accordion-header {
-        width: 100%;
-        border: none;
-        background: var(--header);
-        color: #fff;
-        padding: 15px;
-        font-size: 1rem;
-        font-weight: 700;
-        cursor: pointer;
-        text-align: left;
-        transition: 0.25s ease;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-      }
-
-      .accordion-header:hover {
-        background: var(--header-hover);
-      }
-
-      .accordion-title {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .accordion-badge {
-        min-width: 36px;
-        height: 36px;
-        padding: 0 10px;
-        border-radius: 999px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(255,255,255,0.10);
-        border: 1px solid rgba(255,255,255,0.14);
-        font-size: 0.9rem;
-        font-weight: 700;
-      }
-
-      .accordion-icon {
-        font-size: 1.5rem;
-      }
-
-      .accordion-content {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.35s ease;
-        background: rgba(6, 12, 24, 0.50);
-      }
-
-      #najbolji-content .accordion-item.open .accordion-content {
-        max-height: none !important;
-      }
-
-      .accordion-inner {
-        padding: 16px;
-      }
-
-      .table-wrap {
-        overflow-x: auto;
-        border-radius: 14px;
-        border: 1px solid rgba(255,255,255,0.08);
-        background: var(--panel-2);
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        background: var(--panel-2);
-        color: #eef4ff;
-      }
-
-      thead th {
-        background: var(--table-head);
-        color: #ffffff;
-        text-align: center;
-        padding: 13px 14px;
-        font-size: 1rem;
-        font-weight: 700;
-        border-bottom: 1px solid rgba(255,255,255,0.10);
-        white-space: nowrap;
-      }
-
-      tbody td {
-        padding: 12px 14px;
-        font-size: 1rem;
-        color: #edf3ff;
-        text-align: center;
-        border-bottom: 1px solid rgba(255,255,255,0.07);
-        white-space: nowrap;
-      }
-
-      tbody tr:nth-child(even) {
-        background: rgba(255,255,255,0.035);
-      }
-      
-      tbody tr:nth-child(4) td {
-        border-bottom: 2px solid rgba(255,255,255, 0.75);
-      } 
-
-      tfoot td.table-footer-brand {
-        text-align: center;
-        padding: 10px 12px;
-        font-size: 0.82rem;
-        font-weight: 600;
-        letter-spacing: 0.3px;
-        color: rgba(255,255,255,0.7);
-        background: rgba(255,255,255,0.03);
-        border-top: 1px solid rgba(255,255,255,0.10);
-      }
-
-      #tab-najbolji tbody tr td {
-        text-align: left;
-        border-bottom: none;
-      }
-
-      tbody tr:hover {
-        background: var(--table-row-hover);
-      }
-
-      .empty-state,
-      .error-state {
-        background: rgba(10, 18, 34, 0.94);
-        border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 14px;
-        padding: 18px;
-        color: #e7efff;
-      }
-
-      .error-state {
-        color: #ffd7d7;
-        border-color: rgba(255, 120, 120, 0.18);
-      }
-      
-      .bracket-container {
-        overflow-x: auto;
-        padding: 16px 0;
-        -webkit-overflow-scrolling: touch;
-        animation: fadeInUp 0.6s ease both;
-      }
-
-      .bracket-rounds {
-        display: flex;
-        gap: 0;
-        align-items: stretch;
-        min-width: max-content;
-        justify-content: space-between;
-      }
-
-      .bracket-round {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-width: 190px;
-      }
-
-      .bracket-round-title {
-        text-align: center;
-        font-size: 0.8rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        color: rgba(255,255,255,1);
-        padding: 8px 12px;
-        background: rgba(21, 49, 99, 0.8);
-        white-space: nowrap;
-      }
-
-      .bracket-matches {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        justify-content: space-around;
-        padding: 8px 0;
-      }
-
-      .bracket-round:last-child .bracket-matches > div:first-child {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-      }
-
-      .bracket-match {
-        display: flex;
-        flex-direction: column;
-        margin: 4px 8px;
-        position: relative;
-      }
-
-      .bracket-player {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 7px 10px;
-        background: rgba(12, 20, 38, 0.9);
-        border: 1px solid rgba(255,255,255,0.08);
-        font-size: 0.8rem;
-        gap: 8px;
-        transition: 0.2s ease;
-      }
-
-      .bracket-player:first-child {
-        border-radius: 8px 8px 0 0;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
-      }
-
-      .bracket-player:last-child {
-        border-radius: 0 0 8px 8px;
-      }
-
-      .bracket-player.winner {
-        background: rgba(21, 49, 99, 0.95);
-        border-color: rgba(120, 170, 255, 0.3);
-        font-weight: 700;
-        color: #fff;
-      }
-
-      .bracket-player.loser {
-        opacity: 0.45;
-      }
-
-      .bracket-player-name {
-        flex: 1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 120px;
-      }
-
-      .bracket-player-score {
-        font-weight: 700;
-        font-size: 0.85rem;
-        min-width: 18px;
-        text-align: right;
-        color: rgba(255,255,255,0.85);
-      }
-
-      .finale-container.bracket-match.bracket-player {
-        background: rgb(223 173 26 / 90%);
-        box-shadow: yellow;
-      }
-
-      @media (max-width: 768px) {
-        .page {
-          padding: 20px;
-        }
-
-        h1 {
-          font-size: 1.9rem;
-        }
-
-        .league-logo {
-          max-width: 170px;
-        }
-
-        .social a {
-          width: 45px;
-          height: 45px;
-          font-size: 1.15rem;
-        }
-
-        .last-updated {
-          text-align: center;
-        }
-
-        .accordion-header {
-          font-size: 0.9rem;
-          padding: 10px;
-          gap: 10px;
-        }
-
-        .accordion-title {
-          gap: 10px;
-        }
-
-        .accordion-badge {
-          font-size: 0.95rem;
-          min-width: 34px;
-          height: 34px;
-          padding: 0 8px;
-        }
-
-        .accordion-icon {
-          font-size: 1.35rem;
-        }
-
-        .accordion-inner {
-          padding: 10px;
-        }
-
-        .table-wrap {
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-        }
-
-        table {
-          min-width: 560px;
-        }
-
-        thead th {
-          font-size: 0.9rem;
-          padding: 10px 8px;
-        }
-
-        tbody td {
-          font-size: 0.9rem;
-          padding: 10px 8px;
-        }
-
-        tfoot td.table-footer-brand {
-          font-size: 0.60rem;
-        }
-
-        .tabs {
-          gap: 20px;
-        }
-
-        .tab-btn {
-          font-size: 0.85rem;
-        }
-      }
-
-      @media (max-width: 480px) {
-        .page {
-          padding: 20px;
-        }
-
-        h1 {
-          font-size: 1.5rem;
-        }
-        
-        .hero p {
-          font-size: 1.3rem;
-          margin: 0 0 15px 0;
-        }
-
-        .league-logo {
-          max-width: 135px;
-        }
-
-      
-        .social a {
-          width: 40px;
-          height: 40px;
-          font-size: 1rem;
-        } 
-
-        .accordion-title {
-          gap: 8px;
-        }
-
-        .accordion-badge {
-          font-size: 0.8rem;
-          min-width: 30px;
-          height: 30px;
-          padding: 0 6px;
-        }
-
-        .accordion-icon {
-          font-size: 1.15rem;
-        }
-
-        .accordion-inner {
-          padding: 8px;
-        }
-
-        table {
-          min-width: 500px;
-        }
-
-        thead th {
-          font-size: 0.78rem;
-          padding: 8px 6px;
-        }
-
-        tbody td {
-          font-size: 0.78rem;
-          padding: 8px 6px;
-        }
-
-        tfoot td.table-footer-brand {
-          font-size: 0.50rem;
-        }
-
-        .tabs {
-          gap: 5px;
-        }
-
-        .tab-btn {
-          font-size: 0.75rem;
-		      padding: 10px 20px;
-        }
-      }
-
+    :root {
+      --text: #ffffff;
+      --muted: #c8d3ea;
+      --panel: rgba(8, 14, 28, 0.82);
+      --panel-2: rgba(12, 20, 38, 0.96);
+      --header: rgba(21, 49, 99, 0.95);
+      --header-hover: rgba(39, 81, 159, 0.98);
+      --line: rgba(255,255,255,0.10);
+      --shadow: 0 18px 50px rgba(0,0,0,0.35);
+      --radius: 18px;
+      --table-head: #183a78;
+      --table-row-hover: rgba(110, 168, 255, 0.14);
+    }
+
+    * { 
+      box-sizing: border-box; 
+      scrollbar-width: none; 
+      -ms-overflow-style: none; 
+    }
+    
+    *::-webkit-scrollbar { display: none; }
+
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; min-height: 100%;
+      overflow-x: hidden;
+      background: #1a3a5c;
+      font-family: 'Lexend', sans-serif;
+      font-weight: 400;
+      color: var(--text);
+    }
+
+    button, input, select, textarea {
+      font-family: inherit;
+    }
+
+    .bg-image {
+      position: fixed; inset: 0; z-index: 0;
+      background-image: url("images/background.webp");
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+    }
+
+    .bg-overlay {
+      position: fixed; inset: 0; z-index: -1;
+      background: linear-gradient(rgba(3,8,18,0.55), rgba(3,8,18,0.78));
+    }
+
+    .page {
+      position: relative; min-height: 100vh;
+      width: 100%; padding: 24px 16px 48px;
+    }
+
+    .container {
+      max-width: 1300px; margin: 0 auto;
+      animation: fadeInUp 0.5s ease both;
+    }
+
+    .hero { text-align: center; margin-bottom: 30px; }
+
+    .hero p {
+      margin: 15px 0 15px 0;
+      font-size: 2rem; font-weight: 600;
+      letter-spacing: 1px; text-align: center;
+      text-shadow: 0 4px 18px rgba(0,0,0,0.6);
+    }
+
+    .tabs {
+      display: flex; justify-content: space-evenly;
+      flex-wrap: wrap; margin-bottom: 24px;
+    }
+
+    .tab-btn {
+      background: rgba(10,19,38,0.78);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: #fff; padding: 10px 40px;
+      border-radius: 999px;
+      font-size: 1rem; font-weight: 700;
+      letter-spacing: 0.5px; cursor: pointer;
+      transition: 0.25s ease;
+    }
+    .tab-btn:hover { background: rgba(38,74,138,0.92); }
+    .tab-btn.active {
+      box-shadow: 0 0 12px rgba(255,255,255,0.55);
+      background: rgba(21,49,99,1);
+      border-color: rgba(255,255,255,0.8);
+    }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .league-logo {
+      display: block; margin: 0 auto; height: auto;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.75)) drop-shadow(0 0 18px rgba(120,170,255,0.18));
+    }
+
+    h1 {
+      margin: 15px 0 15px 0; font-size: 3.5rem;
+      letter-spacing: 1px; text-align: center;
+      text-shadow: 0 4px 18px rgba(0,0,0,0.6);
+    }
+
+    .social {
+      display: flex; justify-content: center;
+      align-items: center; gap: 14px; flex-wrap: wrap;
+    }
+    .social a {
+      width: 50px; height: 50px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 999px; text-decoration: none; color: #fff;
+      background: rgba(10,19,38,0.78); border: 1px solid rgba(255,255,255,0.12);
+      transition: 0.25s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.20);
+      font-size: 1.2rem;
+    }
+    .social a:hover { transform: translateY(-2px); background: rgba(38,74,138,0.92); }
+
+    .last-updated { text-align: left; font-size: 1rem; margin: 20px; text-shadow: 0 4px 18px rgba(0, 0, 0, 0.6); }
+
+    .loading-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 10px 20px; gap: 16px;
+    }
+    .loading-spinner {
+      width: 34px; height: 34px;
+      border: 4px solid rgba(255,255,255,0.1);
+      border-top: 4px solid rgba(120,170,255,0.85);
+      border-radius: 50%; animation: spin 1s linear infinite;
+    }
+    .loading-text { font-size: 1rem; font-weight: 500; letter-spacing: 0.5px; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .accordion-item {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: var(--radius); overflow: hidden;
+      margin-bottom: 16px; box-shadow: var(--shadow);
+      backdrop-filter: blur(7px); animation: fadeInUp 0.5s ease both;
+    }
+    .accordion-item.open {
+      border: 1px solid #c7d2eb;
+      box-shadow: 0 0 12px rgba(255,255,255,0.55);
+    }
+
+    .accordion-header {
+      width: 100%; border: none;
+      background: var(--header); color: #fff;
+      padding: 15px; font-size: 1rem; font-weight: 700;
+      cursor: pointer; text-align: left; transition: 0.25s ease;
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 16px;
+    }
+    .accordion-header:hover { background: var(--header-hover); }
+
+    .accordion-title { display: flex; align-items: center; gap: 12px; }
+
+    .accordion-badge {
+      min-width: 36px; height: 36px; padding: 0 10px;
+      border-radius: 999px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.14);
+      font-size: 0.9rem; font-weight: 700;
+    }
+
+    .accordion-icon { font-size: 1.5rem; }
+
+    .accordion-content {
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.35s ease;
+      background: rgba(6,12,24,0.50);
+    }
+
+    #najbolji-content .accordion-item.open .accordion-content {
+      max-height: none !important;
+    }
+
+    .accordion-inner { padding: 16px; }
+
+    .accordion-inner > div[id$="-standings"],
+    .accordion-inner > div[id$="-raspored"] {
+      animation: fadeInUp 0.5s ease both;
+    }
+    
+    .table-wrap {
+      overflow-x: auto; border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: var(--panel-2);
+    }
+
+    table {
+      width: 100%; border-collapse: collapse;
+      background: var(--panel-2); color: #eef4ff;
+    }
+
+    thead th {
+      background: var(--table-head); color: #ffffff;
+      text-align: center; padding: 13px 14px;
+      font-size: 1rem; font-weight: 700;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 12px 14px; font-size: 1rem;
+      color: #edf3ff; text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      white-space: nowrap;
+    }
+
+    tbody tr:nth-child(even) { background: rgba(255,255,255,0.035); }
+    tbody tr:nth-child(4) td { border-bottom: 2px solid rgba(255,255,255,0.75); }
+
+    tfoot td.table-footer-brand {
+      text-align: center; padding: 10px 12px;
+      font-size: 0.82rem; font-weight: 600; letter-spacing: 0.3px;
+      color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.03);
+      border-top: 1px solid rgba(255,255,255,0.10);
+    }
+
+    #tab-najbolji tbody tr td { text-align: left; border-bottom: none; }
+    tbody tr:hover { background: var(--table-row-hover); }
+
+    .empty-state, .error-state {
+      background: rgba(10,18,34,0.94);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; padding: 18px; color: #e7efff;
+    }
+    .error-state { color: #ffd7d7; border-color: rgba(255,120,120,0.18); }
+
+    .bracket-container {
+      overflow-x: auto; padding: 16px 0;
+      -webkit-overflow-scrolling: touch;
+      animation: fadeInUp 0.6s ease both;
+    }
+    .bracket-rounds {
+      display: flex; gap: 0; align-items: stretch;
+      min-width: max-content; justify-content: space-between;
+    }
+    .bracket-round { display: flex; flex-direction: column; flex: 1; min-width: 190px; }
+    .bracket-round-title {
+      text-align: center; font-size: 0.8rem; font-weight: 700;
+      letter-spacing: 0.5px; color: rgba(255,255,255,1);
+      padding: 8px 12px; background: rgba(21,49,99,0.8); white-space: nowrap;
+    }
+    .bracket-matches {
+      display: flex; flex-direction: column; flex: 1;
+      justify-content: space-around; padding: 8px 0;
+    }
+    .bracket-round:last-child .bracket-matches > div:first-child {
+      flex: 1; display: flex; justify-content: center; flex-direction: column;
+    }
+    .bracket-match { display: flex; flex-direction: column; margin: 4px 8px; position: relative; }
+    .bracket-player {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 10px; background: rgba(12,20,38,0.9);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.8rem; gap: 8px; transition: 0.2s ease;
+    }
+    .bracket-player:first-child { border-radius: 8px 8px 0 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .bracket-player:last-child { border-radius: 0 0 8px 8px; }
+    .bracket-player.winner { background: rgba(21,49,99,0.95); border-color: rgba(120,170,255,0.3); font-weight: 700; color: #fff; }
+    .bracket-player.loser { opacity: 0.45; }
+    .bracket-player-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    .bracket-player-score { font-weight: 700; font-size: 0.85rem; min-width: 18px; text-align: right; color: rgba(255,255,255,0.85); }
+    .finale-container.bracket-match.bracket-player { background: rgb(223 173 26 / 90%); }
+
+    /* ── POPUP ── */
+    .match-popup-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+      animation: fadeInUp 0.2s ease both;
+    }
+
+    .match-popup {
+      background: rgba(8,14,28,0.98);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px; padding: 24px;
+      width: 100%; max-width: 480px;
+      max-height: 90vh; overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+    }
+
+    .popup-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .popup-title { font-size: 1rem; font-weight: 800; letter-spacing: 0.5px; }
+
+    .popup-close {
+      width: 32px; height: 32px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px; color: var(--muted);
+      font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: 0.2s ease;
+    }
+    .popup-close:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+    .popup-match {
+      background: rgba(6,12,24,0.6);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px; margin-bottom: 12px; overflow: hidden;
+    }
+
+    .popup-match-top {
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      align-items: center; gap: 8px; padding: 12px 14px;
+    }
+
+    .popup-player-name { font-size: 0.9rem; font-weight: 700; }
+    .popup-player-name.right { text-align: right; }
+
+    .popup-score {
+      font-size: 1.3rem; font-weight: 800;
+      color: #7eb8ff; text-align: center; white-space: nowrap;
+    }
+    .popup-score.empty { color: rgba(255,255,255,0.2); font-size: 1rem; }
+
+    .popup-stats {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 10px 14px;
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      gap: 4px 8px; background: rgba(0,0,0,0.2); font-size: 0.78rem;
+    }
+
+    .popup-stat-label {
+      color: var(--muted); font-size: 0.68rem; font-weight: 600;
+      letter-spacing: 0.5px; text-transform: uppercase;
+      text-align: center; padding: 3px 0; grid-column: 2;
+    }
+
+    .popup-stat-val-l { color: #fff; font-weight: 700; text-align: right; padding: 3px 0; }
+    .popup-stat-val-r { color: #fff; font-weight: 700; text-align: left; padding: 3px 0; }
+
+    .popup-no-score { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 10px 0; }
+    .popup-match-num { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
+
+    /* ── MEDIA ── */
+    @media (max-width: 768px) {
+      .page { padding: 20px; }
+      h1 { font-size: 1.9rem; }
+      .league-logo { max-width: 170px; }
+      .social a { width: 45px; height: 45px; font-size: 1.15rem; }
+      .last-updated { text-align: center; }
+      .accordion-header { font-size: 0.9rem; padding: 10px; gap: 10px; }
+      .accordion-title { gap: 10px; }
+      .accordion-badge { font-size: 0.95rem; min-width: 34px; height: 34px; padding: 0 8px; }
+      .accordion-icon { font-size: 1.35rem; }
+      .accordion-inner { padding: 10px; }
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 560px; }
+      thead th { font-size: 0.9rem; padding: 10px 8px; }
+      tbody td { font-size: 0.9rem; padding: 10px 8px; }
+      tfoot td.table-footer-brand { font-size: 0.60rem; }
+      .tabs { gap: 20px; }
+      .tab-btn { font-size: 0.85rem; }
+    }
+
+    @media (max-width: 480px) {
+      .page { padding: 20px; }
+      h1 { font-size: 1.5rem; }
+      .hero p { font-size: 1.3rem; margin: 0 0 15px 0; }
+      .league-logo { max-width: 135px; }
+      .social a { width: 40px; height: 40px; font-size: 1rem; }
+      .accordion-title { gap: 8px; }
+      .accordion-badge { font-size: 0.8rem; min-width: 30px; height: 30px; padding: 0 6px; }
+      .accordion-icon { font-size: 1.15rem; }
+      .accordion-inner { padding: 10px; }
+      table { min-width: 500px; }
+      thead th { font-size: 0.78rem; padding: 8px 6px; }
+      tbody td { font-size: 0.78rem; padding: 8px 6px; }
+      tfoot td.table-footer-brand { font-size: 0.50rem; }
+      .tabs { gap: 5px; }
+      .tab-btn { font-size: 0.75rem; padding: 10px 20px; }
+    }
   </style>
 </head>
 <body>
@@ -649,27 +415,17 @@
   <div class="page">
     <div class="container">
       <div class="hero">
-        <a href="index-admin.html"><img class="league-logo" src="images/ASL-logo.webp" alt="ASL Logo" width="240"  height="240"  fetchpriority="high" loading="eager"></a>  
+        <a href="index-admin.html">
+          <img class="league-logo" src="images/ASL-logo.webp" alt="ASL Logo" width="240" height="240" fetchpriority="high" loading="eager">
+        </a>
         <h1>ADRIATIC STEEL LEAGUE</h1>
-          <p>
-            2. SEZONA
-          </p>
+        <p>2. SEZONA</p>
         <div class="social">
-          <a href="https://www.facebook.com/profile.php?id=61588443060120" target="_blank" aria-label="Facebook">
-            <i class="fab fa-facebook-f"></i>
-          </a>
-          <a href="https://www.instagram.com/adriaticsteelleague" target="_blank" aria-label="Instagram">
-            <i class="fab fa-instagram"></i>
-          </a>
-          <a href="https://www.tiktok.com/@adriaticsteel" target="_blank" aria-label="TikTok">
-            <i class="fab fa-tiktok"></i>
-          </a>
-          <a href="https://discord.gg/crEnfmDThb" target="_blank" aria-label="Discord">
-            <i class="fab fa-discord"></i>
-          </a>
-          <a href="https://www.youtube.com/@Adriatic-Steel-League" target="_blank" aria-label="YouTube">
-            <i class="fab fa-youtube"></i>
-          </a>
+          <a href="https://www.facebook.com/profile.php?id=61588443060120" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="https://www.instagram.com/adriaticsteelleague" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://www.tiktok.com/@adriaticsteel" target="_blank" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+          <a href="https://discord.gg/crEnfmDThb" target="_blank" aria-label="Discord"><i class="fab fa-discord"></i></a>
+          <a href="https://www.youtube.com/@Adriatic-Steel-League" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
         </div>
       </div>
 
@@ -679,11 +435,11 @@
 
       <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('tablice')">TABLICE</button>
-        <button class="tab-btn" onclick="switchTab('najbolji')">NAJBOLJI U LIGI</button> 
+        <button class="tab-btn" onclick="switchTab('najbolji')">NAJBOLJI U LIGI</button>
         <button class="tab-btn" onclick="switchTab('gornji-zdrijeb')">GORNJI ŽDRIJEB</button>
         <button class="tab-btn" onclick="switchTab('donji-zdrijeb')">DONJI ŽDRIJEB</button>
       </div>
-      
+
       <div id="tab-tablice" class="tab-panel active">
         <div id="content"></div>
       </div>
@@ -693,31 +449,34 @@
       </div>
 
       <div id="tab-gornji-zdrijeb" class="tab-panel">
-        <div style="background: rgba(8, 14, 28, 0.82); border: 1px solid rgba(255,255,255,0.10); border-radius: 18px; padding: 2rem; text-align: center; margin-bottom: 24px; animation: fadeInUp 0.5s ease both;">
-          <p style="font-size: 1.5rem; font-weight: 700; color: #ffffff; margin: 0 0 8px;">U tijeku je regularni dio, a onda - ždrijeb!</p>
-          <p style="font-size: 1rem; color: #c8d3ea; margin: 0;">Pratite nas za više informacija</p>
+        <div style="background:rgba(8,14,28,0.82);border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:2rem;text-align:center;margin-bottom:24px;animation:fadeInUp 0.5s ease both;">
+          <p style="font-size:1.5rem;font-weight:700;color:#ffffff;margin:0 0 8px;">U tijeku je regularni dio, a onda - ždrijeb!</p>
+          <p style="font-size:1rem;color:#c8d3ea;margin:0;">Pratite nas za više informacija</p>
         </div>
-        <div id="gornji-zdrijeb-content" style="display: none;"></div>
+        <div id="gornji-zdrijeb-content" style="display:none;"></div>
       </div>
 
       <div id="tab-donji-zdrijeb" class="tab-panel">
-        <div style="background: rgba(8, 14, 28, 0.82); border: 1px solid rgba(255,255,255,0.10); border-radius: 18px; padding: 2rem; text-align: center; margin-bottom: 24px; animation: fadeInUp 0.5s ease both;">
-          <p style="font-size: 1.5rem; font-weight: 700; color: #ffffff; margin: 0 0 8px;">U tijeku je regularni dio, a onda - ždrijeb!</p>
-          <p style="font-size: 1rem; color: #c8d3ea; margin: 0;">Pratite nas za više informacija</p>
+        <div style="background:rgba(8,14,28,0.82);border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:2rem;text-align:center;margin-bottom:24px;animation:fadeInUp 0.5s ease both;">
+          <p style="font-size:1.5rem;font-weight:700;color:#ffffff;margin:0 0 8px;">U tijeku je regularni dio, a onda - ždrijeb!</p>
+          <p style="font-size:1rem;color:#c8d3ea;margin:0;">Pratite nas za više informacija</p>
         </div>
-        <div id="donji-zdrijeb-content" style="display: none;"></div>
+        <div id="donji-zdrijeb-content" style="display:none;"></div>
       </div>
     </div>
+  </div>
+
+  <!-- POPUP OVERLAY -->
+  <div id="match-popup-overlay" class="match-popup-overlay" style="display:none;" onclick="closeMatchPopup(event)">
+    <div class="match-popup" id="match-popup-content"></div>
   </div>
 
   <script>
     function escapeHtml(value) {
       if (value === null || value === undefined) return '';
       return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
     }
 
@@ -780,7 +539,6 @@
       players.forEach(p => {
         stats[p] = { win:0, draw:0, lost:0, total:0, legs:0, pts:0, avgSum:0, avgCount:0, f9Sum:0, f9Count:0, bl:0, bco:0, x180:0 };
       });
-
       schedule.forEach(({ kolo, matches }) => {
         matches.forEach(({ mec, player1, player2 }) => {
           const m = matchesMap[`${kolo}_${mec}`];
@@ -800,19 +558,18 @@
           } else {
             st2.win++; st1.lost++; st2.pts += 2;
           }
-          if (m.average1) { st1.avgSum += parseFloat(m.average1); st1.avgCount++; }
-          if (m.average2) { st2.avgSum += parseFloat(m.average2); st2.avgCount++; }
-          if (m.first9_1) { st1.f9Sum += parseFloat(m.first9_1); st1.f9Count++; }
-          if (m.first9_2) { st2.f9Sum += parseFloat(m.first9_2); st2.f9Count++; }
-          if (m.bestleg1) st1.bl = Math.max(st1.bl, parseInt(m.bestleg1) || 0);
-          if (m.bestleg2) st2.bl = Math.max(st2.bl, parseInt(m.bestleg2) || 0);
+          if (m.average1)      { st1.avgSum += parseFloat(m.average1); st1.avgCount++; }
+          if (m.average2)      { st2.avgSum += parseFloat(m.average2); st2.avgCount++; }
+          if (m.first9_1)      { st1.f9Sum  += parseFloat(m.first9_1); st1.f9Count++; }
+          if (m.first9_2)      { st2.f9Sum  += parseFloat(m.first9_2); st2.f9Count++; }
+          if (m.bestleg1)      st1.bl  = Math.max(st1.bl,  parseInt(m.bestleg1)      || 0);
+          if (m.bestleg2)      st2.bl  = Math.max(st2.bl,  parseInt(m.bestleg2)      || 0);
           if (m.bestcheckout1) st1.bco = Math.max(st1.bco, parseInt(m.bestcheckout1) || 0);
           if (m.bestcheckout2) st2.bco = Math.max(st2.bco, parseInt(m.bestcheckout2) || 0);
           if (m['180_1']) st1.x180 += parseInt(m['180_1']) || 0;
           if (m['180_2']) st2.x180 += parseInt(m['180_2']) || 0;
         });
       });
-
       return Object.entries(stats)
         .map(([name, s]) => ({
           name, win: s.win, draw: s.draw, lost: s.lost,
@@ -827,28 +584,34 @@
     }
 
     function switchGroupTab(uid, tab, btn) {
-      document.getElementById(uid + '-standings').style.display = tab === 'standings' ? '' : 'none';
-      document.getElementById(uid + '-raspored').style.display = tab === 'raspored' ? '' : 'none';
+      const target = document.getElementById(uid + '-' + tab);
+      const other  = tab === 'standings' ? 'raspored' : 'standings';
+
+      document.getElementById(uid + '-' + other).style.display = 'none';
+      target.style.display   = '';
+      target.style.animation = 'none';
+      requestAnimationFrame(() => {
+        target.style.animation = '';
+      });
+
       const btns = btn.closest('div').querySelectorAll('.grp-tab-btn');
       btns.forEach(b => {
-        b.style.background = 'rgba(10,19,38,0.78)';
+        b.style.background  = 'rgba(10,19,38,0.78)';
         b.style.borderColor = 'rgba(255,255,255,0.12)';
-        b.style.color = 'var(--muted)';
+        b.style.color       = 'var(--muted)';
       });
-      btn.style.background = 'rgba(21,49,99,1)';
+      btn.style.background  = 'rgba(21,49,99,1)';
       btn.style.borderColor = 'rgba(255,255,255,0.2)';
-      btn.style.color = '#fff';
+      btn.style.color       = '#fff';
     }
 
     function renderNajbolji(allPlayersStats) {
       const medal = (i) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
-
-      const top5avg = [...allPlayersStats].filter(p => p.avg !== '--').sort((a,b) => parseFloat(b.avg) - parseFloat(a.avg)).slice(0,5);
-      const top5f9  = [...allPlayersStats].filter(p => p.f9  !== '--').sort((a,b) => parseFloat(b.f9)  - parseFloat(a.f9)).slice(0,5);
-      const top5bl  = [...allPlayersStats].filter(p => p.bl  !== '--' && p.bl > 0).sort((a,b) => a.bl - b.bl).slice(0,5);
-      const top5bco = [...allPlayersStats].filter(p => p.bco !== '--' && p.bco > 0).sort((a,b) => b.bco - a.bco).slice(0,5);
-      const top5x180= [...allPlayersStats].filter(p => p.x180 > 0).sort((a,b) => b.x180 - a.x180).slice(0,5);
-
+      const top5avg  = [...allPlayersStats].filter(p => p.avg !== '--').sort((a,b) => parseFloat(b.avg) - parseFloat(a.avg)).slice(0,5);
+      const top5f9   = [...allPlayersStats].filter(p => p.f9  !== '--').sort((a,b) => parseFloat(b.f9)  - parseFloat(a.f9)).slice(0,5);
+      const top5bl   = [...allPlayersStats].filter(p => p.bl  !== '--' && p.bl > 0).sort((a,b) => a.bl - b.bl).slice(0,5);
+      const top5bco  = [...allPlayersStats].filter(p => p.bco !== '--' && p.bco > 0).sort((a,b) => b.bco - a.bco).slice(0,5);
+      const top5x180 = [...allPlayersStats].filter(p => p.x180 > 0).sort((a,b) => b.x180 - a.x180).slice(0,5);
       const rows = Array.from({length:5}, (_,i) => `
         <tr>
           <td style="text-align:left;">${top5avg[i]  ? `${medal(i)} ${escapeHtml(top5avg[i].name)} - ${top5avg[i].avg}`   : ''}</td>
@@ -858,7 +621,6 @@
           <td style="text-align:left;">${top5x180[i] ? `${medal(i)} ${escapeHtml(top5x180[i].name)} - ${top5x180[i].x180}` : ''}</td>
         </tr>
       `).join('');
-
       document.getElementById('najbolji-content').innerHTML = `
         <div class="accordion-item open">
           <div class="accordion-header" style="pointer-events:none;">
@@ -873,19 +635,12 @@
                 <table>
                   <thead>
                     <tr>
-                      <th>Najveći AVG</th>
-                      <th>Najveći First 9</th>
-                      <th>Najbolji Leg</th>
-                      <th>Najveći CO</th>
-                      <th>Najviše 180</th>
+                      <th>Najveći AVG</th><th>Najveći First 9</th>
+                      <th>Najbolji Leg</th><th>Najveći CO</th><th>Najviše 180</th>
                     </tr>
                   </thead>
                   <tbody>${rows}</tbody>
-                  <tfoot>
-                    <tr>
-                      <td colspan="5" class="table-footer-brand">Adriatic steel league ™ ®</td>
-                    </tr>
-                  </tfoot>
+                  <tfoot><tr><td colspan="5" class="table-footer-brand">Adriatic steel league ™ ®</td></tr></tfoot>
                 </table>
               </div>
             </div>
@@ -894,7 +649,93 @@
       `;
     }
 
+    // ── KOLO POPUP DATA MAP ──
+    const koloDataMap = {};
+
+    function openKoloPopup(groupIndex, kolo) {
+      const data = koloDataMap[`${groupIndex}_${kolo}`];
+      if (!data) return;
+      const { matches, matchesMap, bye } = data;
+      const overlay = document.getElementById('match-popup-overlay');
+      const content = document.getElementById('match-popup-content');
+
+      const matchesHtml = matches.map(({ mec, player1, player2 }) => {
+        const saved = matchesMap[`${kolo}_${mec}`];
+        const score = saved?.score || '';
+        const hasScore = !!score;
+
+        const statsRows = hasScore ? `
+          <div class="popup-stats">
+            <div class="popup-stat-val-l">${saved.average1 ?? '--'}</div>
+            <div class="popup-stat-label">AVG</div>
+            <div class="popup-stat-val-r">${saved.average2 ?? '--'}</div>
+
+            <div class="popup-stat-val-l">${saved.first9_1 ?? '--'}</div>
+            <div class="popup-stat-label">First 9</div>
+            <div class="popup-stat-val-r">${saved.first9_2 ?? '--'}</div>
+
+            <div class="popup-stat-val-l">${saved.bestleg1 ?? '--'}</div>
+            <div class="popup-stat-label">Best Leg</div>
+            <div class="popup-stat-val-r">${saved.bestleg2 ?? '--'}</div>
+
+            <div class="popup-stat-val-l">${saved.bestcheckout1 ?? '--'}</div>
+            <div class="popup-stat-label">Best CO</div>
+            <div class="popup-stat-val-r">${saved.bestcheckout2 ?? '--'}</div>
+
+            <div class="popup-stat-val-l">${saved['180_1'] ?? '--'}</div>
+            <div class="popup-stat-label">180s</div>
+            <div class="popup-stat-val-r">${saved['180_2'] ?? '--'}</div>
+          </div>
+        ` : `<div class="popup-no-score">Meč još nije odigran</div>`;
+
+        return `
+          <div class="popup-match">
+            <div class="popup-match-num" style="padding:8px 14px 0;">Meč ${mec}</div>
+            <div class="popup-match-top">
+              <span class="popup-player-name">${escapeHtml(player1)}</span>
+              <span class="popup-score ${hasScore ? '' : 'empty'}">${score || '-:-'}</span>
+              <span class="popup-player-name right">${escapeHtml(player2)}</span>
+            </div>
+            ${statsRows}
+          </div>
+        `;
+      }).join('');
+
+      const byeHtml = bye ? `<div style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">BYE: ${escapeHtml(bye)}</div>` : '';
+
+      content.innerHTML = `
+        <div class="popup-header">
+          <span class="popup-title">Kolo ${kolo}</span>
+          <button class="popup-close" onclick="closeMatchPopup()">✕</button>
+        </div>
+        ${byeHtml}
+        ${matchesHtml}
+      `;
+
+      overlay.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMatchPopup(e) {
+      if (e && e.target !== document.getElementById('match-popup-overlay')) return;
+      document.getElementById('match-popup-overlay').style.display = 'none';
+      document.body.style.overflow = '';
+    }
+
+    // Escape key to close popup
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        document.getElementById('match-popup-overlay').style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    });
+
     function createAccordion(groupName, groupIndex, standings, schedule, matchesMap) {
+      // Pohrani podatke za popup
+      schedule.forEach(({ kolo, matches, bye }) => {
+        koloDataMap[`${groupIndex}_${kolo}`] = { matches, matchesMap, bye };
+      });
+
       const standingsHtml = `
         <div class="table-wrap">
           <table>
@@ -919,31 +760,31 @@
                   <td>${p.total}</td>
                   <td style="color:${p.legs>0?'#2ecc71':p.legs<0?'#e74c3c':'inherit'}">${p.legs > 0 ? '+'+p.legs : p.legs}</td>
                   <td style="font-weight:800;color:#7eb8ff;">${p.pts}</td>
-                  <td>${p.avg}</td>
-                  <td>${p.f9}</td>
-                  <td>${p.bl}</td>
-                  <td>${p.bco}</td>
-                  <td>${p.x180}</td>
+                  <td>${p.avg}</td><td>${p.f9}</td>
+                  <td>${p.bl}</td><td>${p.bco}</td><td>${p.x180}</td>
                 </tr>
               `).join('')}
             </tbody>
             <tfoot>
-              <tr>
-                <td colspan="13" class="table-footer-brand">Adriatic steel league ™ ®</td>
-              </tr>
+              <tr><td colspan="13" class="table-footer-brand">Adriatic steel league ™ ®</td></tr>
             </tfoot>
           </table>
         </div>
       `;
 
       const rasporedHtml = `
-        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:20px;">
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
           <div style="display:flex;gap:8px;min-width:max-content;">
             ${schedule.map(({ kolo, matches, bye }) => `
-              <div style="min-width:180px;background:rgba(6,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;">
+              <div
+                onclick="openKoloPopup(${groupIndex}, ${kolo})"
+                style="width:max-content;cursor:pointer;background:rgba(6,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:10px 10px 0 0;overflow:hidden;transition:border-color 0.2s ease;"
+                onmouseover="this.style.borderColor='rgba(255,255,255,0.25)'"
+                onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'"
+              >
                 <div style="background:var(--header);padding:8px 12px;font-size:0.8rem;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;">
                   <span>Kolo ${kolo}</span>
-                  ${bye ? `<span style="font-size:0.68rem;color:var(--muted);white-space:nowrap;">BYE: ${escapeHtml(bye)}</span>` : ''}
+                  ${bye ? `<span style="font-size:0.75rem;color:var(--muted);white-space:nowrap;">BYE: ${escapeHtml(bye)}</span>` : ''}
                 </div>
                 ${matches.map(({ mec, player1, player2 }) => {
                   const saved = matchesMap[`${kolo}_${mec}`];
@@ -952,9 +793,9 @@
                   return `
                     <div style="padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.05);">
                       <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
-                        <span style="font-size:0.9rem;font-weight:${hasScore?'700':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;">${escapeHtml(player1)}</span>
-                        <span style="font-size:0.95rem;font-weight:800;color:${hasScore?'#7eb8ff':'rgba(255,255,255,0.2)'};white-space:nowrap;">${score || '-:-'}</span>
-                        <span style="font-size:0.9rem;font-weight:${hasScore?'700':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;text-align:right;">${escapeHtml(player2)}</span>
+                        <span style="font-size: clamp(0.75rem, 2.5vw, 0.9rem);font-weight:${hasScore?'700':'400'};white-space:nowrap;">${escapeHtml(player1)}</span>
+                        <span style="font-size: clamp(0.8rem, 2.5vw, 0.95rem);font-weight:800;color:${hasScore?'#7eb8ff':'rgba(255,255,255,0.2)'};white-space:nowrap;padding:0 6px;">${score || '-:-'}</span>
+                        <span style="font-size: clamp(0.75rem, 2.5vw, 0.9rem);font-weight:${hasScore?'700':'400'};white-space:nowrap;text-align:right;">${escapeHtml(player2)}</span>
                       </div>
                     </div>
                   `;
@@ -963,7 +804,11 @@
             `).join('')}
           </div>
         </div>
+        <div style="text-align:center;padding:10px 12px;font-size:0.5rem;font-weight:600;letter-spacing:0.3px;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.03);border-top:1px solid rgba(255,255,255,0.10);border-radius:0 0 14px 14px;">
+          Adriatic steel league ™ ®
+        </div>
       `;
+      
 
       const uid = `grp-${groupIndex}`;
 
@@ -978,9 +823,9 @@
           </button>
           <div class="accordion-content">
             <div class="accordion-inner">
-              <div style="display:flex;gap:8px;margin-bottom:15px;">
-                <button onclick="switchGroupTab('${uid}','standings',this)" class="grp-tab-btn grp-tab-active" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);background:rgba(21,49,99,1);color:#fff;font-family:'Lexend',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer;">Standings</button>
-                <button onclick="switchGroupTab('${uid}','raspored',this)" class="grp-tab-btn" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);background:rgba(10,19,38,0.78);color:var(--muted);font-family:'Lexend',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer;">Raspored</button>
+              <div style="display:flex;gap:8px;margin:5px 0 15px 0;">
+                <button onclick="switchGroupTab('${uid}','standings',this)" class="grp-tab-btn grp-tab-active" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);background:rgba(21,49,99,1);color:#fff;font-size:0.8rem;font-weight:700;cursor:pointer;">Standings</button>
+                <button onclick="switchGroupTab('${uid}','raspored',this)" class="grp-tab-btn" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);background:rgba(10,19,38,0.78);color:var(--muted);font-size:0.8rem;font-weight:700;cursor:pointer;">Raspored</button>
               </div>
               <div id="${uid}-standings">${standingsHtml}</div>
               <div id="${uid}-raspored" style="display:none;">${rasporedHtml}</div>
@@ -998,8 +843,7 @@
 
     function toggleAccordion(item, shouldOpen) {
       const content = item.querySelector('.accordion-content');
-      const icon = item.querySelector('.accordion-icon');
-
+      const icon    = item.querySelector('.accordion-icon');
       if (shouldOpen) {
         item.classList.add('open');
         content.style.maxHeight = content.scrollHeight + 'px';
@@ -1022,8 +866,7 @@
     function showError(error) {
       document.getElementById('content').innerHTML =
         '<div class="error-state">Ne mogu dohvatiti podatke. ' +
-        escapeHtml(error && error.message ? error.message : error) +
-        '</div>';
+        escapeHtml(error && error.message ? error.message : error) + '</div>';
     }
 
     window.addEventListener('resize', () => {
@@ -1034,11 +877,11 @@
         }
       });
     });
-
   </script>
+
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
+    import { initializeApp }  from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import { getAnalytics }   from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
     import { getFirestore, collection, getDocs, query, orderBy, getDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -1064,17 +907,15 @@
         </div>`;
 
       try {
-        const seasonDoc = await getDoc(doc(db, 'seasons', 'sezona-2'));
-        const currentKolo = seasonDoc.data()?.currentKolo || 1;
+        const seasonDoc    = await getDoc(doc(db, 'seasons', 'sezona-2'));
+        const currentKolo  = seasonDoc.data()?.currentKolo || 1;
 
         const groupsSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups'));
         const groups = [];
         groupsSnap.forEach(d => groups.push({ id: d.id, ...d.data() }));
         groups.sort((a, b) => a.id.localeCompare(b.id));
 
-        // Promjena: map funkcija sada vraća i HTML i standings podatke za tu grupu
         const groupsData = await Promise.all(groups.map(async (group, i) => {
-          // Učitaj igrače
           const playersSnap = await getDocs(query(
             collection(db, 'seasons', 'sezona-2', 'groups', group.id, 'players'),
             orderBy('position')
@@ -1082,7 +923,6 @@
           const players = [];
           playersSnap.forEach(p => players.push(p.data().name));
 
-          // Učitaj mečeve
           const matchesSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups', group.id, 'matches'));
           const matchesMap = {};
           matchesSnap.forEach(m => {
@@ -1090,33 +930,25 @@
             matchesMap[`${d.kolo}_${d.mec}`] = d;
           });
 
-          const schedule = generateSchedule(players);
+          const schedule        = generateSchedule(players);
           const visibleSchedule = schedule.filter(r => r.kolo <= currentKolo);
-          const standings = computeStandings(players, schedule, matchesMap);
+          const standings       = computeStandings(players, schedule, matchesMap);
+          const html            = createAccordion(group.name, i + 1, standings, visibleSchedule, matchesMap);
 
-          const html = createAccordion(group.name, i + 1, standings, visibleSchedule, matchesMap);
-
-          // Vraćamo objekt koji sadrži i generirani HTML i standings niz za ovu grupu
           return { html, standings };
         }));
 
-        // 1. Spoji sav HTML iz svih grupa i prikaži ga
         content.innerHTML = groupsData.map(g => g.html).join('');
 
-        // 2. Skupi standings iz svih grupa u jedan zajednički niz (allPlayersStats)
         const allPlayersStats = [];
-        groupsData.forEach(g => {
-          allPlayersStats.push(...g.standings);
-        });
-
-        // 3. Sad kad imaš SVE igrače na jednom mjestu, pozovi renderNajbolji samo JEDNOM
+        groupsData.forEach(g => allPlayersStats.push(...g.standings));
         renderNajbolji(allPlayersStats);
-        
+
         if (seasonDoc.exists() && seasonDoc.data().lastUpdated) {
           const d = seasonDoc.data().lastUpdated.toDate();
           document.getElementById('updated-time').textContent = d.toLocaleString('hr-HR');
         }
-          
+
       } catch (err) {
         showError(err);
       }
