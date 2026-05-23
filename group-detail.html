@@ -344,11 +344,7 @@
       justify-content: center; gap: 4px;
       padding: 0 8px;
     }
-    .stats-divider-line {
-      width: 1px; flex: 1;
-      background: rgba(255,255,255,0.08);
-      min-height: 20px;
-    }
+    
     .stats-divider-vs {
       font-size: 0.7rem; color: rgba(255,255,255,0.2);
       font-weight: 600; letter-spacing: 1px;
@@ -855,7 +851,6 @@
               <!-- Divider -->
               <div class="stats-divider">
                 <span class="score-sep">:</span>
-                <div class="stats-divider-line"></div>
               </div>
 
               <!-- P2 stats -->
@@ -993,6 +988,7 @@
         btn.innerHTML = '<i class="fas fa-save"></i> Spremi';
         showToast('Greška: ' + err.message, 'error');
       }
+      await setDoc(doc(db, 'seasons', 'sezona-2'), { lastUpdated: new Date() }, { merge: true });
     };
 
     // ── DELETE MATCH ──

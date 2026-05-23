@@ -86,7 +86,7 @@
 
       .hero {
         text-align: center;
-        margin-bottom: 28px;
+        margin-bottom: 30px;
       }
 
       .hero p{
@@ -593,12 +593,6 @@
           font-size: 1rem;
         } 
 
-        .accordion-header {
-          font-size: 0.8rem;
-          padding: 10px;
-          gap: 8px;
-        }
-
         .accordion-title {
           gap: 8px;
         }
@@ -633,7 +627,7 @@
         }
 
         tfoot td.table-footer-brand {
-          font-size: 0.40rem;
+          font-size: 0.50rem;
         }
 
         .tabs {
@@ -677,9 +671,10 @@
             <i class="fab fa-youtube"></i>
           </a>
         </div>
-        <div class="last-updated">
-          Zadnje ažuriranje: <span id="updated-time">učitavanje...</span>
-        </div>
+      </div>
+
+      <div class="last-updated">
+        Zadnje ažuriranje: <span id="updated-time">—</span>
       </div>
 
       <div class="tabs">
@@ -733,115 +728,262 @@
       event.currentTarget.classList.add('active');
     }
 
-    function loadData() {
-	  const loadingHtml = `
-		<div class="loading-state">
-		  <div class="loading-spinner"></div>
-		  <span class="loading-text">Učitavanje podataka...</span>
-		</div>
-	  `;
-	  document.getElementById('content').innerHTML = loadingHtml;
-	  document.getElementById('najbolji-content').innerHTML = loadingHtml;
-	  document.getElementById('gornji-zdrijeb-content').innerHTML = loadingHtml;
-	  document.getElementById('donji-zdrijeb-content').innerHTML = loadingHtml;
+    const berger8 = [
+      [[8,1],[2,7],[3,6],[4,5]],
+      [[6,4],[5,8],[7,3],[1,2]],
+      [[4,7],[3,1],[8,2],[5,6]],
+      [[2,3],[7,5],[1,4],[6,8]],
+      [[6,7],[4,2],[5,1],[8,3]],
+      [[2,5],[1,6],[7,8],[3,4]],
+      [[5,3],[8,4],[6,2],[7,1]]
+    ];
 
-	  fetch('https://getleaguedata-wfud75wkwq-uc.a.run.app')
-        .then(r => r.json())
-        .then(render)
-        .catch(err => showError(err));
+    const berger9 = [
+      { bye:1, matches:[[2,9],[3,8],[4,7],[5,6]] },
+      { bye:6, matches:[[7,5],[8,4],[9,3],[1,2]] },
+      { bye:2, matches:[[3,1],[4,9],[5,8],[6,7]] },
+      { bye:7, matches:[[8,6],[9,5],[1,4],[2,3]] },
+      { bye:3, matches:[[4,2],[5,1],[6,9],[7,8]] },
+      { bye:8, matches:[[9,7],[1,6],[2,5],[3,4]] },
+      { bye:4, matches:[[5,3],[6,2],[7,1],[8,9]] },
+      { bye:9, matches:[[1,8],[2,7],[3,6],[4,5]] },
+      { bye:5, matches:[[6,4],[7,3],[8,2],[9,1]] }
+    ];
 
-    fetch('https://getlastupdated-wfud75wkwq-uc.a.run.app')
-        .then(r => r.json())
-        .then(data => document.getElementById('updated-time').textContent = data.time)
-        .catch(() => document.getElementById('updated-time').textContent = 'Greška');
-
-    fetch('https://getbracketdata-wfud75wkwq-uc.a.run.app')
-        .then(r => r.json())
-        .then(data => renderBracket(data, 'gornji-zdrijeb-content'))
-        .catch(err => showError(err));
-
-    fetch('https://getdonjibracketdata-wfud75wkwq-uc.a.run.app')
-        .then(r => r.json())
-        .then(data => renderBracket(data, 'donji-zdrijeb-content'))
-        .catch(err => showError(err));
-	  }
-
-
-    function render(data) {
-      const content = document.getElementById('content');
-      const najboljiContent = document.getElementById('najbolji-content');
-
-      if (!data || !data.length) {
-        content.innerHTML = '<div class="empty-state">Nema sheetova za prikaz.</div>';
-        return;
+    function generateSchedule(players) {
+      const n = players.length;
+      const rounds = [];
+      if (n === 8) {
+        berger8.forEach((pairs, ri) => {
+          const matches = pairs.map((pair, mi) => ({
+            mec: mi + 1,
+            player1: players[pair[0] - 1],
+            player2: players[pair[1] - 1]
+          }));
+          rounds.push({ kolo: ri + 1, matches, bye: null });
+        });
+      } else if (n === 9) {
+        berger9.forEach((round, ri) => {
+          const matches = round.matches.map((pair, mi) => ({
+            mec: mi + 1,
+            player1: players[pair[0] - 1],
+            player2: players[pair[1] - 1]
+          }));
+          rounds.push({ kolo: ri + 1, matches, bye: round.bye ? players[round.bye - 1] : null });
+        });
       }
-
-      const tabliceSheets = data.filter(s => s.name !== 'Najbolji u ligi');
-      const najboljiSheet = data.find(s => s.name === 'Najbolji u ligi');
-
-      content.innerHTML = tabliceSheets.map((sheet, index) => createAccordion(sheet, index + 1)).join('');
-
-      if (najboljiSheet) {
-        najboljiContent.innerHTML = createSheetTable(najboljiSheet);
-      }
+      return rounds;
     }
 
-    function createAccordion(sheet, index) {
-      const badge = sheet.name === "Najbolji u ligi" ? "⭐" : (index);
-      const rows = sheet.name === "Najbolji u ligi"
-        ? sheet.rows.slice(0, 5)
-        : sheet.rows;
-      const rowCount = Array.isArray(rows) ? rows.length : 0;
+    function computeStandings(players, schedule, matchesMap) {
+      const stats = {};
+      players.forEach(p => {
+        stats[p] = { win:0, draw:0, lost:0, total:0, legs:0, pts:0, avgSum:0, avgCount:0, f9Sum:0, f9Count:0, bl:0, bco:0, x180:0 };
+      });
 
-      let innerContent = '';
-      if (sheet.error) {
-        innerContent = `<div class="error-state">${escapeHtml(sheet.error)}</div>`;
-      } else if (!sheet.headers || !sheet.headers.length) {
-        innerContent = `<div class="empty-state">Sheet nema podataka za prikaz.</div>`;
-      } else {
-        innerContent = `
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  ${sheet.headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}
-                </tr>
-              </thead>
-              <tbody>
-                ${
-                  rowCount
-                    ? rows.map(row => `
-                      <tr>
-                        ${sheet.headers.map((_, i) => `<td>${escapeHtml(row[i] || '')}</td>`).join('')}
-                      </tr>
-                    `).join('')
-                    : `<tr><td colspan="${sheet.headers.length}" style="text-align:center;">Nema redaka za prikaz.</td></tr>`
-                }
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colspan="${sheet.headers.length}" class="table-footer-brand">
-                    Adriatic steel league ™ ®
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+      schedule.forEach(({ kolo, matches }) => {
+        matches.forEach(({ mec, player1, player2 }) => {
+          const m = matchesMap[`${kolo}_${mec}`];
+          if (!m || !m.score) return;
+          const parts = m.score.split('-');
+          if (parts.length !== 2) return;
+          const s1 = parseInt(parts[0]), s2 = parseInt(parts[1]);
+          if (isNaN(s1) || isNaN(s2)) return;
+          const st1 = stats[player1], st2 = stats[player2];
+          if (!st1 || !st2) return;
+          st1.total++; st2.total++;
+          st1.legs += (s1 - s2); st2.legs += (s2 - s1);
+          if (m.score === '5-5') {
+            st1.draw++; st2.draw++; st1.pts++; st2.pts++;
+          } else if (s1 > s2) {
+            st1.win++; st2.lost++; st1.pts += 2;
+          } else {
+            st2.win++; st1.lost++; st2.pts += 2;
+          }
+          if (m.average1) { st1.avgSum += parseFloat(m.average1); st1.avgCount++; }
+          if (m.average2) { st2.avgSum += parseFloat(m.average2); st2.avgCount++; }
+          if (m.first9_1) { st1.f9Sum += parseFloat(m.first9_1); st1.f9Count++; }
+          if (m.first9_2) { st2.f9Sum += parseFloat(m.first9_2); st2.f9Count++; }
+          if (m.bestleg1) st1.bl = Math.max(st1.bl, parseInt(m.bestleg1) || 0);
+          if (m.bestleg2) st2.bl = Math.max(st2.bl, parseInt(m.bestleg2) || 0);
+          if (m.bestcheckout1) st1.bco = Math.max(st1.bco, parseInt(m.bestcheckout1) || 0);
+          if (m.bestcheckout2) st2.bco = Math.max(st2.bco, parseInt(m.bestcheckout2) || 0);
+          if (m['180_1']) st1.x180 += parseInt(m['180_1']) || 0;
+          if (m['180_2']) st2.x180 += parseInt(m['180_2']) || 0;
+        });
+      });
+
+      return Object.entries(stats)
+        .map(([name, s]) => ({
+          name, win: s.win, draw: s.draw, lost: s.lost,
+          total: s.total, legs: s.legs, pts: s.pts,
+          avg:  s.avgCount > 0 ? (s.avgSum / s.avgCount).toFixed(2) : '--',
+          f9:   s.f9Count  > 0 ? (s.f9Sum  / s.f9Count).toFixed(2)  : '--',
+          bl:   s.bl  || '--',
+          bco:  s.bco || '--',
+          x180: s.x180
+        }))
+        .sort((a, b) => b.pts - a.pts || b.legs - a.legs || (a.avg === '--' ? 1 : b.avg === '--' ? -1 : parseFloat(b.avg) - parseFloat(a.avg)));
+    }
+
+    function switchGroupTab(uid, tab, btn) {
+      document.getElementById(uid + '-standings').style.display = tab === 'standings' ? '' : 'none';
+      document.getElementById(uid + '-raspored').style.display = tab === 'raspored' ? '' : 'none';
+      const btns = btn.closest('div').querySelectorAll('.grp-tab-btn');
+      btns.forEach(b => {
+        b.style.background = 'rgba(10,19,38,0.78)';
+        b.style.borderColor = 'rgba(255,255,255,0.12)';
+        b.style.color = 'var(--muted)';
+      });
+      btn.style.background = 'rgba(21,49,99,1)';
+      btn.style.borderColor = 'rgba(255,255,255,0.2)';
+      btn.style.color = '#fff';
+    }
+
+    function renderNajbolji(allPlayersStats) {
+      const medal = (i) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+
+      const top5avg = [...allPlayersStats].filter(p => p.avg !== '--').sort((a,b) => parseFloat(b.avg) - parseFloat(a.avg)).slice(0,5);
+      const top5f9  = [...allPlayersStats].filter(p => p.f9  !== '--').sort((a,b) => parseFloat(b.f9)  - parseFloat(a.f9)).slice(0,5);
+      const top5bl  = [...allPlayersStats].filter(p => p.bl  !== '--' && p.bl > 0).sort((a,b) => a.bl - b.bl).slice(0,5);
+      const top5bco = [...allPlayersStats].filter(p => p.bco !== '--' && p.bco > 0).sort((a,b) => b.bco - a.bco).slice(0,5);
+      const top5x180= [...allPlayersStats].filter(p => p.x180 > 0).sort((a,b) => b.x180 - a.x180).slice(0,5);
+
+      const rows = Array.from({length:5}, (_,i) => `
+        <tr>
+          <td style="text-align:left;">${top5avg[i]  ? `${medal(i)} ${escapeHtml(top5avg[i].name)} - ${top5avg[i].avg}`   : ''}</td>
+          <td style="text-align:left;">${top5f9[i]   ? `${medal(i)} ${escapeHtml(top5f9[i].name)} - ${top5f9[i].f9}`       : ''}</td>
+          <td style="text-align:left;">${top5bl[i]   ? `${medal(i)} ${escapeHtml(top5bl[i].name)} - ${top5bl[i].bl}`       : ''}</td>
+          <td style="text-align:left;">${top5bco[i]  ? `${medal(i)} ${escapeHtml(top5bco[i].name)} - ${top5bco[i].bco}`    : ''}</td>
+          <td style="text-align:left;">${top5x180[i] ? `${medal(i)} ${escapeHtml(top5x180[i].name)} - ${top5x180[i].x180}` : ''}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('najbolji-content').innerHTML = `
+        <div class="accordion-item open">
+          <div class="accordion-header" style="pointer-events:none;">
+            <div class="accordion-title">
+              <span class="accordion-badge">⭐</span>
+              <span>Najbolji u ligi</span>
+            </div>
           </div>
-        `;
-      }
+          <div class="accordion-content" style="max-height:none;">
+            <div class="accordion-inner">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Najveći AVG</th>
+                      <th>Najveći First 9</th>
+                      <th>Najbolji Leg</th>
+                      <th>Najveći CO</th>
+                      <th>Najviše 180</th>
+                    </tr>
+                  </thead>
+                  <tbody>${rows}</tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="5" class="table-footer-brand">Adriatic steel league ™ ®</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function createAccordion(groupName, groupIndex, standings, schedule, matchesMap) {
+      const standingsHtml = `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th style="text-align:left;">Igrač</th>
+                <th>W</th><th>D</th><th>L</th>
+                <th>Tot</th><th>Legs</th><th>PTS</th>
+                <th>AVG</th><th>First 9</th>
+                <th>Best Leg</th><th>Best CO</th><th>180</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${standings.map((p, i) => `
+                <tr>
+                  <td>${i + 1}</td>
+                  <td style="text-align:left;font-weight:700;">${escapeHtml(p.name)}</td>
+                  <td style="color:#2ecc71;font-weight:700;">${p.win}</td>
+                  <td style="color:#f39c12;font-weight:700;">${p.draw}</td>
+                  <td style="color:#e74c3c;font-weight:700;">${p.lost}</td>
+                  <td>${p.total}</td>
+                  <td style="color:${p.legs>0?'#2ecc71':p.legs<0?'#e74c3c':'inherit'}">${p.legs > 0 ? '+'+p.legs : p.legs}</td>
+                  <td style="font-weight:800;color:#7eb8ff;">${p.pts}</td>
+                  <td>${p.avg}</td>
+                  <td>${p.f9}</td>
+                  <td>${p.bl}</td>
+                  <td>${p.bco}</td>
+                  <td>${p.x180}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="13" class="table-footer-brand">Adriatic steel league ™ ®</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      `;
+
+      const rasporedHtml = `
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:20px;">
+          <div style="display:flex;gap:8px;min-width:max-content;">
+            ${schedule.map(({ kolo, matches, bye }) => `
+              <div style="min-width:180px;background:rgba(6,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;">
+                <div style="background:var(--header);padding:8px 12px;font-size:0.8rem;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                  <span>Kolo ${kolo}</span>
+                  ${bye ? `<span style="font-size:0.68rem;color:var(--muted);white-space:nowrap;">BYE: ${escapeHtml(bye)}</span>` : ''}
+                </div>
+                ${matches.map(({ mec, player1, player2 }) => {
+                  const saved = matchesMap[`${kolo}_${mec}`];
+                  const score = saved?.score || '';
+                  const hasScore = !!score;
+                  return `
+                    <div style="padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.05);">
+                      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+                        <span style="font-size:0.9rem;font-weight:${hasScore?'700':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;">${escapeHtml(player1)}</span>
+                        <span style="font-size:0.95rem;font-weight:800;color:${hasScore?'#7eb8ff':'rgba(255,255,255,0.2)'};white-space:nowrap;">${score || '-:-'}</span>
+                        <span style="font-size:0.9rem;font-weight:${hasScore?'700':'400'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;text-align:right;">${escapeHtml(player2)}</span>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      const uid = `grp-${groupIndex}`;
 
       return `
         <div class="accordion-item">
           <button class="accordion-header" onclick="handleAccordionClick(this)">
             <div class="accordion-title">
-              <span class="accordion-badge">${badge}</span>
-              <span>${escapeHtml(sheet.name)}</span>
+              <span class="accordion-badge">${groupIndex}</span>
+              <span>${escapeHtml(groupName)}</span>
             </div>
             <span class="accordion-icon">▼</span>
           </button>
           <div class="accordion-content">
             <div class="accordion-inner">
-              ${innerContent}
+              <div style="display:flex;gap:8px;margin-bottom:15px;">
+                <button onclick="switchGroupTab('${uid}','standings',this)" class="grp-tab-btn grp-tab-active" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);background:rgba(21,49,99,1);color:#fff;font-family:'Lexend',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer;">Standings</button>
+                <button onclick="switchGroupTab('${uid}','raspored',this)" class="grp-tab-btn" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);background:rgba(10,19,38,0.78);color:var(--muted);font-family:'Lexend',sans-serif;font-size:0.8rem;font-weight:700;cursor:pointer;">Raspored</button>
+              </div>
+              <div id="${uid}-standings">${standingsHtml}</div>
+              <div id="${uid}-raspored" style="display:none;">${rasporedHtml}</div>
             </div>
           </div>
         </div>
@@ -877,193 +1019,6 @@
       }
     }
 
-    function createSheetTable(sheet) {
-      if (sheet.error) {
-        return `<div class="error-state">${escapeHtml(sheet.error)}</div>`;
-      }
-      if (!sheet.headers || !sheet.headers.length) {
-        return `<div class="empty-state">Sheet nema podataka za prikaz.</div>`;
-      }
-
-      const rows = sheet.rows.slice(0, 5);
-      const rowCount = rows.length;
-
-      return `
-        <div class="accordion-item open">
-          <div class="accordion-header" style="pointer-events:none; cursor:default;">
-            <div class="accordion-title">
-              <span class="accordion-badge">⭐</span>
-              <span>${escapeHtml(sheet.name)}</span>
-            </div>
-          </div>
-          <div class="accordion-content" style="max-height:none;">
-            <div class="accordion-inner">
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      ${sheet.headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${
-                      rowCount
-                        ? rows.map(row => `
-                          <tr>
-                            ${sheet.headers.map((_, i) => `<td>${escapeHtml(row[i] || '')}</td>`).join('')}
-                          </tr>
-                        `).join('')
-                        : `<tr><td colspan="${sheet.headers.length}" style="text-align:center;">Nema redaka za prikaz.</td></tr>`
-                    }
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colspan="${sheet.headers.length}" class="table-footer-brand">
-                        Adriatic steel league ™ ®
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    }
-
-    function renderBracket(rows, containerId) {
-      const bc = document.getElementById(containerId);
-      if (!bc) return;
-
-      function getFilledRows(col) {
-        return rows.slice(1).filter(r => r[col] && String(r[col]).trim() !== '');
-      }
-
-      function buildMatches(nameCol, scoreCol) {
-        const filled = getFilledRows(nameCol);
-        const matches = [];
-        for (let i = 0; i < filled.length; i += 2) {
-          const r1 = filled[i];
-          const r2 = filled[i + 1] || null;
-          matches.push({
-            p1: r1[nameCol],
-            s1: r1[scoreCol],
-            p2: r2 ? r2[nameCol] : '',
-            s2: r2 ? r2[scoreCol] : ''
-          });
-        }
-        return matches;
-      }
-
-      function determineWinner(match) {
-        const s1 = parseInt(match.s1);
-        const s2 = parseInt(match.s2);
-        if (!isNaN(s1) && !isNaN(s2)) {
-          if (s1 > s2) return 1;
-          if (s2 > s1) return 2;
-        }
-        return 0;
-      }
-
-      function renderMatch(match) {
-        const winner = determineWinner(match);
-        const p1class = winner === 1 ? 'winner' : winner === 2 ? 'loser' : '';
-        const p2class = winner === 2 ? 'winner' : winner === 1 ? 'loser' : '';
-        return `
-          <div class="bracket-match">
-            <div class="bracket-player ${p1class}">
-              <span class="bracket-player-name">${escapeHtml(match.p1 || 'TBD')}</span>
-              <span class="bracket-player-score">${escapeHtml(match.s1)}</span>
-            </div>
-            <div class="bracket-player ${p2class}">
-              <span class="bracket-player-name">${escapeHtml(match.p2 || 'TBD')}</span>
-              <span class="bracket-player-score">${escapeHtml(match.s2)}</span>
-            </div>
-          </div>
-        `;
-      }
-
-      const finaleRows = getFilledRows(11);
-      const finaleMatch = {
-        p1: finaleRows[0] ? finaleRows[0][11] : '',
-        s1: finaleRows[0] ? finaleRows[0][12] : '',
-        p2: finaleRows[1] ? finaleRows[1][11] : '',
-        s2: finaleRows[1] ? finaleRows[1][12] : ''
-      };
-
-      const thirdRows = getFilledRows(11);
-      const thirdMatch = finaleRows.length >= 4 ? {
-        p1: thirdRows[2][11],
-        s1: thirdRows[2][12],
-        p2: thirdRows[3][11],
-        s2: thirdRows[3][12]
-      } : null;
-
-      const finaleWinner = determineWinner(finaleMatch) === 1 ? finaleMatch.p1 : determineWinner(finaleMatch) === 2 ? finaleMatch.p2 : null;
-      const thirdWinner = thirdMatch ? (determineWinner(thirdMatch) === 1 ? thirdMatch.p1 : determineWinner(thirdMatch) === 2 ? thirdMatch.p2 : null) : null;
-
-      const rounds = [
-        { title: 'ROUND OF 32', matches: buildMatches(3, 4) },
-        { title: 'ROUND OF 16', matches: buildMatches(5, 6) },
-        { title: 'QUARTER-FINALS', matches: buildMatches(7, 8) },
-        { title: 'SEMI-FINALS', matches: buildMatches(9, 10) },
-      ];
-
-      let html = `<div class="bracket-container"><div class="bracket-rounds">`;
-
-      rounds.forEach(round => {
-        html += `
-          <div class="bracket-round">
-            <div class="bracket-round-title">${round.title}</div>
-            <div class="bracket-matches">
-              ${round.matches.map(m => renderMatch(m)).join('')}
-            </div>
-          </div>
-        `;
-      });
-
-     html += `
-    <div class="bracket-round">
-      <div class="bracket-round-title">ZAVRŠNICA</div>
-      
-      <div class="bracket-matches">
-        
-        <div class="finale-container">
-
-          <div style="text-align:center; font-size:1.2rem; font-weight:800; letter-spacing:1.5px; color:#FFD700; margin: 10px; text-shadow: 0 0 8px #FFD700;">
-            🏆 VELIKO FINALE
-          </div>
-          ${renderMatch(finaleMatch)}
-          
-          ${finaleWinner ? `
-          <div style="text-align:center; margin:10px; padding:10px; background:linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,215,0,0.05)); border:1px solid rgba(255,215,0,0.4); border-radius:8px;">
-            <div style="font-size:0.9rem; color:#FFD700; opacity:0.8; letter-spacing:1px; margin-bottom:4px; text-transform:uppercase;">Pobjednik ASL</div>
-            <div style="font-size:1.5rem; font-weight:900; color:#fff; text-shadow: 0 0 10px #FFD700;">${escapeHtml(finaleWinner)}</div>
-          </div>` : ''}
-
-          ${thirdMatch ? `
-          <div class="third-place-container">
-            <div style="text-align:center; font-size:1.2rem; font-weight:800; letter-spacing:1.5px; color:#CD7F32; margin: 10px; text-shadow: 0 0 8px #CD7F32;">
-              🥉 3. MJESTO
-            </div>
-            ${renderMatch(thirdMatch)}
-
-            ${thirdWinner ? `
-            <div style="text-align:center; margin:10px; padding:8px; background:rgba(205,127,50,0.1); border:1px solid rgba(205,127,50,0.2); border-radius:8px; text-shadow: 0 0 10px #CD7F32;">
-              <div style="font-size:1.2rem; font-weight:800; color:#CD7F32;">${escapeHtml(thirdWinner)}</div>
-            </div>` : ''}
-          </div>` : ''}
-
-        </div>
-
-      </div>
-    </div>
-  `;
-
-      html += `</div></div>`;
-      bc.innerHTML = html;
-    }
-
     function showError(error) {
       document.getElementById('content').innerHTML =
         '<div class="error-state">Ne mogu dohvatiti podatke. ' +
@@ -1080,17 +1035,12 @@
       });
     });
 
-    loadData();
   </script>
   <script type="module">
-    // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-    // https://firebase.google.com/docs/web/setup#available-libraries
+    import { getFirestore, collection, getDocs, query, orderBy, getDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
-    // Your web app's Firebase configuration
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
     const firebaseConfig = {
       apiKey: "AIzaSyDyG6WN60VOhp-iHq_18vOLDcHP6zHNoRk",
       authDomain: "adriatic-steel-league.firebaseapp.com",
@@ -1101,9 +1051,78 @@
       measurementId: "G-8HLYCZLJ2Y"
     };
 
-    // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
+    getAnalytics(app);
+    const db = getFirestore(app);
+
+    async function loadStandings() {
+      const content = document.getElementById('content');
+      content.innerHTML = `
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          <span class="loading-text">Učitavanje podataka...</span>
+        </div>`;
+
+      try {
+        const seasonDoc = await getDoc(doc(db, 'seasons', 'sezona-2'));
+        const currentKolo = seasonDoc.data()?.currentKolo || 1;
+
+        const groupsSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups'));
+        const groups = [];
+        groupsSnap.forEach(d => groups.push({ id: d.id, ...d.data() }));
+        groups.sort((a, b) => a.id.localeCompare(b.id));
+
+        // Promjena: map funkcija sada vraća i HTML i standings podatke za tu grupu
+        const groupsData = await Promise.all(groups.map(async (group, i) => {
+          // Učitaj igrače
+          const playersSnap = await getDocs(query(
+            collection(db, 'seasons', 'sezona-2', 'groups', group.id, 'players'),
+            orderBy('position')
+          ));
+          const players = [];
+          playersSnap.forEach(p => players.push(p.data().name));
+
+          // Učitaj mečeve
+          const matchesSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups', group.id, 'matches'));
+          const matchesMap = {};
+          matchesSnap.forEach(m => {
+            const d = m.data();
+            matchesMap[`${d.kolo}_${d.mec}`] = d;
+          });
+
+          const schedule = generateSchedule(players);
+          const visibleSchedule = schedule.filter(r => r.kolo <= currentKolo);
+          const standings = computeStandings(players, schedule, matchesMap);
+
+          const html = createAccordion(group.name, i + 1, standings, visibleSchedule, matchesMap);
+
+          // Vraćamo objekt koji sadrži i generirani HTML i standings niz za ovu grupu
+          return { html, standings };
+        }));
+
+        // 1. Spoji sav HTML iz svih grupa i prikaži ga
+        content.innerHTML = groupsData.map(g => g.html).join('');
+
+        // 2. Skupi standings iz svih grupa u jedan zajednički niz (allPlayersStats)
+        const allPlayersStats = [];
+        groupsData.forEach(g => {
+          allPlayersStats.push(...g.standings);
+        });
+
+        // 3. Sad kad imaš SVE igrače na jednom mjestu, pozovi renderNajbolji samo JEDNOM
+        renderNajbolji(allPlayersStats);
+        
+        if (seasonDoc.exists() && seasonDoc.data().lastUpdated) {
+          const d = seasonDoc.data().lastUpdated.toDate();
+          document.getElementById('updated-time').textContent = d.toLocaleString('hr-HR');
+        }
+          
+      } catch (err) {
+        showError(err);
+      }
+    }
+
+    loadStandings();
   </script>
 </body>
 </html>
