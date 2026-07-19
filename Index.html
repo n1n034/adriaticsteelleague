@@ -34,12 +34,7 @@
       --table-row-hover: rgba(110, 168, 255, 0.14);
     }
 
-    * { 
-      box-sizing: border-box; 
-      scrollbar-width: none; 
-      -ms-overflow-style: none; 
-    }
-    
+    * { box-sizing: border-box; scrollbar-width: none; -ms-overflow-style: none; }
     *::-webkit-scrollbar { display: none; }
 
     html, body {
@@ -52,16 +47,12 @@
       color: var(--text);
     }
 
-    button, input, select, textarea {
-      font-family: inherit;
-    }
+    button, input, select, textarea { font-family: inherit; }
 
     .bg-image {
       position: fixed; inset: 0; z-index: 0;
       background-image: url("images/background.webp");
-      background-size: cover;
-      background-position: center center;
-      background-repeat: no-repeat;
+      background-size: cover; background-position: center center; background-repeat: no-repeat;
     }
 
     .bg-overlay {
@@ -69,45 +60,23 @@
       background: linear-gradient(rgba(3,8,18,0.55), rgba(3,8,18,0.78));
     }
 
-    .page {
-      position: relative; min-height: 100vh;
-      width: 100%; padding: 24px 16px 48px;
-    }
+    .page { position: relative; min-height: 100vh; width: 100%; padding: 26px; }
 
-    .container {
-      max-width: 1300px; margin: 0 auto;
-      animation: fadeInUp 0.5s ease both;
-    }
+    .container { max-width: 1300px; margin: 0 auto; animation: fadeInUp 0.5s ease both; }
 
-    .hero { text-align: center; margin-bottom: 30px; }
+    .hero { text-align: center; margin-bottom: 40px; }
+    .hero p { margin: 15px 0 15px 0; font-size: 2rem; font-weight: 600; letter-spacing: 1px; text-align: center; text-shadow: 0 6px 6px rgba(0, 0, 0, 0.5); }
 
-    .hero p {
-      margin: 15px 0 15px 0;
-      font-size: 2rem; font-weight: 600;
-      letter-spacing: 1px; text-align: center;
-      text-shadow: 0 4px 18px rgba(0,0,0,0.6);
-    }
-
-    .tabs {
-      display: flex; justify-content: space-evenly;
-      flex-wrap: wrap; margin-bottom: 24px;
-    }
+    .tabs { display: flex; justify-content: space-evenly; flex-wrap: wrap; margin-bottom: 24px; }
 
     .tab-btn {
-      background: rgba(10,19,38,0.78);
-      border: 1px solid rgba(255,255,255,0.18);
-      color: #fff; padding: 10px 40px;
-      border-radius: 999px;
-      font-size: 1rem; font-weight: 700;
-      letter-spacing: 0.5px; cursor: pointer;
-      transition: 0.25s ease;
+      background: rgba(10,19,38,0.78); border: 1px solid rgba(255,255,255,0.18);
+      color: #fff; padding: 10px 40px; border-radius: 999px;
+      font-size: 1rem; font-weight: 700; letter-spacing: 0.5px;
+      cursor: pointer; transition: 0.25s ease;
     }
     .tab-btn:hover { background: rgba(38,74,138,0.92); }
-    .tab-btn.active {
-      box-shadow: 0 0 12px rgba(255,255,255,0.55);
-      background: rgba(21,49,99,1);
-      border-color: rgba(255,255,255,0.8);
-    }
+    .tab-btn.active { box-shadow: 0 0 12px rgba(255,255,255,0.55); background: rgba(21,49,99,1); border-color: rgba(255,255,255,0.8); }
 
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
@@ -117,258 +86,547 @@
       filter: drop-shadow(0 10px 15px rgba(0,0,0,0.75)) drop-shadow(0 0 18px rgba(120,170,255,0.18));
     }
 
-    h1 {
-      margin: 15px 0 15px 0; font-size: 3.5rem;
-      letter-spacing: 1px; text-align: center;
-      text-shadow: 0 4px 18px rgba(0,0,0,0.6);
-    }
+    h1 { margin: 15px 0 15px 0; font-size: 3.5rem; letter-spacing: 1px; text-align: center; text-shadow: 0 6px 6px rgba(0, 0, 0, 0.5); }
 
-    .social {
-      display: flex; justify-content: center;
-      align-items: center; gap: 14px; flex-wrap: wrap;
-    }
+    .social { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; }
     .social a {
-      width: 50px; height: 50px;
-      display: inline-flex; align-items: center; justify-content: center;
+      width: 50px; height: 50px; display: inline-flex; align-items: center; justify-content: center;
       border-radius: 999px; text-decoration: none; color: #fff;
       background: rgba(10,19,38,0.78); border: 1px solid rgba(255,255,255,0.12);
-      transition: 0.25s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.20);
-      font-size: 1.2rem;
+      transition: 0.25s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.50); font-size: 1.2rem;
     }
     .social a:hover { transform: translateY(-2px); background: rgba(38,74,138,0.92); }
 
-    .last-updated { text-align: left; font-size: 1rem; margin: 20px; text-shadow: 0 4px 18px rgba(0, 0, 0, 0.6); }
+    .last-updated { text-align: left; font-size: 1rem; margin: 20px 0; text-shadow: 0 6px 6px rgba(0, 0, 0, 0.5);}
 
-    .loading-state {
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
-      padding: 10px 20px; gap: 16px;
+    /* ── PLAYER SEARCH ── */
+    .player-search-wrap { position: relative; margin-bottom: 24px; animation: fadeInUp 0.5s ease both; z-index: 60; }
+
+    .player-search-box {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 12px 18px; backdrop-filter: blur(7px); box-shadow: var(--shadow);
+      transition: 0.2s ease;
+      width: max-content;
+      height: 44px;
     }
-    .loading-spinner {
-      width: 34px; height: 34px;
-      border: 4px solid rgba(255,255,255,0.1);
-      border-top: 4px solid rgba(120,170,255,0.85);
-      border-radius: 50%; animation: spin 1s linear infinite;
+    .player-search-box:has(.player-search-input:focus) { border-color: rgba(120,170,255,0.4); box-shadow: 0 0 0 3px rgba(120,170,255,0.12); }
+
+    .player-search-icon { color: var(--muted); font-size: 0.95rem; }
+
+    .player-search-input {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: #fff; font-size: 1rem; font-family: 'Lexend', sans-serif;
     }
+    .player-search-input::placeholder { color: rgba(255,255,255,0.35); }
+
+    .player-search-results {
+      position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 50;
+      background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px;
+      box-shadow: var(--shadow); overflow: hidden; max-height: 340px; overflow-y: auto;
+      animation: fadeInUp 0.2s ease both;
+    }
+
+    .player-search-item {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 11px 16px; cursor: pointer; transition: 0.15s ease;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .player-search-item:last-child { border-bottom: none; }
+    .player-search-item:hover { background: var(--table-row-hover); }
+    .player-search-item-name { font-size: 1rem; font-weight: 600; color: #fff; }
+    .player-search-item-group { font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+
+    .player-search-empty { padding: 16px; text-align: center; color: var(--muted); font-size: 0.88rem; }
+
+    .loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 20px; gap: 16px; }
+    .loading-spinner { width: 34px; height: 34px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid rgba(120,170,255,0.85); border-radius: 50%; animation: spin 1s linear infinite; }
     .loading-text { font-size: 1rem; font-weight: 500; letter-spacing: 0.5px; }
 
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 
     .accordion-item {
-      background: var(--panel); border: 1px solid var(--line);
-      border-radius: var(--radius); overflow: hidden;
-      margin-bottom: 16px; box-shadow: var(--shadow);
+      background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+      overflow: hidden; margin-bottom: 16px; box-shadow: var(--shadow);
       backdrop-filter: blur(7px); animation: fadeInUp 0.5s ease both;
     }
-    .accordion-item.open {
-      border: 1px solid #c7d2eb;
-      box-shadow: 0 0 12px rgba(255,255,255,0.55);
-    }
+    .accordion-item.open { border: 1px solid #c7d2eb; box-shadow: 0 0 12px rgba(255,255,255,0.55); }
 
     .accordion-header {
-      width: 100%; border: none;
-      background: var(--header); color: #fff;
-      padding: 15px; font-size: 1rem; font-weight: 700;
-      cursor: pointer; text-align: left; transition: 0.25s ease;
-      display: flex; align-items: center;
-      justify-content: space-between; gap: 16px;
+      width: 100%; border: none; background: var(--header); color: #fff;
+      padding: 15px; font-size: 1rem; font-weight: 700; cursor: pointer;
+      text-align: left; transition: 0.25s ease;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
     }
     .accordion-header:hover { background: var(--header-hover); }
 
     .accordion-title { display: flex; align-items: center; gap: 12px; }
-
     .accordion-badge {
-      min-width: 36px; height: 36px; padding: 0 10px;
-      border-radius: 999px;
+      min-width: 36px; height: 36px; padding: 0 10px; border-radius: 999px;
       display: inline-flex; align-items: center; justify-content: center;
       background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.14);
       font-size: 0.9rem; font-weight: 700;
     }
-
     .accordion-icon { font-size: 1.5rem; }
 
-    .accordion-content {
-      max-height: 0; overflow: hidden;
-      transition: max-height 0.35s ease;
-      background: rgba(6,12,24,0.50);
-    }
-
-    #najbolji-content .accordion-item.open .accordion-content {
-      max-height: none !important;
-    }
-
+    .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; background: rgba(6,12,24,0.50); }
+    #najbolji-content .accordion-item.open .accordion-content { max-height: none !important; }
     .accordion-inner { padding: 16px; }
 
-    .accordion-inner > div[id$="-standings"],
-    .accordion-inner > div[id$="-raspored"] {
-      animation: fadeInUp 0.5s ease both;
-    }
-    
-    .table-wrap {
-      overflow-x: auto; border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: var(--panel-2);
-    }
+    .table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); background: var(--panel-2); transition: 0.25s ease;}
 
-    table {
-      width: 100%; border-collapse: collapse;
-      background: var(--panel-2); color: #eef4ff;
-    }
-
-    thead th {
-      background: var(--table-head); color: #ffffff;
-      text-align: center; padding: 13px 14px;
-      font-size: 1rem; font-weight: 700;
-      border-bottom: 1px solid rgba(255,255,255,0.10);
-      white-space: nowrap;
-    }
-
-    tbody td {
-      padding: 12px 14px; font-size: 1rem;
-      color: #edf3ff; text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,0.07);
-      white-space: nowrap;
-    }
-
+    table { width: 100%; border-collapse: collapse; background: var(--panel-2); color: #eef4ff; }
+    thead th { background: var(--table-head); color: #fff; text-align: center; padding: 13px 14px; font-size: 1rem; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.10); white-space: nowrap; }
+    tbody td { padding: 12px 14px; font-size: 1rem; color: #edf3ff; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.07); white-space: nowrap; }
     tbody tr:nth-child(even) { background: rgba(255,255,255,0.035); }
     tbody tr:nth-child(4) td { border-bottom: 2px solid rgba(255,255,255,0.75); }
-
-    tfoot td.table-footer-brand {
-      text-align: center; padding: 10px 12px;
-      font-size: 0.82rem; font-weight: 600; letter-spacing: 0.3px;
-      color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.03);
-      border-top: 1px solid rgba(255,255,255,0.10);
-    }
-
+    tfoot td.table-footer-brand { text-align: center; padding: 10px 12px; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.3px; color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.10); }
     #tab-najbolji tbody tr td { text-align: left; border-bottom: none; }
     tbody tr:hover { background: var(--table-row-hover); }
 
-    .empty-state, .error-state {
-      background: rgba(10,18,34,0.94);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px; padding: 18px; color: #e7efff;
+    .form-badges { display: inline-flex; gap: 3px; vertical-align: middle; }
+    .form-badge {
+      width: 18px; height: 18px; border-radius: 5px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.62rem; font-weight: 800; color: #fff; flex-shrink: 0;
     }
+    .form-badge.w { background: rgba(46,204,113,0.85); }
+    .form-badge.l { background: rgba(231,76,60,0.85); }
+    .form-badge.d { background: rgba(243,156,18,0.85); }
+
+    .empty-state, .error-state { background: rgba(10,18,34,0.94); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 18px; color: #e7efff; }
     .error-state { color: #ffd7d7; border-color: rgba(255,120,120,0.18); }
 
-    .bracket-container {
-      overflow-x: auto; padding: 16px 0;
-      -webkit-overflow-scrolling: touch;
-      animation: fadeInUp 0.6s ease both;
+    /* ── BRACKET ── */
+    .bracket-wrap {
+      overflow-x: auto; 
+      animation: fadeInUp 0.5s ease both;
+      position: relative;
     }
+
     .bracket-rounds {
-      display: flex; gap: 0; align-items: stretch;
-      min-width: max-content; justify-content: space-between;
+      display: flex; align-items: stretch;
+      min-width: max-content; gap: 0;
     }
-    .bracket-round { display: flex; flex-direction: column; flex: 1; min-width: 190px; }
+
+    .bracket-round { display: flex; flex-direction: column; width: 100%; }
+
+    /* Bracket connectors */
+    .bracket-round:not(:first-child) .bracket-match::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      width: 8px;
+      height: 0;
+      border-top: 1.5px solid rgba(255,255,255,1);
+      pointer-events: none;
+    }
+
+    .bracket-round:not(:last-child) .bracket-match.pair-top::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      width: 8px;
+      height: calc(var(--pair-offset, 0px) / 2);
+      border-right: 1.5px solid rgba(255,255,255,1);
+      border-top: 1.5px solid rgba(255,255,255,1);
+      pointer-events: none;
+    }
+
+    .bracket-round:not(:last-child) .bracket-match.pair-bottom::after {
+      content: '';
+      position: absolute;
+      bottom: 50%;
+      left: 100%;
+      width: 8px;
+      height: calc(var(--pair-offset, 0px) / 2);
+      border-right: 1.5px solid rgba(255,255,255,1);
+      border-bottom: 1.5px solid rgba(255,255,255,1);
+      pointer-events: none;
+    }
+
+    .bracket-match { position: relative; }
+
     .bracket-round-title {
-      text-align: center; font-size: 0.8rem; font-weight: 700;
-      letter-spacing: 0.5px; color: rgba(255,255,255,1);
-      padding: 8px 12px; background: rgba(21,49,99,0.8); white-space: nowrap;
+      text-align: center; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px;
+      padding: 10px 12px; background: rgba(21,49,99,0.9);
+      white-space: nowrap; border-right: 1px solid rgba(255,255,255,0.06);
     }
+
     .bracket-matches {
       display: flex; flex-direction: column; flex: 1;
-      justify-content: space-around; padding: 8px 0;
+      justify-content: space-around; padding: 8px 0; position: relative;
     }
-    .bracket-round:last-child .bracket-matches > div:first-child {
-      flex: 1; display: flex; justify-content: center; flex-direction: column;
+
+    .bracket-match {
+      display: flex; flex-direction: column;
+      margin: 4px 8px; position: relative; cursor: pointer;
     }
-    .bracket-match { display: flex; flex-direction: column; margin: 4px 8px; position: relative; }
+    .bracket-match:hover .bracket-player { border-color: rgba(120,170,255,0.3); }
+
     .bracket-player {
       display: flex; align-items: center; justify-content: space-between;
       padding: 7px 10px; background: rgba(12,20,38,0.9);
       border: 1px solid rgba(255,255,255,0.08);
-      font-size: 0.8rem; gap: 8px; transition: 0.2s ease;
+      font-size: 0.82rem; gap: 8px; transition: 0.2s ease;
     }
     .bracket-player:first-child { border-radius: 8px 8px 0 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
-    .bracket-player:last-child { border-radius: 0 0 8px 8px; }
-    .bracket-player.winner { background: rgba(21,49,99,0.95); border-color: rgba(120,170,255,0.3); font-weight: 700; color: #fff; }
-    .bracket-player.loser { opacity: 0.45; }
-    .bracket-player-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
-    .bracket-player-score { font-weight: 700; font-size: 0.85rem; min-width: 18px; text-align: right; color: rgba(255,255,255,0.85); }
-    .finale-container.bracket-match.bracket-player { background: rgb(223 173 26 / 90%); }
+    .bracket-player:last-child  { border-radius: 0 0 8px 8px; }
+    .bracket-player.winner { background: rgba(21,49,99,0.95); border-color: rgba(120,170,255,0.35); font-weight: 700; color: #fff; }
+    .bracket-player.loser  { opacity: 0.4; }
+    .bracket-player.tbd    { color: rgba(255,255,255,0.3); font-style: italic; }
+    .bracket-player-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+    .bracket-player-score { font-weight: 800; font-size: 0.85rem; min-width: 20px; text-align: right; color: #7eb8ff; }
+    .bracket-round:last-child .bracket-matches{justify-content: center;}
+    
+
+    /* 3rd place match */
+    .bracket-third-title {
+      text-align: center; font-size: 0.75rem; font-weight: 700;
+      color: #cd7f32; letter-spacing: 0.5px; margin: 10px;
+    }
+
+    .bracket-final-title {
+      text-align: center; font-size: 0.85rem; font-weight: 800;
+      color: #FFD700; letter-spacing: 1px; margin: 10px;
+      text-shadow: 0 0 12px rgba(255,215,0,0.35);
+    }
 
     /* ── POPUP ── */
     .match-popup-overlay {
       position: fixed; inset: 0; z-index: 1000;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
-      display: flex; align-items: center; justify-content: center;
-      padding: 16px;
-      animation: fadeInUp 0.2s ease both;
+      background: rgba(0,0,0,0.72); backdrop-filter: blur(4px);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 24px 16px; animation: fadeInUp 0.2s ease both;
+      overflow-y: auto;
+      overscroll-behavior: contain;
     }
 
     .match-popup {
-      background: rgba(8,14,28,0.98);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 20px; padding: 24px;
-      width: 100%; max-width: 480px;
-      max-height: 90vh; overflow-y: auto;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+      position: relative;
+      background: linear-gradient(180deg, rgba(13,20,38,0.98), rgba(6,10,20,0.98));
+      border: 1px solid rgba(126,184,255,0.18);
+      border-radius: 28px;
+      padding: 28px;
+      width: 100%;
+      max-width: 680px;
+      box-shadow:
+        0 30px 80px rgba(0,0,0,0.65),
+        inset 0 1px 0 rgba(255,255,255,0.06);
     }
-
-    .popup-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 20px;
-    }
-
-    .popup-title { font-size: 1rem; font-weight: 800; letter-spacing: 0.5px; }
 
     .popup-close {
-      width: 32px; height: 32px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 999px; color: var(--muted);
-      font-size: 1rem; cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: 0.2s ease;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: .2s ease;
     }
-    .popup-close:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+    .popup-close:hover {
+      background: rgba(126,184,255,0.18);
+      border-color: rgba(126,184,255,0.35);
+      transform: scale(1.05);
+    }
 
     .popup-match {
-      background: rgba(6,12,24,0.6);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 14px; margin-bottom: 12px; overflow: hidden;
+      position: relative;
+      background:linear-gradient(135deg,rgba(24,39,72,0.95),rgba(9,15,28,0.95));
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 22px;
+      margin-bottom: 18px;
+      overflow: hidden;
+      transition: .2s ease;
+    }
+
+    .popup-match.mvp-card{
+      margin-bottom: 0;
+    }
+
+    .popup-match:hover {
+      border-color: rgba(126,184,255,0.25);
+      transform: translateY(-2px);
     }
 
     .popup-match-top {
-      display: grid; grid-template-columns: 1fr auto 1fr;
-      align-items: center; gap: 8px; padding: 12px 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      padding: 20px;
+      column-gap: 40px;
     }
 
-    .popup-player-name { font-size: 0.9rem; font-weight: 700; }
-    .popup-player-name.right { text-align: right; }
+    .popup-player-name {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #fff;
+      justify-self: center;
+      text-align: center;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .popup-player-name.right {
+      justify-self: center;
+    }
 
     .popup-score {
-      font-size: 1.3rem; font-weight: 800;
-      color: #7eb8ff; text-align: center; white-space: nowrap;
+      min-width: 100px;
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 900;
+      color: #7eb8ff;
+      letter-spacing: 1px;
+      justify-self: center;
     }
-    .popup-score.empty { color: rgba(255,255,255,0.2); font-size: 1rem; }
+
+    .popup-score.empty {
+      color: rgba(255,255,255,0.2);
+    }
 
     .popup-stats {
-      border-top: 1px solid rgba(255,255,255,0.06);
-      padding: 10px 14px;
-      display: grid; grid-template-columns: 1fr auto 1fr;
-      gap: 4px 8px; background: rgba(0,0,0,0.2); font-size: 0.78rem;
+      padding: 18px 22px 20px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px 16px;
+      background: rgba(255,255,255,0.02);
+      border-top: 1px solid rgba(255,255,255,0.05);
     }
 
     .popup-stat-label {
-      color: var(--muted); font-size: 0.68rem; font-weight: 600;
-      letter-spacing: 0.5px; text-transform: uppercase;
-      text-align: center; padding: 3px 0; grid-column: 2;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-align: center;
     }
 
-    .popup-stat-val-l { color: #fff; font-weight: 700; text-align: right; padding: 3px 0; }
-    .popup-stat-val-r { color: #fff; font-weight: 700; text-align: left; padding: 3px 0; }
+    .popup-stat-val-l,
+    .popup-stat-val-r {
+      font-size: 1rem;
+      font-weight: 800;
+      color: #fff;
+    }
 
-    .popup-no-score { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 10px 0; }
-    .popup-match-num { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; text-align: center; }
+    .popup-stat-val-l {
+      text-align: right;
+    }
 
-    /* ── MEDIA ── */
+    .popup-stat-val-r {
+      text-align: left;
+    }
+
+    .popup-no-score {
+      padding: 18px;
+      text-align: center;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.9rem;
+    }
+
+    .popup-match-num {
+      display: inline-flex;
+      margin: 16px 0 0 16px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(126,184,255,0.12);
+      color: #7eb8ff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── PLAYER PROFILE POPUP ── */
+    .player-profile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+
+    .player-profile-user {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .player-avatar {
+      width: 92px;
+      height: 92px;
+      border-radius: 999px;
+      flex-shrink: 0;
+      background: #2d5fb6;
+      border: 3px solid rgb(138 187 229 / 50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 12px 30px rgba(126,184,255,0.25);
+    }
+      .player-profile-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .player-profile-name {
+      font-size: 1.35rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .player-profile-group {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.6);
+      margin-top: 4px;
+    }
+    .player-season-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+    .player-season-tab {
+      padding: 6px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(10,19,38,0.78); color: var(--muted);
+      font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: 0.2s ease;
+    }
+    .player-season-tab.active { background: rgba(21,49,99,1); border-color: rgba(255,255,255,0.2); color: #fff; }
+
+    .player-stats-grid {
+      display: grid;
+      /* Radimo trik s 15 stupaca kako bi se gornja 3 i donjih 5 savršeno poravnali na rubovima */
+      grid-template-columns: repeat(15, 1fr); 
+      gap: 12px; /* Malo veći razmak za "prozračniji" i skuplji izgled */
+      margin-bottom: 24px;
+      width: 100%;
+    }
+
+    /* Osnovni stil za sve kutije (zadržavamo tvoju tamnu premium bazu) */
+    .player-stat-box {
+      background: rgba(6, 12, 24, 0.6); 
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px; 
+      padding: 12px 8px; 
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* AVG, First 9, 180s */
+    .player-stat-box:nth-child(-n+3) {
+      grid-column: span 5;
+    }
+    .player-stat-box:nth-child(1) {
+      background: linear-gradient(135deg, rgb(103 143 35), rgb(15 65 21));
+    }
+    .player-stat-box:nth-child(2) {
+      background: linear-gradient(135deg, rgb(39 120 189), rgb(28 50 89));    
+    }
+    .player-stat-box:nth-child(3) {
+      background: linear-gradient(135deg, rgb(151 119 47), rgb(53 61 29));
+    }
+
+    /* Posebno stiliziranje za velike vrijednosti (gornji red) */
+    .player-stat-box:nth-child(-n+3) .player-stat-box-val {
+      font-size: 26px;
+      font-weight: 800;
+      color: #ffffff;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.1); /* Blagi premium sjaj */
+    }
+
+    /* Posebno stiliziranje za velike labele (gornji red) */
+    .player-stat-box:nth-child(-n+3) .player-stat-box-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* --- SPOREDNE STATISTIKE (Donjih 5 kutija) --- */
+    /* Hvata sve elemente od 4. mjesta nadalje */
+    .player-stat-box:nth-child(n+4) {
+      grid-column: span 3; /* 15 / 5 = 3 stupca po elementu */
+      /* Zadržavaju tvoj originalni stil s tamnom pozadinom i rubom */
+    }
+
+    .player-stat-box:nth-child(n+4) .player-stat-box-val {
+      font-size: clamp(9px, 3.2vw, 14px);
+      font-weight: 700;
+      color: #e2e8f0;
+      white-space: nowrap;
+    }
+
+    .player-stat-box:nth-child(n+4) .player-stat-box-label {
+      font-size: 10px;
+      color: #475569;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .player-stat-box-val { font-size: 1.15rem; font-weight: 800; color: #7eb8ff; }
+    .player-stat-box-label { font-size: 0.62rem; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; margin-top: 2px; }
+    .stat-icon { height: 1em; width: auto; vertical-align: middle; margin-right: 10px}
+
+    .player-avg-chart-wrap {
+      background: rgba(6,12,24,0.6); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 14px 16px 10px; margin-bottom: 24px;
+    }
+    .player-avg-chart-wrap svg { display: block; width: 100%; height: auto; }
+    .player-avg-chart-empty { font-size: 0.82rem; color: var(--muted); text-align: center; padding: 10px 0; }
+
+    .player-matches-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+
+    .player-match-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 14px; background: linear-gradient(135deg, rgba(24, 39, 72, 0.95), rgba(9, 15, 28, 0.95));; border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px; cursor: pointer; transition: 0.15s ease; margin-bottom: 10px; 
+    }
+    .player-match-row.expanded { border-radius: 10px 10px 0 0}
+    .player-match-row:hover { border-color: rgba(120,170,255,0.3); }
+    .player-match-row-left { display: flex; flex-direction: column; gap: 2px; }
+    .player-match-kolo { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; }
+    .player-match-opp { font-size: 0.88rem; font-weight: 700; }
+    .player-match-result { display: flex; align-items: center; gap: 10px; }
+    .result-icon {
+      width: 22px; height: 22px; border-radius: 999px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; flex-shrink: 0;
+    }
+    .result-icon.win  { background: rgba(46,204,113,0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.35); }
+    .result-icon.loss { background: rgba(231,76,60,0.15);  color: #e74c3c; border: 1px solid rgba(231,76,60,0.35); }
+    .result-icon.draw { background: rgba(243,156,18,0.15); color: #f39c12; border: 1px solid rgba(243,156,18,0.35); }
+
+    .player-match-score { font-size: 1.1rem; font-weight: 800; color: #7eb8ff; white-space: nowrap; }
+    .player-match-score.win  { color: #2ecc71; }
+    .player-match-score.loss { color: #e74c3c; }
+    .player-match-score.draw { color: #f39c12; }
+    .player-match-score.empty { color: rgba(255,255,255,0.2); font-size: 0.9rem; }
+
+    .player-match-detail-stats {
+      display: none; grid-template-columns: 1fr auto 1fr; gap: 4px 8px;
+      padding: 14px; font-size: 1rem;
+      background:rgb(52 71 115 / 50%);
+    }
+    .player-match-detail-stats.open { display: grid; margin-bottom: 10px; margin-top: -10px; border-radius: 0 0 10px 10px;}
+    .player-match-row.expanded .player-match-detail-stats { padding-bottom: 10px; }
+
     @media (max-width: 768px) {
       .page { padding: 20px; }
       h1 { font-size: 1.9rem; }
@@ -383,28 +641,38 @@
       .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
       table { min-width: 560px; }
       thead th { font-size: 0.9rem; padding: 10px 8px; }
-      tbody td { font-size: 0.9rem; padding: 10px 8px; }
+      tbody td  { font-size: 0.9rem; padding: 10px 8px; }
       tfoot td.table-footer-brand { font-size: 0.60rem; }
       .tabs { gap: 20px; }
       .tab-btn { font-size: 0.85rem; }
+      .bracket-round { min-width: 160px; }
     }
 
     @media (max-width: 480px) {
-      .page { padding: 20px; }
+      .page { padding: 12px; }
       h1 { font-size: 1.5rem; }
-      .hero p { font-size: 1.3rem; margin: 0 0 15px 0; }
+      .hero p { font-size: 1.3rem; margin: 0 0 16px 0; }
       .league-logo { max-width: 135px; }
       .social a { width: 40px; height: 40px; font-size: 1rem; }
+      .last-updated {margin: 16px 0;}
       .accordion-title { gap: 8px; }
       .accordion-badge { font-size: 0.8rem; min-width: 30px; height: 30px; padding: 0 6px; }
       .accordion-icon { font-size: 1.15rem; }
       .accordion-inner { padding: 10px; }
       table { min-width: 500px; }
       thead th { font-size: 0.78rem; padding: 8px 6px; }
-      tbody td { font-size: 0.78rem; padding: 8px 6px; }
+      tbody td  { font-size: 0.78rem; padding: 8px 6px; }
       tfoot td.table-footer-brand { font-size: 0.50rem; }
-      .tabs { gap: 5px; }
+      .tabs { gap: 5px; margin-bottom: 16px;}
       .tab-btn { font-size: 0.75rem; padding: 10px 20px; }
+      .bracket-round { min-width: 140px; }
+      .bracket-player { font-size: 0.72rem; padding: 6px 8px; }
+      .yt {height: 200px;}
+      .match-popup { padding: 20px }
+      .player-search-wrap { margin: 16px auto; width: max-content; }
+      .player-stats-grid { gap: 6px; }
+      .player-stat-box { padding: 10px 6px; }
+      .popup-match-top {column-gap: 0px;}
     }
   </style>
 </head>
@@ -422,15 +690,21 @@
         <p>2. SEZONA</p>
         <div class="social">
           <a href="https://www.facebook.com/profile.php?id=61588443060120" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-          <a href="https://www.instagram.com/adriaticsteelleague" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-          <a href="https://www.tiktok.com/@adriaticsteel" target="_blank" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
-          <a href="https://discord.gg/crEnfmDThb" target="_blank" aria-label="Discord"><i class="fab fa-discord"></i></a>
-          <a href="https://www.youtube.com/@Adriatic-Steel-League" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+          <a href="https://www.instagram.com/adriaticsteelleague"           target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://www.tiktok.com/@adriaticsteel"                   target="_blank" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
+          <a href="https://discord.gg/crEnfmDThb"                           target="_blank" aria-label="Discord"><i class="fab fa-discord"></i></a>
+          <a href="https://www.youtube.com/@Adriatic-Steel-League"          target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
         </div>
       </div>
 
-      <div class="last-updated">
-        Zadnje ažuriranje: <span id="updated-time">—</span>
+      <div class="last-updated">Zadnje ažuriranje: <span id="updated-time">—</span></div>
+
+      <div class="player-search-wrap">
+        <div class="player-search-box">
+          <i class="fas fa-search player-search-icon"></i>
+          <input type="text" id="player-search-input" class="player-search-input" placeholder="Pretraži igrača..." autocomplete="off" oninput="handlePlayerSearch(this.value)" onfocus="handlePlayerSearchFocus()">
+        </div>
+        <div id="player-search-results" class="player-search-results" style="display:none;"></div>
       </div>
 
       <div class="tabs">
@@ -438,6 +712,8 @@
         <button class="tab-btn" onclick="switchTab('najbolji')">NAJBOLJI U LIGI</button>
         <button class="tab-btn" onclick="switchTab('gornji-zdrijeb')">GORNJI ŽDRIJEB</button>
         <button class="tab-btn" onclick="switchTab('donji-zdrijeb')">DONJI ŽDRIJEB</button>
+        <button class="tab-btn" onclick="switchTab('yt-live')">YT-LIVE</button>        
+        <button class="tab-btn" onclick="switchTab('avg-lige')">AVG LIGE</button>
       </div>
 
       <div id="tab-tablice" class="tab-panel active">
@@ -446,38 +722,75 @@
 
       <div id="tab-najbolji" class="tab-panel">
         <div id="najbolji-content"></div>
+        <div id="best-matches-content" style="margin-top:16px;"></div>
       </div>
 
       <div id="tab-gornji-zdrijeb" class="tab-panel">
-        <div style="background:rgba(8,14,28,0.82);border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:2rem;text-align:center;margin-bottom:24px;animation:fadeInUp 0.5s ease both;">
-          <p style="font-size:1.5rem;font-weight:700;color:#ffffff;margin:0 0 8px;">U tijeku je regularni dio, a onda - ždrijeb!</p>
-          <p style="font-size:1rem;color:#c8d3ea;margin:0;">Pratite nas za više informacija</p>
+        <div id="gornji-zdrijeb-content">
+          <div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>
         </div>
-        <div id="gornji-zdrijeb-content" style="display:none;"></div>
       </div>
 
       <div id="tab-donji-zdrijeb" class="tab-panel">
-        <div style="background:rgba(8,14,28,0.82);border:1px solid rgba(255,255,255,0.10);border-radius:18px;padding:2rem;text-align:center;margin-bottom:24px;animation:fadeInUp 0.5s ease both;">
-          <p style="font-size:1.5rem;font-weight:700;color:#ffffff;margin:0 0 8px;">U tijeku je regularni dio, a onda - ždrijeb!</p>
-          <p style="font-size:1rem;color:#c8d3ea;margin:0;">Pratite nas za više informacija</p>
+        <div id="donji-zdrijeb-content">
+          <div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>
         </div>
-        <div id="donji-zdrijeb-content" style="display:none;"></div>
       </div>
+
+      <div id="tab-yt-live" class="tab-panel">
+        <div id="yt-frame">
+          <iframe class="yt" width="100%" height="731px" src="https://www.youtube.com/embed/ULQK_BW6uqY?si=bk6mvLSMDF3zxyEu"
+            title="YouTube video player" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
+          </iframe>
+        </div>
+      </div>
+
+      <div id="tab-avg-lige" class="tab-panel">
+        <div style="display:flex;flex-direction:column;gap:16px;">
+      
+          <div style="background:rgba(8,14,28,0.78);border:1px solid rgba(205,127,50,0.4);border-radius:18px;padding:24px;">
+            <h2 style="font-size:1.1rem;font-weight:800;color: #b9f2ff;margin-bottom:16px;letter-spacing:0.5px;">💎 DIAMOND
+            </h2>
+            <iframe src="https://challonge.com/ASLDiamondLeague/module" width="100%" height="500" frameborder="0"
+              scrolling="auto" allowtransparency="true"></iframe>
+          </div>
+      
+          <div style="background:rgba(8,14,28,0.78);border:1px solid rgba(192,192,192,0.4);border-radius:18px;padding:24px;">
+            <h2 style="font-size:1.1rem;font-weight:800;color:#FFD700;margin-bottom:16px;letter-spacing:0.5px;">🥇 GOLD</h2>
+            <iframe src="https://challonge.com/ASLGoldLeague/module" width="100%" height="500" frameborder="0"
+              scrolling="auto" allowtransparency="true"></iframe>
+          </div>
+      
+          <div style="background:rgba(8,14,28,0.78);border:1px solid rgba(255,215,0,0.4);border-radius:18px;padding:24px;">
+            <h2 style="font-size:1.1rem;font-weight:800;color:#c0c0c0;margin-bottom:16px;letter-spacing:0.5px;">🥈 SILVER</h2>
+            <iframe src="https://challonge.com/ASLSilverLeague/module" width="100%" height="500" frameborder="0"
+              scrolling="auto" allowtransparency="true"></iframe>
+          </div>
+      
+          <div style="background:rgba(8,14,28,0.78);border:1px solid rgba(185,242,255,0.4);border-radius:18px;padding:24px;">
+            <h2 style="font-size:1.1rem;font-weight:800;color:#cd7f32;margin-bottom:16px;letter-spacing:0.5px;">🥉 BRONZE</h2>
+            <iframe src="https://challonge.com/ASLBronzeLeague/module" width="100%" height="500" frameborder="0"
+              scrolling="auto" allowtransparency="true"></iframe>
+          </div>
+      
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <!-- POPUP OVERLAY -->
-  <div id="match-popup-overlay" class="match-popup-overlay" style="display:none;" onclick="closeMatchPopup(event)">
+  <!-- POPUP -->
+  <div id="match-popup-overlay" class="match-popup-overlay" style="display:none;" onclick="closePopup(event)">
     <div class="match-popup" id="match-popup-content"></div>
   </div>
 
   <script>
-    function escapeHtml(value) {
-      if (value === null || value === undefined) return '';
-      return String(value)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+    // ── HELPERS ──
+    function escapeHtml(v) {
+      if (v === null || v === undefined) return '';
+      return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     }
 
     function switchTab(name) {
@@ -487,48 +800,28 @@
       event.currentTarget.classList.add('active');
     }
 
+    // ── BERGER ──
     const berger8 = [
-      [[8,1],[2,7],[3,6],[4,5]],
-      [[6,4],[5,8],[7,3],[1,2]],
-      [[4,7],[3,1],[8,2],[5,6]],
-      [[2,3],[7,5],[1,4],[6,8]],
-      [[6,7],[4,2],[5,1],[8,3]],
-      [[2,5],[1,6],[7,8],[3,4]],
-      [[5,3],[8,4],[6,2],[7,1]]
+      [[8,1],[2,7],[3,6],[4,5]],[[6,4],[5,8],[7,3],[1,2]],[[4,7],[3,1],[8,2],[5,6]],
+      [[2,3],[7,5],[1,4],[6,8]],[[6,7],[4,2],[5,1],[8,3]],[[2,5],[1,6],[7,8],[3,4]],[[5,3],[8,4],[6,2],[7,1]]
     ];
-
     const berger9 = [
-      { bye:1, matches:[[2,9],[3,8],[4,7],[5,6]] },
-      { bye:6, matches:[[7,5],[8,4],[9,3],[1,2]] },
-      { bye:2, matches:[[3,1],[4,9],[5,8],[6,7]] },
-      { bye:7, matches:[[8,6],[9,5],[1,4],[2,3]] },
-      { bye:3, matches:[[4,2],[5,1],[6,9],[7,8]] },
-      { bye:8, matches:[[9,7],[1,6],[2,5],[3,4]] },
-      { bye:4, matches:[[5,3],[6,2],[7,1],[8,9]] },
-      { bye:9, matches:[[1,8],[2,7],[3,6],[4,5]] },
-      { bye:5, matches:[[6,4],[7,3],[8,2],[9,1]] }
+      {bye:1,matches:[[2,9],[3,8],[4,7],[5,6]]},{bye:6,matches:[[7,5],[8,4],[9,3],[1,2]]},
+      {bye:2,matches:[[3,1],[4,9],[5,8],[6,7]]},{bye:7,matches:[[8,6],[9,5],[1,4],[2,3]]},
+      {bye:3,matches:[[4,2],[5,1],[6,9],[7,8]]},{bye:8,matches:[[9,7],[1,6],[2,5],[3,4]]},
+      {bye:4,matches:[[5,3],[6,2],[7,1],[8,9]]},{bye:9,matches:[[1,8],[2,7],[3,6],[4,5]]},
+      {bye:5,matches:[[6,4],[7,3],[8,2],[9,1]]}
     ];
 
     function generateSchedule(players) {
-      const n = players.length;
-      const rounds = [];
+      const n = players.length, rounds = [];
       if (n === 8) {
         berger8.forEach((pairs, ri) => {
-          const matches = pairs.map((pair, mi) => ({
-            mec: mi + 1,
-            player1: players[pair[0] - 1],
-            player2: players[pair[1] - 1]
-          }));
-          rounds.push({ kolo: ri + 1, matches, bye: null });
+          rounds.push({ kolo: ri+1, matches: pairs.map((p,mi) => ({mec:mi+1, player1:players[p[0]-1], player2:players[p[1]-1]})), bye: null });
         });
       } else if (n === 9) {
         berger9.forEach((round, ri) => {
-          const matches = round.matches.map((pair, mi) => ({
-            mec: mi + 1,
-            player1: players[pair[0] - 1],
-            player2: players[pair[1] - 1]
-          }));
-          rounds.push({ kolo: ri + 1, matches, bye: round.bye ? players[round.bye - 1] : null });
+          rounds.push({ kolo: ri+1, matches: round.matches.map((p,mi) => ({mec:mi+1, player1:players[p[0]-1], player2:players[p[1]-1]})), bye: round.bye ? players[round.bye-1] : null });
         });
       }
       return rounds;
@@ -536,309 +829,898 @@
 
     function computeStandings(players, schedule, matchesMap) {
       const stats = {};
-      players.forEach(p => {
-        stats[p] = { win:0, draw:0, lost:0, total:0, legs:0, pts:0, avgSum:0, avgCount:0, f9Sum:0, f9Count:0, bl:0, bco:0, x180:0 };
-      });
-      schedule.forEach(({ kolo, matches }) => {
-        matches.forEach(({ mec, player1, player2 }) => {
+      players.forEach(p => { stats[p] = {win:0,draw:0,lost:0,total:0,legs:0,pts:0,avgSum:0,avgCount:0,f9Sum:0,f9Count:0,bl:0,bco:0,x180:0,form:[]}; });
+      schedule.forEach(({kolo,matches}) => {
+        matches.forEach(({mec,player1,player2}) => {
           const m = matchesMap[`${kolo}_${mec}`];
           if (!m || !m.score) return;
-          const parts = m.score.split('-');
-          if (parts.length !== 2) return;
-          const s1 = parseInt(parts[0]), s2 = parseInt(parts[1]);
-          if (isNaN(s1) || isNaN(s2)) return;
-          const st1 = stats[player1], st2 = stats[player2];
-          if (!st1 || !st2) return;
-          st1.total++; st2.total++;
-          st1.legs += (s1 - s2); st2.legs += (s2 - s1);
-          if (m.score === '5-5') {
-            st1.draw++; st2.draw++; st1.pts++; st2.pts++;
-          } else if (s1 > s2) {
-            st1.win++; st2.lost++; st1.pts += 2;
-          } else {
-            st2.win++; st1.lost++; st2.pts += 2;
-          }
-          if (m.average1)      { st1.avgSum += parseFloat(m.average1); st1.avgCount++; }
-          if (m.average2)      { st2.avgSum += parseFloat(m.average2); st2.avgCount++; }
-          if (m.first9_1)      { st1.f9Sum  += parseFloat(m.first9_1); st1.f9Count++; }
-          if (m.first9_2)      { st2.f9Sum  += parseFloat(m.first9_2); st2.f9Count++; }
-          if (m.bestleg1)      st1.bl  = Math.max(st1.bl,  parseInt(m.bestleg1)      || 0);
-          if (m.bestleg2)      st2.bl  = Math.max(st2.bl,  parseInt(m.bestleg2)      || 0);
-          if (m.bestcheckout1) st1.bco = Math.max(st1.bco, parseInt(m.bestcheckout1) || 0);
-          if (m.bestcheckout2) st2.bco = Math.max(st2.bco, parseInt(m.bestcheckout2) || 0);
-          if (m['180_1']) st1.x180 += parseInt(m['180_1']) || 0;
-          if (m['180_2']) st2.x180 += parseInt(m['180_2']) || 0;
+          const parts = m.score.split('-'); if (parts.length!==2) return;
+          const s1=parseInt(parts[0]),s2=parseInt(parts[1]); if(isNaN(s1)||isNaN(s2)) return;
+          const st1=stats[player1],st2=stats[player2]; if(!st1||!st2) return;
+          st1.total++;st2.total++;st1.legs+=(s1-s2);st2.legs+=(s2-s1);
+          if (m.score === '0-0') {
+          } else if(m.score==='5-5'){st1.draw++;st2.draw++;st1.pts++;st2.pts++;st1.form.push('D');st2.form.push('D');}
+          else if(s1>s2){st1.win++;st2.lost++;st1.pts+=2;st1.form.push('W');st2.form.push('L');}
+          else{st2.win++;st1.lost++;st2.pts+=2;st1.form.push('L');st2.form.push('W');}
+          if(m.average1){st1.avgSum+=parseFloat(m.average1);st1.avgCount++;}
+          if(m.average2){st2.avgSum+=parseFloat(m.average2);st2.avgCount++;}
+          if(m.first9_1){st1.f9Sum+=parseFloat(m.first9_1);st1.f9Count++;}
+          if(m.first9_2){st2.f9Sum+=parseFloat(m.first9_2);st2.f9Count++;}
+          if (m.bestleg1) st1.bl = st1.bl === 0 ? parseInt(m.bestleg1) : Math.min(st1.bl, parseInt(m.bestleg1) || 999);
+          if (m.bestleg2) st2.bl = st2.bl === 0 ? parseInt(m.bestleg2) : Math.min(st2.bl, parseInt(m.bestleg2) || 999);
+          if(m.bestcheckout1)st1.bco=Math.max(st1.bco,parseInt(m.bestcheckout1)||0);
+          if(m.bestcheckout2)st2.bco=Math.max(st2.bco,parseInt(m.bestcheckout2)||0);
+          if(m['180_1'])st1.x180+=parseInt(m['180_1'])||0;
+          if(m['180_2'])st2.x180+=parseInt(m['180_2'])||0;
         });
       });
-      return Object.entries(stats)
-        .map(([name, s]) => ({
-          name, win: s.win, draw: s.draw, lost: s.lost,
-          total: s.total, legs: s.legs, pts: s.pts,
-          avg:  s.avgCount > 0 ? (s.avgSum / s.avgCount).toFixed(2) : '--',
-          f9:   s.f9Count  > 0 ? (s.f9Sum  / s.f9Count).toFixed(2)  : '--',
-          bl:   s.bl  || '--',
-          bco:  s.bco || '--',
-          x180: s.x180
-        }))
-        .sort((a, b) => b.pts - a.pts || b.legs - a.legs || (a.avg === '--' ? 1 : b.avg === '--' ? -1 : parseFloat(b.avg) - parseFloat(a.avg)));
+      return Object.entries(stats).map(([name,s])=>({
+        name,win:s.win,draw:s.draw,lost:s.lost,total:s.total,legs:s.legs,pts:s.pts,
+        avg:s.avgCount>0?(s.avgSum/s.avgCount).toFixed(2):'--',
+        f9:s.f9Count>0?(s.f9Sum/s.f9Count).toFixed(2):'--',
+        bl:s.bl||'--',bco:s.bco||'--',x180:s.x180,
+        form:s.form.slice(-5)
+      })).sort((a,b)=>b.pts-a.pts||b.legs-a.legs||(a.avg==='--'?1:b.avg==='--'?-1:parseFloat(b.avg)-parseFloat(a.avg)));
     }
 
     function switchGroupTab(uid, tab, btn) {
-      const target = document.getElementById(uid + '-' + tab);
-      const other  = tab === 'standings' ? 'raspored' : 'standings';
-
-      document.getElementById(uid + '-' + other).style.display = 'none';
-      target.style.display   = '';
-      target.style.animation = 'none';
-      requestAnimationFrame(() => {
-        target.style.animation = '';
-      });
-
+      const target = document.getElementById(uid+'-'+tab);
+      const other  = tab==='standings'?'raspored':'standings';
+      document.getElementById(uid+'-'+other).style.display = 'none';
+      target.style.display=''; target.style.animation='none';
+      requestAnimationFrame(()=>{ target.style.animation=''; });
       const btns = btn.closest('div').querySelectorAll('.grp-tab-btn');
-      btns.forEach(b => {
-        b.style.background  = 'rgba(10,19,38,0.78)';
-        b.style.borderColor = 'rgba(255,255,255,0.12)';
-        b.style.color       = 'var(--muted)';
-      });
-      btn.style.background  = 'rgba(21,49,99,1)';
-      btn.style.borderColor = 'rgba(255,255,255,0.2)';
-      btn.style.color       = '#fff';
+      btns.forEach(b=>{ b.style.background='rgba(10,19,38,0.78)'; b.style.borderColor='rgba(255,255,255,0.12)'; b.style.color='var(--muted)'; });
+      btn.style.background='rgba(21,49,99,1)'; btn.style.borderColor='rgba(255,255,255,0.2)'; btn.style.color='#fff';
     }
 
     function renderNajbolji(allPlayersStats) {
-      const medal = (i) => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
-      const top5avg  = [...allPlayersStats].filter(p => p.avg !== '--').sort((a,b) => parseFloat(b.avg) - parseFloat(a.avg)).slice(0,5);
-      const top5f9   = [...allPlayersStats].filter(p => p.f9  !== '--').sort((a,b) => parseFloat(b.f9)  - parseFloat(a.f9)).slice(0,5);
-      const top5bl   = [...allPlayersStats].filter(p => p.bl  !== '--' && p.bl > 0).sort((a,b) => a.bl - b.bl).slice(0,5);
-      const top5bco  = [...allPlayersStats].filter(p => p.bco !== '--' && p.bco > 0).sort((a,b) => b.bco - a.bco).slice(0,5);
-      const top5x180 = [...allPlayersStats].filter(p => p.x180 > 0).sort((a,b) => b.x180 - a.x180).slice(0,5);
-      const rows = Array.from({length:5}, (_,i) => `
+      const medal = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
+      const top5avg  = [...allPlayersStats].filter(p=>p.avg!=='--').sort((a,b)=>parseFloat(b.avg)-parseFloat(a.avg)).slice(0,5);
+      const top5f9   = [...allPlayersStats].filter(p=>p.f9!=='--').sort((a,b)=>parseFloat(b.f9)-parseFloat(a.f9)).slice(0,5);
+      const top5bl   = [...allPlayersStats].filter(p=>p.bl!=='--'&&p.bl>0).sort((a,b)=>a.bl-b.bl).slice(0,5);
+      const top5bco  = [...allPlayersStats].filter(p=>p.bco!=='--'&&p.bco>0).sort((a,b)=>b.bco-a.bco).slice(0,5);
+      const top5x180 = [...allPlayersStats].filter(p=>p.x180>0).sort((a,b)=>b.x180-a.x180).slice(0,5);
+      const rows = Array.from({length:5},(_,i)=>`
         <tr>
-          <td style="text-align:left;">${top5avg[i]  ? `${medal(i)} ${escapeHtml(top5avg[i].name)} - ${top5avg[i].avg}`   : ''}</td>
-          <td style="text-align:left;">${top5f9[i]   ? `${medal(i)} ${escapeHtml(top5f9[i].name)} - ${top5f9[i].f9}`       : ''}</td>
-          <td style="text-align:left;">${top5bl[i]   ? `${medal(i)} ${escapeHtml(top5bl[i].name)} - ${top5bl[i].bl}`       : ''}</td>
-          <td style="text-align:left;">${top5bco[i]  ? `${medal(i)} ${escapeHtml(top5bco[i].name)} - ${top5bco[i].bco}`    : ''}</td>
-          <td style="text-align:left;">${top5x180[i] ? `${medal(i)} ${escapeHtml(top5x180[i].name)} - ${top5x180[i].x180}` : ''}</td>
-        </tr>
-      `).join('');
+          <td style="text-align:left;">${top5avg[i]  ?`${medal(i)} ${escapeHtml(top5avg[i].name)} - ${top5avg[i].avg}`  :''}</td>
+          <td style="text-align:left;">${top5f9[i]   ?`${medal(i)} ${escapeHtml(top5f9[i].name)} - ${top5f9[i].f9}`    :''}</td>
+          <td style="text-align:left;">${top5bl[i]   ?`${medal(i)} ${escapeHtml(top5bl[i].name)} - ${top5bl[i].bl}`    :''}</td>
+          <td style="text-align:left;">${top5bco[i]  ?`${medal(i)} ${escapeHtml(top5bco[i].name)} - ${top5bco[i].bco}` :''}</td>
+          <td style="text-align:left;">${top5x180[i] ?`${medal(i)} ${escapeHtml(top5x180[i].name)} - ${top5x180[i].x180}`:''}</td>
+        </tr>`).join('');
       document.getElementById('najbolji-content').innerHTML = `
         <div class="accordion-item open">
           <div class="accordion-header" style="pointer-events:none;">
-            <div class="accordion-title">
-              <span class="accordion-badge">⭐</span>
-              <span>Najbolji u ligi</span>
-            </div>
+            <div class="accordion-title"><span class="accordion-badge">⭐</span><span>Najbolji u ligi</span></div>
           </div>
           <div class="accordion-content" style="max-height:none;">
             <div class="accordion-inner">
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Najveći AVG</th><th>Najveći First 9</th>
-                      <th>Najbolji Leg</th><th>Najveći CO</th><th>Najviše 180</th>
-                    </tr>
-                  </thead>
-                  <tbody>${rows}</tbody>
-                  <tfoot><tr><td colspan="5" class="table-footer-brand">Adriatic steel league ™ ®</td></tr></tfoot>
-                </table>
-              </div>
+              <div class="table-wrap"><table>
+                <thead><tr><th>Najveći AVG</th><th>Najveći First 9</th><th>Najbolji Leg</th><th>Najveći CO</th><th>Najviše 180</th></tr></thead>
+                <tbody>${rows}</tbody>
+                <tfoot><tr><td colspan="5" class="table-footer-brand">Adriatic steel league ™ ®</td></tr></tfoot>
+              </table></div>
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
-    // ── KOLO POPUP DATA MAP ──
+    // ── NAJBOLJI MEČ KOLA ──
+        function avgSumOf(m) {
+          const a1 = parseFloat(m.average1);
+          const a2 = parseFloat(m.average2);
+          if (isNaN(a1) || isNaN(a2)) return null;
+          return a1 + a2;
+        }
+
+        function x180SumOf(m) {
+          return (parseInt(m['180_1']) || 0) + (parseInt(m['180_2']) || 0);
+        }
+
+        function considerBestMatch(bestMatchByKolo, kolo, match, groupName) {
+          if (!match.score) return; // samo odigrani mečevi
+          const avgSum = avgSumOf(match);
+          if (avgSum === null) return; // treba oba prosjeka za usporedbu
+          const x180Sum = x180SumOf(match);
+          const existing = bestMatchByKolo[kolo];
+          const better = !existing
+            || avgSum > existing.avgSum
+            || (avgSum === existing.avgSum && x180Sum > existing.x180Sum); // tiebreak: više 180-ica
+
+          if (better) {
+            bestMatchByKolo[kolo] = { ...match, groupName, avgSum, x180Sum };
+          }
+        }
+
+        function considerMVP(mvpByKolo, kolo, match) {
+            if (!match.score) return;
+            const parts = match.score.split('-');
+            if (parts.length !== 2) return;
+            const s1 = parseInt(parts[0]), s2 = parseInt(parts[1]);
+            if (isNaN(s1) || isNaN(s2) || s1 === s2) return; // bez pobjednika nema MVP-a (remi se ne broji)
+
+            const winnerIsP1 = s1 > s2;
+            const winnerName = winnerIsP1 ? match.player1 : match.player2;
+            const winnerAvg = parseFloat(winnerIsP1 ? match.average1 : match.average2);
+            if (isNaN(winnerAvg)) return;
+
+            const existing = mvpByKolo[kolo];
+            if (!existing || winnerAvg > existing.avg) {
+              mvpByKolo[kolo] = { name: winnerName, avg: winnerAvg };
+            }
+          }
+
+        function renderBestMatches(bestMatchByKolo, mvpByKolo) {
+            const container = document.getElementById('best-matches-content');
+            const kolos = Object.keys(bestMatchByKolo).map(Number).sort((a, b) => a - b);
+            if (!kolos.length) { container.innerHTML = ''; return; }
+
+            const cardsHtml = kolos.map(kolo => {
+              const m = bestMatchByKolo[kolo];
+              const mvp = mvpByKolo[kolo];
+              const mvpHtml = mvp ? `
+            <div class="popup-match mvp-card" style="width: 100%;display:flex;align-items:center;justify-content:center;gap:14px;padding:16px 20px;">
+              <span style="font-size:1.3rem;">🏆</span>
+              <div style="text-align:left;">
+                <div style="font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.55);">MVP kola</div>
+                <div style="font-size:1.05rem;font-weight:800;color:#fff;">${escapeHtml(mvp.name)}</div>
+              </div>
+              <div style="margin-left:auto;text-align:right;">
+                <div style="font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.55);">AVG</div>
+                <div style="font-size:1.1rem;font-weight:800;color:#7eb8ff;">${mvp.avg.toFixed(2)}</div>
+              </div>
+            </div>` : '';
+            return `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
+            <div style="flex:1;min-width:280px;">
+              <div class="popup-match" style="margin-bottom:0;">
+                <div class="popup-match-num">Kolo ${kolo} — ${escapeHtml(m.groupName)}</div>
+                <div class="popup-match-top">
+                  <span class="popup-player-name">${escapeHtml(m.player1)}</span>
+                  <span class="popup-score">${escapeHtml(m.score)}</span>
+                  <span class="popup-player-name right">${escapeHtml(m.player2)}</span>
+                </div>
+                <div class="popup-stats">
+                  <div class="popup-stat-val-l">${m.average1 ?? '--'}</div><div class="popup-stat-label">AVG</div><div class="popup-stat-val-r">${m.average2 ?? '--'}</div>
+                  <div class="popup-stat-val-l">${m.first9_1 ?? '--'}</div><div class="popup-stat-label">First 9</div><div class="popup-stat-val-r">${m.first9_2 ?? '--'}</div>
+                  <div class="popup-stat-val-l">${m.bestleg1 ?? '--'}</div><div class="popup-stat-label">Best Leg</div><div class="popup-stat-val-r">${m.bestleg2 ?? '--'}</div>
+                  <div class="popup-stat-val-l">${m.bestcheckout1 ?? '--'}</div><div class="popup-stat-label">Best CO</div><div class="popup-stat-val-r">${m.bestcheckout2 ?? '--'}</div>
+                  <div class="popup-stat-val-l">${m['180_1'] ?? '--'}</div><div class="popup-stat-label">180s</div><div class="popup-stat-val-r">${m['180_2'] ?? '--'}</div>
+                </div>
+              </div>
+            </div>
+            ${mvp ? `<div style="width:100%;display:flex;align-items:center;">${mvpHtml}</div>` : ''}
+          </div>`;
+          }).join('');
+
+          container.innerHTML = `
+          <div class="accordion-item open">
+            <div class="accordion-header" style="pointer-events:none;">
+              <div class="accordion-title"><span class="accordion-badge">🔥</span><span>Najbolji meč kola</span></div>
+            </div>
+            <div class="accordion-content" style="max-height:none;">
+              <div class="accordion-inner">${cardsHtml}</div>
+            </div>
+          </div>`;
+          }
+
+    // ── FORM (zadnjih 5 mečeva W/L/D) ──
+    function formFromMatches(matches) {
+      return matches.filter(m => m.hasScore).map(m => m.result === 'win' ? 'W' : m.result === 'loss' ? 'L' : 'D').slice(-5);
+    }
+
+    function formHtml(form) {
+      if (!form || !form.length) return '';
+      const labels = { W:'W', L:'L', D:'D' };
+      return `<span class="form-badges">${form.map(r =>
+        `<span class="form-badge ${r.toLowerCase()}">${labels[r]}</span>`
+      ).join('')}</span>`;
+    }
+
+    // ── KOLO POPUP MAP ──
     const koloDataMap = {};
+
+    // ── PLAYER DATABASE (multi-season ready) ──
+    // playerDatabase[playerName] = { seasons: { 'sezona-2': { seasonLabel, group, groupName, standings, matches:[...] } } }
+    const playerDatabase = {};
+    const SEASON_ORDER = ['sezona-1', 'sezona-2']; // proširiti kad dođe sezona-3, sezona-4...
+    const SEASON_LABELS = { 'sezona-1': 'Sezona 1', 'sezona-2': 'Sezona 2' };
+
+    function registerPlayerSeasonData(playerName, seasonId, seasonLabel, group, groupName, standingsRow, matches, playoff = null) {
+      if (!playerDatabase[playerName]) playerDatabase[playerName] = { seasons: {} };
+      playerDatabase[playerName].seasons[seasonId] = {
+        seasonLabel, group, groupName, standings: standingsRow, matches, playoff
+      };
+    }
+
+    function buildPlayerMatches(playerName, players, schedule, matchesMap) {
+      const matches = [];
+      schedule.forEach(({kolo, matches: kMatches}) => {
+        kMatches.forEach(({mec, player1, player2}) => {
+          if (player1 !== playerName && player2 !== playerName) return;
+          const m = matchesMap[`${kolo}_${mec}`];
+          if (!m || !m.score) return; // prikazuju se samo odigrani mečevi
+          const isP1 = player1 === playerName;
+          const opponent = isP1 ? player2 : player1;
+
+          // Normaliziraj rezultat tako da prvi broj bude rezultat ovog igrača
+          const parts = m.score.split('-');
+          const selfScore = isP1 ? parts[0] : parts[1];
+          const oppScore  = isP1 ? parts[1] : parts[0];
+          const score = `${selfScore}-${oppScore}`;
+          const s1 = parseInt(selfScore), s2 = parseInt(oppScore);
+          let result = 'draw';
+          if (!isNaN(s1) && !isNaN(s2)) {
+            result = s1 > s2 ? 'win' : s1 < s2 ? 'loss' : 'draw';
+          }
+
+          matches.push({
+            kolo, opponent, score, hasScore: true, result,
+            avgSelf: isP1 ? m.average1 : m.average2,
+            avgOpp:  isP1 ? m.average2 : m.average1,
+            f9Self:  isP1 ? m.first9_1 : m.first9_2,
+            f9Opp:   isP1 ? m.first9_2 : m.first9_1,
+            blSelf:  isP1 ? m.bestleg1 : m.bestleg2,
+            blOpp:   isP1 ? m.bestleg2 : m.bestleg1,
+            bcoSelf: isP1 ? m.bestcheckout1 : m.bestcheckout2,
+            bcoOpp:  isP1 ? m.bestcheckout2 : m.bestcheckout1,
+            x180Self: isP1 ? m['180_1'] : m['180_2'],
+            x180Opp:  isP1 ? m['180_2'] : m['180_1']
+          });
+        });
+      });
+      matches.sort((a,b) => a.kolo - b.kolo);
+      return matches;
+    }
+
+    // ── AGGREGATED ("Sveukupno") STATS ──
+    function computeOverallStats(playerName) {
+      const entry = playerDatabase[playerName];
+      if (!entry) return null;
+      const agg = {win:0,draw:0,lost:0,total:0,legs:0,pts:0,avgSum:0,avgCount:0,f9Sum:0,f9Count:0,bl:0,bco:0,x180:0};
+      SEASON_ORDER.forEach(seasonId => {
+        const sd = entry.seasons[seasonId];
+        if (!sd) return;
+        const s = sd.standings;
+        agg.win += s.win; agg.draw += s.draw; agg.lost += s.lost; agg.total += s.total;
+        agg.legs += s.legs; agg.pts += s.pts; agg.x180 += s.x180;
+        if (s.avg !== '--') { agg.avgSum += parseFloat(s.avg) * s.total; agg.avgCount += s.total; }
+        if (s.f9 !== '--') { agg.f9Sum += parseFloat(s.f9) * s.total; agg.f9Count += s.total; }
+        if (s.bl !== '--' && s.bl) agg.bl = agg.bl === 0 ? s.bl : Math.min(agg.bl, s.bl);
+        if (s.bco !== '--' && s.bco) agg.bco = Math.max(agg.bco, s.bco);
+      });
+      return {
+        win: agg.win, draw: agg.draw, lost: agg.lost, total: agg.total,
+        legs: agg.legs, pts: agg.pts, x180: agg.x180,
+        avg: agg.avgCount > 0 ? (agg.avgSum/agg.avgCount).toFixed(2) : '--',
+        f9:  agg.f9Count  > 0 ? (agg.f9Sum/agg.f9Count).toFixed(2)  : '--',
+        bl:  agg.bl || '--', bco: agg.bco || '--'
+      };
+    }
+
+    // ── PLAYER SEARCH ── 
+    let playerSearchBlurTimeout = null;
+
+    function handlePlayerSearchFocus() {
+      const val = document.getElementById('player-search-input').value;
+      handlePlayerSearch(val, true);
+    }
+
+    function handlePlayerSearch(value, forceShow) {
+      const resultsEl = document.getElementById('player-search-results');
+      const term = value.trim().toLowerCase();
+
+      if (!term) {
+        resultsEl.style.display = 'none';
+        resultsEl.innerHTML = '';
+        return;
+      }
+
+      const names = Object.keys(playerDatabase)
+        .filter(name => name.toLowerCase().includes(term))
+        .sort((a,b) => a.localeCompare(b))
+        .slice(0, 8);
+
+      if (names.length === 0) {
+        resultsEl.innerHTML = `<div class="player-search-empty">Nema rezultata za "${escapeHtml(value)}"</div>`;
+        resultsEl.style.display = 'block';
+        return;
+      }
+
+      resultsEl.innerHTML = names.map(name => {
+        const entry = playerDatabase[name];
+        const availableSeasons = SEASON_ORDER.filter(s => entry.seasons[s]);
+        const latestSeason = availableSeasons[availableSeasons.length-1];
+        const sd = latestSeason ? entry.seasons[latestSeason] : null;
+        const groupLabel = sd ? sd.groupName : '';
+        return `<div class="player-search-item" onmousedown="openPlayerProfile('${escapeHtml(name).replace(/'/g,"\\'")}')">
+          <span class="player-search-item-name">${escapeHtml(name)}</span>
+          <span class="player-search-item-group">${escapeHtml(groupLabel)}</span>
+        </div>`;
+      }).join('');
+      resultsEl.style.display = 'block';
+    }
+
+    document.addEventListener('click', e => {
+      const wrap = document.querySelector('.player-search-wrap');
+      if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('player-search-results').style.display = 'none';
+      }
+    });
+
+    // ── PLAYER PROFILE POPUP ──
+    let currentProfilePlayer = null;
+    let currentProfileSeason = 'overall';
+
+    function openPlayerProfile(playerName) {
+      currentProfilePlayer = playerName;
+      currentProfileSeason = 'overall';
+      document.getElementById('player-search-results').style.display = 'none';
+      document.getElementById('player-search-input').value = '';
+      renderPlayerProfile();
+    }
+
+    function switchProfileSeason(seasonId) {
+      currentProfileSeason = seasonId;
+      renderPlayerProfile();
+    }
+
+    function statBoxes(stats) {
+        return `
+          <div class="player-stats-grid">
+            <div class="player-stat-box primary text-left">
+              <div class="player-stat-box-val"><img src="images/average-icon.png" alt="average-icon" class="stat-icon"> ${stats.avg}</div>
+              <div class="player-stat-box-label">AVG</div>
+            </div>
+            <div class="player-stat-box primary text-center">
+              <div class="player-stat-box-val"><img src="images/average-icon.png" alt="average-icon" class="stat-icon">${stats.f9}</div>
+              <div class="player-stat-box-label">First 9</div>
+            </div>
+            <div class="player-stat-box primary text-right">
+              <div class="player-stat-box-val"><img src="images/dart-icon.png" alt="dart-icon" class="stat-icon">${stats.x180}</div>
+              <div class="player-stat-box-label">180s</div>
+            </div>
+
+            <div class="player-stat-box secondary">
+              <div class="player-stat-box-val">${stats.pts}</div>
+              <div class="player-stat-box-label">PTS</div>
+            </div>
+            <div class="player-stat-box secondary">
+              <div class="player-stat-box-val">${stats.win}/${stats.draw}/${stats.lost}</div>
+              <div class="player-stat-box-label">W/D/L</div>
+            </div>
+            <div class="player-stat-box secondary">
+              <div class="player-stat-box-val">${stats.legs > 0 ? '+' + stats.legs : stats.legs}</div>
+              <div class="player-stat-box-label">Legs</div>
+            </div>
+            <div class="player-stat-box secondary">
+              <div class="player-stat-box-val">${stats.bl}</div>
+              <div class="player-stat-box-label">Best Leg</div>
+            </div>
+            <div class="player-stat-box secondary">
+              <div class="player-stat-box-val">${stats.bco}</div>
+              <div class="player-stat-box-label">Best CO</div>
+            </div>
+          </div>`;
+      }
+    function matchRow(m, idx) {
+      const resultIcons = {
+        win:  '<span class="result-icon win"><i class="fas fa-check"></i></span>',
+        loss: '<span class="result-icon loss"><i class="fas fa-times"></i></span>',
+        draw: '<span class="result-icon draw"><i class="fas fa-equals"></i></span>'
+      };
+      const iconHtml = m.hasScore ? (resultIcons[m.result] || '') : '';
+      const scoreHtml = m.hasScore
+        ? `<span class="player-match-score ${m.result}">${escapeHtml(m.score)}</span>`
+        : `<span class="player-match-score empty">-:-</span>`;
+      const detailHtml = m.hasScore ? `
+        <div class="player-match-detail-stats" id="player-match-detail-${idx}">
+          <div class="popup-stat-val-l">${m.avgSelf??'--'}</div><div class="popup-stat-label">AVG</div><div class="popup-stat-val-r">${m.avgOpp??'--'}</div>
+          <div class="popup-stat-val-l">${m.f9Self??'--'}</div><div class="popup-stat-label">First 9</div><div class="popup-stat-val-r">${m.f9Opp??'--'}</div>
+          <div class="popup-stat-val-l">${m.blSelf??'--'}</div><div class="popup-stat-label">Best Leg</div><div class="popup-stat-val-r">${m.blOpp??'--'}</div>
+          <div class="popup-stat-val-l">${m.bcoSelf??'--'}</div><div class="popup-stat-label">Best CO</div><div class="popup-stat-val-r">${m.bcoOpp??'--'}</div>
+          <div class="popup-stat-val-l">${m.x180Self??'--'}</div><div class="popup-stat-label">180s</div><div class="popup-stat-val-r">${m.x180Opp??'--'}</div>
+        </div>` : '';
+      return `<div class="player-match-row" onclick="toggleMatchDetail(this, ${idx})">
+        <div class="player-match-row-left">
+          <span class="player-match-kolo">Kolo ${m.kolo}</span>
+          <span class="player-match-opp">vs ${escapeHtml(m.opponent)}</span>
+        </div>
+        <div class="player-match-result">
+          ${iconHtml}
+          ${scoreHtml}
+        </div>
+      </div>${detailHtml}`;
+    }
+
+    // ── AVG GRAF KROZ KOLA ──
+    function avgChartHtml(matches, overallAvg, form) {
+      const formHtml_ = (form && form.length) ? `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <span style="font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">Forma (zadnjih ${form.length})</span>
+          ${formHtml(form)}
+        </div>` : '';
+
+      const MAX_POINTS = 7;
+      const points = matches
+        .filter(m => m.hasScore && m.avgSelf != null && !isNaN(parseFloat(m.avgSelf)) && parseFloat(m.avgSelf) > 0)
+        .map(m => ({ label: m.chartLabel || `K${m.kolo}`, avg: parseFloat(m.avgSelf), season: m._season, result: m.result }))
+        .slice(-MAX_POINTS);
+
+      if (points.length < 2) {
+        return `<div class="player-avg-chart-wrap">${formHtml_}<div class="player-avg-chart-empty">Nema dovoljno odigranih mečeva za prikaz grafa.</div></div>`;
+      }
+
+      const W = 600, H = 180, padL = 34, padR = 14, padT = 16, padB = 26;
+      const innerW = W - padL - padR, innerH = H - padT - padB;
+
+      const avgs = points.map(p => p.avg);
+      let minAvg = Math.min(...avgs), maxAvg = Math.max(...avgs);
+      if (minAvg === maxAvg) { minAvg -= 1; maxAvg += 1; }
+      const pad = (maxAvg - minAvg) * 0.18;
+      minAvg -= pad; maxAvg += pad;
+
+
+      const xStep = points.length > 1 ? innerW / (points.length - 1) : 0;
+      const xy = points.map((p, i) => ({
+        x: padL + i * xStep,
+        y: padT + innerH - ((p.avg - minAvg) / (maxAvg - minAvg)) * innerH,
+        ...p
+      }));
+
+      const linePath = xy.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+      const areaPath = `${linePath} L${xy[xy.length-1].x.toFixed(1)},${(padT+innerH).toFixed(1)} L${xy[0].x.toFixed(1)},${(padT+innerH).toFixed(1)} Z`;
+
+      const gridLines = [0, 0.5, 1].map(t => {
+        const y = padT + innerH * t;
+        const val = (maxAvg - (maxAvg - minAvg) * t).toFixed(1);
+        return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+                <text x="${padL-6}" y="${(y+3).toFixed(1)}" font-size="14" fill="rgba(255,255,255,0.4)" text-anchor="end">${val}</text>`;
+      }).join('');
+
+      // Referentna linija: sezonski/overall prosjek AVG-a
+      const avgRefNum = parseFloat(overallAvg);
+      const avgRefLine = (!isNaN(avgRefNum) && avgRefNum >= minAvg && avgRefNum <= maxAvg) ? (() => {
+        const yRef = padT + innerH - ((avgRefNum - minAvg) / (maxAvg - minAvg)) * innerH;
+        return `<line x1="${padL}" y1="${yRef.toFixed(1)}" x2="${W-padR}" y2="${yRef.toFixed(1)}" stroke="rgba(255,255,255,0.28)" stroke-width="1" stroke-dasharray="4,4"/>
+                <text x="${W-padR}" y="${(yRef-4).toFixed(1)}" font-size="14" fill="rgba(255,255,255,1)" text-anchor="end">AVG ${avgRefNum.toFixed(1)}</text>`;
+      })() : '';
+
+      // Max 7 točaka - prikaži sve x-oznake
+      const xLabels = xy.map((p,i) =>
+        `<text x="${p.x.toFixed(1)}" y="${H-8}" font-size="14" fill="rgba(255,255,255,0.4)" text-anchor="middle">${escapeHtml(p.label)}</text>`
+      ).join('');
+
+      const dotColor = r => r === 'win' ? '#2ecc71' : r === 'loss' ? '#e74c3c' : r === 'draw' ? '#f39c12' : '#7eb8ff';
+      const dots = xy.map(p =>
+        `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="${dotColor(p.result)}" stroke="#0d1426" stroke-width="1.5">
+           <title>${escapeHtml(p.label)}: ${p.avg.toFixed(2)}</title>
+         </circle>`
+      ).join('');
+
+      const lastAvg = xy[xy.length-1].avg.toFixed(2);
+      const firstAvg = xy[0].avg.toFixed(2);
+      const trendUp = xy[xy.length-1].avg >= xy[0].avg;
+
+      return `<div class="player-avg-chart-wrap">
+        ${formHtml_}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <span style="font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">AVG kroz kola</span>
+          <span style="font-size:0.75rem;font-weight:700;color:${trendUp?'#2ecc71':'#e74c3c'};">${firstAvg} → ${lastAvg}</span>
+        </div>
+        <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="avgFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#7eb8ff" stop-opacity="0.32"/>
+              <stop offset="100%" stop-color="#7eb8ff" stop-opacity="0"/>
+            </linearGradient>
+            <filter id="avgGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.5" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          ${gridLines}
+          <path d="${areaPath}" fill="url(#avgFill)"/>
+          <path d="${linePath}" fill="none" stroke="#7eb8ff" stroke-width="2" filter="url(#avgGlow)"/>
+          ${dots}
+          ${xLabels}
+          ${avgRefLine}
+        </svg>
+      </div>`;
+    }
+
+    // ── PLAYOFF MEČEVI IGRAČA (iz gornjeg + donjeg ždrijeba) ──
+    function getPlayoffMatchesForPlayer(playerName) {
+      const result = [];
+      function collect(dataMap, bracketLabel) {
+        Object.entries(dataMap).forEach(([id, d]) => {
+          if (!d || !d.score) return; // samo odigrani
+          const isP1 = d.player1 === playerName;
+          const isP2 = d.player2 === playerName;
+          if (!isP1 && !isP2) return;
+          const opponent = isP1 ? d.player2 : d.player1;
+          const parts = String(d.score).split('-');
+          const selfScore = isP1 ? parts[0] : parts[1];
+          const oppScore  = isP1 ? parts[1] : parts[0];
+          const score = `${selfScore}-${oppScore}`;
+          const s1 = parseInt(selfScore), s2 = parseInt(oppScore);
+          let result_ = 'draw';
+          if (!isNaN(s1) && !isNaN(s2)) result_ = s1 > s2 ? 'win' : s1 < s2 ? 'loss' : 'draw';
+          result.push({
+            id, bracketLabel, roundLabel: d.roundLabel || '',
+            opponent, score, hasScore: true, result: result_,
+            avgSelf: isP1 ? d.average1 : d.average2,
+            avgOpp:  isP1 ? d.average2 : d.average1,
+            f9Self:  isP1 ? d.first9_1 : d.first9_2,
+            f9Opp:   isP1 ? d.first9_2 : d.first9_1,
+            blSelf:  isP1 ? d.bestleg1 : d.bestleg2,
+            blOpp:   isP1 ? d.bestleg2 : d.bestleg1,
+            bcoSelf: isP1 ? d.bestcheckout1 : d.bestcheckout2,
+            bcoOpp:  isP1 ? d.bestcheckout2 : d.bestcheckout1,
+            x180Self: isP1 ? d['180_1'] : d['180_2'],
+            x180Opp:  isP1 ? d['180_2'] : d['180_1']
+          });
+        });
+      }
+      collect(bracketMatchData, 'Gornji ždrijeb');
+      collect(lowerBracketMatchData, 'Donji ždrijeb');
+      return result;
+    }
+
+    function playoffMatchRow(m, idx) {
+      const resultIcons = {
+        win:  '<span class="result-icon win"><i class="fas fa-check"></i></span>',
+        loss: '<span class="result-icon loss"><i class="fas fa-times"></i></span>',
+        draw: '<span class="result-icon draw"><i class="fas fa-equals"></i></span>'
+      };
+      const iconHtml = resultIcons[m.result] || '';
+      const scoreHtml = `<span class="player-match-score ${m.result}">${escapeHtml(m.score)}</span>`;
+      const detailHtml = `
+        <div class="player-match-detail-stats" id="playoff-match-detail-${idx}">
+          <div class="popup-stat-val-l">${m.avgSelf??'--'}</div><div class="popup-stat-label">AVG</div><div class="popup-stat-val-r">${m.avgOpp??'--'}</div>
+          <div class="popup-stat-val-l">${m.f9Self??'--'}</div><div class="popup-stat-label">First 9</div><div class="popup-stat-val-r">${m.f9Opp??'--'}</div>
+          <div class="popup-stat-val-l">${m.blSelf??'--'}</div><div class="popup-stat-label">Best Leg</div><div class="popup-stat-val-r">${m.blOpp??'--'}</div>
+          <div class="popup-stat-val-l">${m.bcoSelf??'--'}</div><div class="popup-stat-label">Best CO</div><div class="popup-stat-val-r">${m.bcoOpp??'--'}</div>
+          <div class="popup-stat-val-l">${m.x180Self??'--'}</div><div class="popup-stat-label">180s</div><div class="popup-stat-val-r">${m.x180Opp??'--'}</div>
+        </div>`;
+      return `<div class="player-match-row" onclick="togglePlayoffMatchDetail(this, ${idx})">
+        <div class="player-match-row-left">
+          <span class="player-match-kolo">${escapeHtml(m.bracketLabel)}${m.roundLabel ? ' · ' + escapeHtml(m.roundLabel.split('—')[0].trim()) : ''}</span>
+          <span class="player-match-opp">vs ${escapeHtml(m.opponent)}</span>
+        </div>
+        <div class="player-match-result">
+          ${iconHtml}
+          ${scoreHtml}
+        </div>
+      </div>${detailHtml}`;
+    }
+
+    function togglePlayoffMatchDetail(rowEl, idx) {
+      const detail = document.getElementById(`playoff-match-detail-${idx}`);
+      if (!detail) return;
+      const open = detail.classList.contains('open');
+      detail.classList.toggle('open', !open);
+      rowEl.classList.toggle('expanded', !open);
+    }
+
+    function toggleMatchDetail(rowEl, idx) {
+      const detail = document.getElementById(`player-match-detail-${idx}`);
+      if (!detail) return;
+      const open = detail.classList.contains('open');
+      detail.classList.toggle('open', !open);
+      rowEl.classList.toggle('expanded', !open);
+    }
+
+    function getInitials(name) {
+      return name.trim().split(/\s+/).map(p => p[0]).slice(0,2).join('').toUpperCase();
+    }
+
+    function renderPlayerProfile() {
+      const entry = playerDatabase[currentProfilePlayer];
+      if (!entry) return;
+
+      const availableSeasons = SEASON_ORDER.filter(s => entry.seasons[s]);
+      const latestSeason = availableSeasons[availableSeasons.length-1];
+      const groupLabel = latestSeason ? entry.seasons[latestSeason].groupName : '';
+
+      const tabsHtml = `
+        <div class="player-season-tabs">
+          <button class="player-season-tab ${currentProfileSeason==='overall'?'active':''}" onclick="switchProfileSeason('overall')">Sveukupno</button>
+          ${availableSeasons.map(s => `<button class="player-season-tab ${currentProfileSeason===s?'active':''}" onclick="switchProfileSeason('${s}')">${SEASON_LABELS[s]||s}</button>`).join('')}
+        </div>`;
+
+      let stats, matches;
+      if (currentProfileSeason === 'overall') {
+        stats = computeOverallStats(currentProfilePlayer);
+        matches = [];
+        availableSeasons.forEach(s => matches.push(...entry.seasons[s].matches.map(m => ({...m, _season: s}))));
+        matches.sort((a,b) => SEASON_ORDER.indexOf(a._season) - SEASON_ORDER.indexOf(b._season) || a.kolo - b.kolo);
+      } else {
+        const sd = entry.seasons[currentProfileSeason];
+        stats = sd.standings;
+        matches = sd.matches.map(m => ({...m, _season: currentProfileSeason}));
+      }
+
+      const sd = currentProfileSeason !== 'overall' ? entry.seasons[currentProfileSeason] : null;
+      const playoffNote = sd?.playoff || null;
+      const playoffTextHtml = playoffNote
+        ? `<div style="background:rgba(6,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+             <p style="font-size:0.9rem;color:#edf3ff;line-height:1.6;margin:0;">${escapeHtml(playoffNote)}</p>
+           </div>`
+        : '';
+
+      // Playoff mečevi iz ždrijeba (samo za Sezonu 2 / Sveukupno, jer bracket postoji samo za tu sezonu)
+      const showBracketPlayoffs = (currentProfileSeason === 'overall' || currentProfileSeason === 'sezona-2');
+      const playoffMatches = showBracketPlayoffs ? getPlayoffMatchesForPlayer(currentProfilePlayer) : [];
+      const playoffMatchesHtml = playoffMatches.length
+        ? playoffMatches.map((m, i) => playoffMatchRow(m, i)).join('')
+        : '';
+
+      const playoffHtml = (playoffTextHtml || playoffMatchesHtml)
+        ? `<div class="player-matches-title" style="margin-top:16px;">Playoff</div>${playoffTextHtml}${playoffMatchesHtml}`
+        : '';
+
+      // Za graf: regularni mečevi (kronološki) + playoff mečevi nakon njih (grupna faza pa ždrijeb),
+      // uvijek prikazuje zadnjih 7 - avgChartHtml sam reže na zadnjih MAX_POINTS.
+      const roundShortLabel = (roundLabel) => {
+        const base = (roundLabel || '').split('—')[0].trim();
+        const map = {
+          'Last of 64': 'L64', 'Donji Last of 64': 'L64',
+          'Last of 32': 'L32', 'Donji Last of 32': 'L32',
+          'Osmina finala': 'OF', 'Donja Osmina finala': 'OF',
+          'Četvrtfinale': 'ČF', 'Donje Četvrtfinale': 'ČF',
+          'Polufinale': 'PF', 'Donje Polufinale': 'PF',
+          'Finale': 'F', 'Donje Finale': 'F',
+          'Utakmica za 3. mjesto': '3.mj', 'Donja utakmica za 3. mjesto': '3.mj'
+        };
+        return map[base] || base || 'PO';
+      };
+      const matchesForChart = [
+        ...matches.map(m => ({ ...m, chartLabel: `K${m.kolo}` })),
+        ...(showBracketPlayoffs ? playoffMatches.map(m => ({ ...m, chartLabel: roundShortLabel(m.roundLabel) })) : [])
+      ];
+
+      const form = formFromMatches(matchesForChart);
+      const chartHtml = avgChartHtml(matchesForChart, stats.avg, form);
+
+      const matchesHtml = matches.length
+        ? `<div class="player-matches-title">Mečevi</div>${matches.map((m, i) => matchRow(m, i)).join('')}`
+        : '';
+
+      const body = `
+        <div class="player-profile-header">
+          <div class="player-profile-user">
+            <div class="player-avatar">${escapeHtml(getInitials(currentProfilePlayer))}</div>
+            <div class="player-profile-info">
+              <div class="player-profile-name">${escapeHtml(currentProfilePlayer)}</div>
+              <div class="player-profile-group">${escapeHtml(groupLabel)}</div>
+            </div>
+          </div>
+          <div>
+            <button class="popup-close" onclick="closePopup()">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
+        </div>
+        ${tabsHtml}
+        ${statBoxes(stats)}
+        ${chartHtml}
+        ${matchesHtml}
+        ${playoffHtml}`;
+
+      showPopup('', body, '');
+    }
 
     function openKoloPopup(groupIndex, kolo) {
       const data = koloDataMap[`${groupIndex}_${kolo}`];
       if (!data) return;
-      const { matches, matchesMap, bye } = data;
-      const overlay = document.getElementById('match-popup-overlay');
-      const content = document.getElementById('match-popup-content');
-
-      const matchesHtml = matches.map(({ mec, player1, player2 }) => {
+      const {matches, matchesMap, bye} = data;
+      const byeHtml = bye ? `<div style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">BYE: ${escapeHtml(bye)}</div>` : '';
+      const matchesHtml = matches.map(({mec,player1,player2}) => {
         const saved = matchesMap[`${kolo}_${mec}`];
-        const score = saved?.score || '';
-        const hasScore = !!score;
-
+        const score = saved?.score||''; const hasScore = !!score;
         const statsRows = hasScore ? `
           <div class="popup-stats">
-            <div class="popup-stat-val-l">${saved.average1 ?? '--'}</div>
-            <div class="popup-stat-label">AVG</div>
-            <div class="popup-stat-val-r">${saved.average2 ?? '--'}</div>
-
-            <div class="popup-stat-val-l">${saved.first9_1 ?? '--'}</div>
-            <div class="popup-stat-label">First 9</div>
-            <div class="popup-stat-val-r">${saved.first9_2 ?? '--'}</div>
-
-            <div class="popup-stat-val-l">${saved.bestleg1 ?? '--'}</div>
-            <div class="popup-stat-label">Best Leg</div>
-            <div class="popup-stat-val-r">${saved.bestleg2 ?? '--'}</div>
-
-            <div class="popup-stat-val-l">${saved.bestcheckout1 ?? '--'}</div>
-            <div class="popup-stat-label">Best CO</div>
-            <div class="popup-stat-val-r">${saved.bestcheckout2 ?? '--'}</div>
-
-            <div class="popup-stat-val-l">${saved['180_1'] ?? '--'}</div>
-            <div class="popup-stat-label">180s</div>
-            <div class="popup-stat-val-r">${saved['180_2'] ?? '--'}</div>
-          </div>
-        ` : `<div class="popup-no-score">Meč još nije odigran</div>`;
-
-        return `
-          <div class="popup-match">
-            <div class="popup-match-num" style="padding:8px 14px 0;">Meč ${mec}</div>
-            <div class="popup-match-top">
-              <span class="popup-player-name">${escapeHtml(player1)}</span>
-              <span class="popup-score ${hasScore ? '' : 'empty'}">${score || '-:-'}</span>
-              <span class="popup-player-name right">${escapeHtml(player2)}</span>
-            </div>
-            ${statsRows}
-          </div>
-        `;
+            <div class="popup-stat-val-l">${saved.average1??'--'}</div><div class="popup-stat-label">AVG</div><div class="popup-stat-val-r">${saved.average2??'--'}</div>
+            <div class="popup-stat-val-l">${saved.first9_1??'--'}</div><div class="popup-stat-label">First 9</div><div class="popup-stat-val-r">${saved.first9_2??'--'}</div>
+            <div class="popup-stat-val-l">${saved.bestleg1??'--'}</div><div class="popup-stat-label">Best Leg</div><div class="popup-stat-val-r">${saved.bestleg2??'--'}</div>
+            <div class="popup-stat-val-l">${saved.bestcheckout1??'--'}</div><div class="popup-stat-label">Best CO</div><div class="popup-stat-val-r">${saved.bestcheckout2??'--'}</div>
+            <div class="popup-stat-val-l">${saved['180_1']??'--'}</div><div class="popup-stat-label">180s</div><div class="popup-stat-val-r">${saved['180_2']??'--'}</div>
+          </div>` : `<div class="popup-no-score">Meč još nije odigran</div>`;
+        return `<div class="popup-match">
+          <div class="popup-match-num">Meč ${mec}</div>
+          <div class="popup-match-top">
+            <span class="popup-player-name">${escapeHtml(player1)}</span>
+            <span class="popup-score ${hasScore?'':'empty'}">${score||'-:-'}</span>
+            <span class="popup-player-name right">${escapeHtml(player2)}</span>
+          </div>${statsRows}</div>`;
       }).join('');
+      showPopup(`Kolo ${kolo}`, matchesHtml, byeHtml);
+    }
 
-      const byeHtml = bye ? `<div style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">BYE: ${escapeHtml(bye)}</div>` : '';
+    // ── PAIR OFFSET (za connector linije) ──
+    // Nakon rendera, izmjeri stvarni pixel-razmak između centra svakog
+    // "pair-top" meča i njegovog partnera "pair-bottom" unutar iste kolone,
+    // i postavi ga kao CSS varijablu --pair-offset na oba elementa.
+    // Layout (space-around) ostaje potpuno netaknut — ovo samo čita pozicije.
+    function setPairOffsets(wrapId) {
+      const wrap = document.getElementById(wrapId);
+      if (!wrap) return;
+      wrap.querySelectorAll('.bracket-round').forEach(round => {
+        const matches = round.querySelectorAll(':scope > .bracket-matches > .bracket-match');
+        for (let i = 0; i < matches.length; i += 2) {
+          const top = matches[i];
+          const bottom = matches[i+1];
+          if (!top || !bottom) continue;
+          const offset = bottom.offsetTop - top.offsetTop; // razmak vrh-do-vrh
+          top.style.setProperty('--pair-offset', offset + 'px');
+          bottom.style.setProperty('--pair-offset', offset + 'px');
+        }
+      });
+    }
 
-      content.innerHTML = `
-        <div class="popup-header">
-          <span class="popup-title">Kolo ${kolo}</span>
-          <button class="popup-close" onclick="closeMatchPopup()">✕</button>
-        </div>
-        ${byeHtml}
-        ${matchesHtml}
-      `;
+    // Pokreni mjerenje tek kad je layout stvarno stabilan: nakon fontova,
+    // slika, i dva animacijska framea (da flex/space-around završi).
+    function scheduleAllPairOffsets() {
+      const run = () => {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          if (document.getElementById('bracket-wrap-upper')) setPairOffsets('bracket-wrap-upper');
+          if (document.getElementById('bracket-wrap-lower')) setPairOffsets('bracket-wrap-lower');
+        }));
+      };
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(run);
+      } else {
+        run();
+      }
+    }
 
-      overlay.style.display = 'flex';
+    // ResizeObserver hvata SVE promjene veličine (resize prozora, otvaranje
+    // accordiona, zoom, orijentacija na mobitelu) — ne samo window resize.
+    let pairOffsetDebounce = null;
+    function debouncedRecalc() {
+      clearTimeout(pairOffsetDebounce);
+      pairOffsetDebounce = setTimeout(() => {
+        if (document.getElementById('bracket-wrap-upper')) setPairOffsets('bracket-wrap-upper');
+        if (document.getElementById('bracket-wrap-lower')) setPairOffsets('bracket-wrap-lower');
+      }, 100);
+    }
+
+    if (window.ResizeObserver) {
+      const bracketResizeObserver = new ResizeObserver(debouncedRecalc);
+      // Promatra oba wrapa čim postoje u DOM-u (pozivamo i nakon svakog rendera ispod)
+      window.__observeBracketWrap = (id) => {
+        const el = document.getElementById(id);
+        if (el) bracketResizeObserver.observe(el);
+      };
+    } else {
+      window.addEventListener('resize', debouncedRecalc);
+      window.__observeBracketWrap = () => {};
+    }
+
+    // ── BRACKET POPUP ──
+    const bracketMatchData = {};
+
+    function openBracketMatchPopup(matchId) {
+      const d = bracketMatchData[matchId];
+      if (!d) return;
+      const score = d.score||''; const hasScore = !!score;
+      const p1 = d.player1||'TBD'; const p2 = d.player2||'TBD';
+      const statsRows = hasScore ? `
+        <div class="popup-stats">
+          <div class="popup-stat-val-l">${d.average1??'--'}</div><div class="popup-stat-label">AVG</div><div class="popup-stat-val-r">${d.average2??'--'}</div>
+          <div class="popup-stat-val-l">${d.first9_1??'--'}</div><div class="popup-stat-label">First 9</div><div class="popup-stat-val-r">${d.first9_2??'--'}</div>
+          <div class="popup-stat-val-l">${d.bestleg1??'--'}</div><div class="popup-stat-label">Best Leg</div><div class="popup-stat-val-r">${d.bestleg2??'--'}</div>
+          <div class="popup-stat-val-l">${d.bestcheckout1??'--'}</div><div class="popup-stat-label">Best CO</div><div class="popup-stat-val-r">${d.bestcheckout2??'--'}</div>
+          <div class="popup-stat-val-l">${d['180_1']??'--'}</div><div class="popup-stat-label">180s</div><div class="popup-stat-val-r">${d['180_2']??'--'}</div>
+        </div>` : `<div class="popup-no-score">Meč još nije odigran</div>`;
+      const body = `<div class="popup-match">
+        <div class="popup-match-top">
+          <span class="popup-player-name">${escapeHtml(p1)}</span>
+          <span class="popup-score ${hasScore?'':'empty'}">${score||'-:-'}</span>
+          <span class="popup-player-name right">${escapeHtml(p2)}</span>
+        </div>${statsRows}</div>`;
+      showPopup(d.roundLabel||'', body, '');
+    }
+
+    function showPopup(title, bodyHtml, extraHtml) {
+      document.getElementById('match-popup-content').innerHTML = `${extraHtml}${bodyHtml}`;
+      document.getElementById('match-popup-overlay').style.display = 'flex';
       document.body.style.overflow = 'hidden';
     }
 
-    function closeMatchPopup(e) {
+    function closePopup(e) {
       if (e && e.target !== document.getElementById('match-popup-overlay')) return;
       document.getElementById('match-popup-overlay').style.display = 'none';
       document.body.style.overflow = '';
     }
 
-    // Escape key to close popup
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') {
-        document.getElementById('match-popup-overlay').style.display = 'none';
-        document.body.style.overflow = '';
-      }
+      if (e.key==='Escape') { document.getElementById('match-popup-overlay').style.display='none'; document.body.style.overflow=''; }
     });
 
     function createAccordion(groupName, groupIndex, standings, schedule, matchesMap) {
-      // Pohrani podatke za popup
-      schedule.forEach(({ kolo, matches, bye }) => {
-        koloDataMap[`${groupIndex}_${kolo}`] = { matches, matchesMap, bye };
-      });
+      schedule.forEach(({kolo,matches,bye}) => { koloDataMap[`${groupIndex}_${kolo}`] = {matches,matchesMap,bye}; });
 
-      const standingsHtml = `
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th style="text-align:left;">Igrač</th>
-                <th>W</th><th>D</th><th>L</th>
-                <th>Tot</th><th>Legs</th><th>PTS</th>
-                <th>AVG</th><th>First 9</th>
-                <th>Best Leg</th><th>Best CO</th><th>180</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${standings.map((p, i) => `
-                <tr>
-                  <td>${i + 1}</td>
-                  <td style="text-align:left;font-weight:700;">${escapeHtml(p.name)}</td>
-                  <td style="color:#2ecc71;font-weight:700;">${p.win}</td>
-                  <td style="color:#f39c12;font-weight:700;">${p.draw}</td>
-                  <td style="color:#e74c3c;font-weight:700;">${p.lost}</td>
-                  <td>${p.total}</td>
-                  <td style="color:${p.legs>0?'#2ecc71':p.legs<0?'#e74c3c':'inherit'}">${p.legs > 0 ? '+'+p.legs : p.legs}</td>
-                  <td style="font-weight:800;color:#7eb8ff;">${p.pts}</td>
-                  <td>${p.avg}</td><td>${p.f9}</td>
-                  <td>${p.bl}</td><td>${p.bco}</td><td>${p.x180}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-            <tfoot>
-              <tr><td colspan="13" class="table-footer-brand">Adriatic steel league ™ ®</td></tr>
-            </tfoot>
-          </table>
-        </div>
-      `;
+      const standingsHtml = `<div class="table-wrap"><table>
+        <thead><tr><th>#</th><th style="text-align:left;">Igrač</th><th>Form</th><th>W</th><th>D</th><th>L</th><th>Tot</th><th>Legs</th><th>PTS</th><th>AVG</th><th>First 9</th><th>Best Leg</th><th>Best CO</th><th>180</th></tr></thead>        <tbody>${standings.map((p,i)=>`<tr>
+          <td>${i+1}</td>
+          <td style="text-align:left;font-weight:700;">${escapeHtml(p.name)}</td>
+          <td>${formHtml(p.form)}</td>
+          <td style="color:#2ecc71;font-weight:700;">${p.win}</td>
+          <td style="color:#f39c12;font-weight:700;">${p.draw}</td>
+          <td style="color:#e74c3c;font-weight:700;">${p.lost}</td>
+          <td>${p.total}</td>
+          <td style="color:${p.legs>0?'#2ecc71':p.legs<0?'#e74c3c':'inherit'}">${p.legs>0?'+'+p.legs:p.legs}</td>
+          <td style="font-weight:800;color:#7eb8ff;">${p.pts}</td>
+          <td>${p.avg}</td><td>${p.f9}</td><td>${p.bl}</td><td>${p.bco}</td><td>${p.x180}</td>
+        </tr>`).join('')}</tbody>
+        <tfoot><tr><td colspan="14" class="table-footer-brand">Adriatic steel league ™ ®</td></tr></tfoot>
+      </table></div>`;
 
       const rasporedHtml = `
-        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
-          <div style="display:flex;gap:8px;min-width:max-content;">
-            ${schedule.map(({ kolo, matches, bye }) => `
-              <div
-                onclick="openKoloPopup(${groupIndex}, ${kolo})"
-                style="width:max-content;cursor:pointer;background:rgba(6,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:10px 10px 0 0;overflow:hidden;transition:border-color 0.2s ease;"
-                onmouseover="this.style.borderColor='rgba(255,255,255,0.25)'"
-                onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'"
-              >
-                <div style="background:var(--header);padding:8px 12px;font-size:0.8rem;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px;">
-                  <span>Kolo ${kolo}</span>
-                  ${bye ? `<span style="font-size:0.75rem;color:var(--muted);white-space:nowrap;">BYE: ${escapeHtml(bye)}</span>` : ''}
+        <div style="overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:4px; user-select:none; cursor:grab;"
+             onmousedown="this.isDown = true; this.startX = event.pageX; this.scrollLeftStart = this.scrollLeft; this.style.cursor = 'grabbing'; this.setAttribute('data-moved', 'false');"
+             onmouseleave="this.isDown = false; this.style.cursor = 'grab';"
+             onmouseup="setTimeout(() => { this.isDown = false; this.style.cursor = 'grab'; }, 50);"
+             onmousemove="if(!this.isDown) return; event.preventDefault(); const x = event.pageX; const walk = (x - this.startX) * 0.7; if(Math.abs(walk) > 5) { this.setAttribute('data-moved', 'true'); } this.scrollLeft = this.scrollLeftStart - walk;">
+          
+          <div style="display:flex; gap:8px; min-width:max-content;">
+            ${schedule.map(({kolo,matches,bye})=>`
+              
+              <div onclick="if(this.parentElement.parentElement.getAttribute('data-moved') !== 'true') { openKoloPopup(${groupIndex},${kolo}); } else { this.parentElement.parentElement.setAttribute('data-moved', 'false'); }"
+                style="width:max-content; cursor:pointer; background:rgba(6,12,24,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; transition:border-color 0.2s ease;"
+                onmouseover="this.style.borderColor='rgba(255,255,255,0.25)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+                
+                <div style="background:var(--header); padding:8px 12px; font-size:clamp(0.65rem,2.5vw,0.8rem); font-weight:700; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                  <span style="font-size:0.75rem; white-space:nowrap;">Kolo ${kolo}</span>
+                  ${bye?`<span style="font-size:0.75rem; color:var(--muted); white-space:nowrap;">BYE: ${escapeHtml(bye)}</span>`:''}
                 </div>
-                ${matches.map(({ mec, player1, player2 }) => {
-                  const saved = matchesMap[`${kolo}_${mec}`];
-                  const score = saved?.score || '';
-                  const hasScore = !!score;
-                  return `
-                    <div style="padding:7px 10px;border-bottom:1px solid rgba(255,255,255,0.05);">
-                      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
-                        <span style="font-size: clamp(0.75rem, 2.5vw, 0.9rem);font-weight:${hasScore?'700':'400'};white-space:nowrap;">${escapeHtml(player1)}</span>
-                        <span style="font-size: clamp(0.8rem, 2.5vw, 0.95rem);font-weight:800;color:${hasScore?'#7eb8ff':'rgba(255,255,255,0.2)'};white-space:nowrap;padding:0 6px;">${score || '-:-'}</span>
-                        <span style="font-size: clamp(0.75rem, 2.5vw, 0.9rem);font-weight:${hasScore?'700':'400'};white-space:nowrap;text-align:right;">${escapeHtml(player2)}</span>
-                      </div>
+                
+                ${matches.map(({mec,player1,player2})=>{
+                  const saved=matchesMap[`${kolo}_${mec}`]; const score=saved?.score||''; const hasScore=!!score;
+                  return `<div style="padding:clamp(4px,1.5vw,7px) clamp(6px,2vw,10px); border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                      <span style="font-size:clamp(0.7rem,2.5vw,0.9rem); font-weight:${hasScore?'700':'400'}; white-space:nowrap;">${escapeHtml(player1)}</span>
+                      <span style="font-size:clamp(0.75rem,2.8vw,0.95rem); font-weight:800; color:${hasScore?'#7eb8ff':'rgba(255,255,255,0.2)'}; white-space:nowrap; padding:0 6px;">${score||'-:-'}</span>
+                      <span style="font-size:clamp(0.7rem,2.5vw,0.9rem); font-weight:${hasScore?'700':'400'}; white-space:nowrap; text-align:right;">${escapeHtml(player2)}</span>
                     </div>
-                  `;
+                  </div>`;
                 }).join('')}
-              </div>
-            `).join('')}
+              </div>`).join('')}
           </div>
         </div>
-        <div style="text-align:center;padding:10px 12px;font-size:0.5rem;font-weight:600;letter-spacing:0.3px;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.03);border-top:1px solid rgba(255,255,255,0.10);border-radius:0 0 14px 14px;">
+        
+        <div style="text-align:center; padding:10px 12px; font-size:0.82rem; font-weight:600; letter-spacing:0.3px; color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.03); border-top:1px solid rgba(255,255,255,0.10); border-radius:0 0 14px 14px; user-select:none;">
           Adriatic steel league ™ ®
         </div>
       `;
-      
 
       const uid = `grp-${groupIndex}`;
-
-      return `
-        <div class="accordion-item">
-          <button class="accordion-header" onclick="handleAccordionClick(this)">
-            <div class="accordion-title">
-              <span class="accordion-badge">${groupIndex}</span>
-              <span>${escapeHtml(groupName)}</span>
+      return `<div class="accordion-item">
+        <button class="accordion-header" onclick="handleAccordionClick(this)">
+          <div class="accordion-title"><span class="accordion-badge">${groupIndex}</span><span>${escapeHtml(groupName)}</span></div>
+          <span class="accordion-icon">▼</span>
+        </button>
+        <div class="accordion-content">
+          <div class="accordion-inner">
+            <div style="display:flex;gap:8px;margin-bottom:15px;">
+              <button onclick="switchGroupTab('${uid}','standings',this)" class="grp-tab-btn" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);background:rgba(21,49,99,1);color:#fff;font-size:0.8rem;font-weight:700;cursor:pointer;">Standings</button>
+              <button onclick="switchGroupTab('${uid}','raspored',this)" class="grp-tab-btn" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);background:rgba(10,19,38,0.78);color:var(--muted);font-size:0.8rem;font-weight:700;cursor:pointer;">Raspored</button>
             </div>
-            <span class="accordion-icon">▼</span>
-          </button>
-          <div class="accordion-content">
-            <div class="accordion-inner">
-              <div style="display:flex;gap:8px;margin:5px 0 15px 0;">
-                <button onclick="switchGroupTab('${uid}','standings',this)" class="grp-tab-btn grp-tab-active" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);background:rgba(21,49,99,1);color:#fff;font-size:0.8rem;font-weight:700;cursor:pointer;">Standings</button>
-                <button onclick="switchGroupTab('${uid}','raspored',this)" class="grp-tab-btn" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);background:rgba(10,19,38,0.78);color:var(--muted);font-size:0.8rem;font-weight:700;cursor:pointer;">Raspored</button>
-              </div>
-              <div id="${uid}-standings">${standingsHtml}</div>
-              <div id="${uid}-raspored" style="display:none;">${rasporedHtml}</div>
-            </div>
+            <div id="${uid}-standings" style="animation:fadeInUp 0.25s ease both;">${standingsHtml}</div>
+            <div id="${uid}-raspored"  style="display:none;animation:fadeInUp 0.25s ease both;">${rasporedHtml}</div>
           </div>
         </div>
-      `;
+      </div>`;
     }
 
     function handleAccordionClick(button) {
       const item = button.closest('.accordion-item');
-      const open = item.classList.contains('open');
-      toggleAccordion(item, !open);
+      toggleAccordion(item, !item.classList.contains('open'));
     }
 
     function toggleAccordion(item, shouldOpen) {
@@ -847,41 +1729,281 @@
       if (shouldOpen) {
         item.classList.add('open');
         content.style.maxHeight = content.scrollHeight + 'px';
-        content.addEventListener('transitionend', () => {
-          content.style.maxHeight = 'none';
-        }, { once: true });
+        content.addEventListener('transitionend', () => { content.style.maxHeight = 'none'; }, {once:true});
         if (icon) icon.textContent = '▲';
       } else {
         content.style.maxHeight = content.scrollHeight + 'px';
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            content.style.maxHeight = '0px';
-            item.classList.remove('open');
-          });
-        });
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          content.style.maxHeight = '0px'; item.classList.remove('open');
+        }));
         if (icon) icon.textContent = '▼';
       }
     }
 
     function showError(error) {
-      document.getElementById('content').innerHTML =
-        '<div class="error-state">Ne mogu dohvatiti podatke. ' +
-        escapeHtml(error && error.message ? error.message : error) + '</div>';
+      document.getElementById('content').innerHTML = '<div class="error-state">Ne mogu dohvatiti podatke. ' + escapeHtml(error?.message||error) + '</div>';
     }
 
     window.addEventListener('resize', () => {
       document.querySelectorAll('.accordion-item.open').forEach(item => {
         const content = item.querySelector('.accordion-content');
-        if (content.style.maxHeight !== 'none') {
-          content.style.maxHeight = content.scrollHeight + 'px';
-        }
+        if (content.style.maxHeight !== 'none') content.style.maxHeight = content.scrollHeight + 'px';
       });
     });
+
+    // ── BRACKET RENDER ──
+    // R64 fixed draw — 32 matches
+    const R64_DRAW = [
+      {p1:'1A',p2:'4P'},{p1:'2N',p2:'3C'},{p1:'1O',p2:'4B'},{p1:'2D',p2:'3M'},
+      {p1:'1G',p2:'4J'},{p1:'2L',p2:'3E'},{p1:'1I',p2:'4H'},{p1:'2F',p2:'3K'},
+      {p1:'1C',p2:'4N'},{p1:'2P',p2:'3A'},{p1:'1M',p2:'4D'},{p1:'2B',p2:'3O'},
+      {p1:'1E',p2:'4L'},{p1:'2J',p2:'3G'},{p1:'1K',p2:'4F'},{p1:'2H',p2:'3I'},
+      {p1:'1B',p2:'4O'},{p1:'2M',p2:'3D'},{p1:'1P',p2:'4A'},{p1:'2C',p2:'3N'},
+      {p1:'1H',p2:'4I'},{p1:'2K',p2:'3F'},{p1:'1J',p2:'4G'},{p1:'2E',p2:'3L'},
+      {p1:'1D',p2:'4M'},{p1:'2O',p2:'3B'},{p1:'1N',p2:'4C'},{p1:'2A',p2:'3P'},
+      {p1:'1F',p2:'4K'},{p1:'2I',p2:'3H'},{p1:'1L',p2:'4E'},{p1:'2G',p2:'3J'}
+    ];
+
+    const ROUND_LABELS = ['Last of 64','Last of 32','Osmina finala','Četvrtfinale','Polufinale','Finale'];
+    const ROUND_IDS    = ['R64','R32','R16','QF','SF','F'];
+
+    function renderBracket(matchesByRound, groupStandingsMap) {
+      const container = document.getElementById('gornji-zdrijeb-content');
+
+      // Resolve player names from group standings
+      function resolveName(code, gsm) {
+        if (!code) return null;
+        const m = code.match(/^([1-4])([A-P])$/);
+        if (!m) return code;
+        const rank = parseInt(m[1])-1;
+        const grp  = m[2];
+        const standings = gsm[grp];
+        if (!standings || !standings[rank]) return code;
+        return standings[rank].name;
+      }
+
+      // Build R64 matches with names
+      const r64Matches = R64_DRAW.map((draw, i) => {
+        const id = `R64_${i + 1}`;
+        const saved = matchesByRound[id] || {};
+
+        // Prikaži pravo ime samo ako je meč već odigran, inače kod
+        const p1name = saved.player1 || resolveName(draw.p1, groupStandingsMap) || draw.p1;
+        const p2name = saved.player2 || resolveName(draw.p2, groupStandingsMap) || draw.p2;
+
+        bracketMatchData[id] = { ...saved, player1: p1name, player2: p2name, roundLabel: `Last of 64 — Meč ${i + 1}` };
+        return { id, player1: p1name, player2: p2name, score: saved.score || '', winner: saved.winner || null };
+      });
+
+      // Build subsequent rounds
+      const rounds = [r64Matches];
+      for (let r = 1; r < ROUND_IDS.length; r++) {
+        const prev = rounds[r-1];
+        const count = prev.length / 2;
+        const cur = [];
+        for (let i = 0; i < count; i++) {
+          const id    = `${ROUND_IDS[r]}_${i+1}`;
+          const saved = matchesByRound[id] || {};
+          const p1 = saved.player1 || (prev[i*2]?.winner   ? (prev[i*2].winner==='player1'   ? prev[i*2].player1   : prev[i*2].player2)   : null);
+          const p2 = saved.player2 || (prev[i*2+1]?.winner ? (prev[i*2+1].winner==='player1' ? prev[i*2+1].player1 : prev[i*2+1].player2) : null);
+          bracketMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${ROUND_LABELS[r]} — Meč ${i+1}` };
+          cur.push({ id, player1: p1, player2: p2, score: saved.score||'', winner: saved.winner||null });
+        }
+        rounds.push(cur);
+      }
+
+      // 3rd place match
+      const sfMatches = rounds[4]; // SF
+      const thirdId   = 'THIRD_1';
+      const savedThird = matchesByRound[thirdId] || {};
+      let third_p1 = savedThird.player1 || null;
+      let third_p2 = savedThird.player2 || null;
+      if (!third_p1 && sfMatches[0]) {
+        const sf1 = sfMatches[0];
+        third_p1 = sf1.winner ? (sf1.winner==='player1' ? sf1.player2 : sf1.player1) : null;
+      }
+      if (!third_p2 && sfMatches[1]) {
+        const sf2 = sfMatches[1];
+        third_p2 = sf2.winner ? (sf2.winner==='player1' ? sf2.player2 : sf2.player1) : null;
+      }
+      bracketMatchData[thirdId] = { ...savedThird, player1: third_p1, player2: third_p2, roundLabel: 'Utakmica za 3. mjesto' };
+
+      function playerHtml(name, isWinner, isLoser) {
+        const cls = isWinner ? 'winner' : isLoser ? 'loser' : (!name ? 'tbd' : '');
+        return `<div class="bracket-player ${cls}">
+          <span class="bracket-player-name">${escapeHtml(name||'TBD')}</span>
+        </div>`;
+      }
+
+      function matchHtml(match, pairClass) {
+        const saved = bracketMatchData[match.id]||{};
+        const score = saved.score||'';
+        const hasScore = !!score;
+        const parts = hasScore ? score.split('-') : [];
+        const s1 = parts[0]||'', s2 = parts[1]||'';
+        const w = saved.winner||null;
+        return `<div class="bracket-match ${pairClass||''}" onclick="openBracketMatchPopup('${match.id}')">
+          <div class="bracket-player ${w==='player1'?'winner':w==='player2'?'loser':(!match.player1?'tbd':'')}">
+            <span class="bracket-player-name">${escapeHtml(match.player1||'TBD')}</span>
+            ${hasScore?`<span class="bracket-player-score">${s1}</span>`:''}
+          </div>
+          <div class="bracket-player ${w==='player2'?'winner':w==='player1'?'loser':(!match.player2?'tbd':'')}">
+            <span class="bracket-player-name">${escapeHtml(match.player2||'TBD')}</span>
+            ${hasScore?`<span class="bracket-player-score">${s2}</span>`:''}
+          </div>
+        </div>`;
+      }
+
+      const thirdMatch = bracketMatchData[thirdId];
+
+      const roundsHtml = rounds.map((matches, ri) => `
+        <div class="bracket-round">
+          <div class="bracket-round-title">${ROUND_LABELS[ri]}</div>
+          <div class="bracket-matches">
+            ${ri === rounds.length - 1 ? `<div class="bracket-final-title">🏆 FINALE</div>` : ''}
+            ${matches.map((m,i) => matchHtml(m, i%2===0?'pair-top':'pair-bottom')).join('')}
+            ${ri === rounds.length - 1 ? `
+              <div class="bracket-third-title">🥉 UTAKMICA ZA 3. MJESTO</div>
+              ${matchHtml({ id: thirdId, player1: thirdMatch.player1, player2: thirdMatch.player2 })}
+            ` : ''}
+          </div>
+        </div>`).join('');
+
+      container.innerHTML = `
+        <div class="bracket-wrap" id="bracket-wrap-upper">
+          <div class="bracket-rounds">${roundsHtml}</div>
+        </div>
+        <div style="text-align:center;padding:14px 12px;font-size:0.82rem;font-weight:600;color:rgba(255,255,255,0.5);">
+          Adriatic steel league ™ ®
+        </div>`;
+
+      requestAnimationFrame(() => scheduleAllPairOffsets());
+      window.__observeBracketWrap('bracket-wrap-upper');
+        }
+
+    // ── DONJI ŽDRIJEB ──
+    const LROUND_IDS    = ['LR64','LR32','LR16','LQF','LSF','LF'];
+    const LROUND_LABELS = ['Donji Last of 64','Donji Last of 32','Donja Osmina finala','Donje Četvrtfinale','Donje Polufinale','Donje Finale'];
+    const lowerBracketMatchData = {};
+
+    function renderLowerBracket(matchesByRound) {
+      const container = document.getElementById('donji-zdrijeb-content');
+
+      // Build LR64 (nema šablone kodova - imena se upisuju ručno u admin panelu)
+      const lr64Matches = Array.from({ length: 32 }, (_, i) => {
+        const id = `LR64_${i + 1}`;
+        const saved = matchesByRound[id] || {};
+        const p1 = saved.player1 || null;
+        const p2 = saved.player2 || null;
+        lowerBracketMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `Donji Last of 64 — Meč ${i + 1}` };
+        return { id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null };
+      });
+
+      // Build subsequent rounds
+      const rounds = [lr64Matches];
+      for (let r = 1; r < LROUND_IDS.length; r++) {
+        const prev = rounds[r-1];
+        const count = prev.length / 2;
+        const cur = [];
+        for (let i = 0; i < count; i++) {
+          const id    = `${LROUND_IDS[r]}_${i+1}`;
+          const saved = matchesByRound[id] || {};
+          const p1 = saved.player1 || (prev[i*2]?.winner   ? (prev[i*2].winner==='player1'   ? prev[i*2].player1   : prev[i*2].player2)   : null);
+          const p2 = saved.player2 || (prev[i*2+1]?.winner ? (prev[i*2+1].winner==='player1' ? prev[i*2+1].player1 : prev[i*2+1].player2) : null);
+          lowerBracketMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${LROUND_LABELS[r]} — Meč ${i+1}` };
+          cur.push({ id, player1: p1, player2: p2, score: saved.score||'', winner: saved.winner||null });
+        }
+        rounds.push(cur);
+      }
+
+      // 3rd place match
+      const sfMatches = rounds[4]; // LSF
+      const thirdId   = 'LTHIRD_1';
+      const savedThird = matchesByRound[thirdId] || {};
+      let third_p1 = savedThird.player1 || null;
+      let third_p2 = savedThird.player2 || null;
+      if (!third_p1 && sfMatches[0]) {
+        const sf1 = sfMatches[0];
+        third_p1 = sf1.winner ? (sf1.winner==='player1' ? sf1.player2 : sf1.player1) : null;
+      }
+      if (!third_p2 && sfMatches[1]) {
+        const sf2 = sfMatches[1];
+        third_p2 = sf2.winner ? (sf2.winner==='player1' ? sf2.player2 : sf2.player1) : null;
+      }
+      lowerBracketMatchData[thirdId] = { ...savedThird, player1: third_p1, player2: third_p2, roundLabel: 'Donja utakmica za 3. mjesto' };
+
+      function matchHtml(match, pairClass) {
+        const saved = lowerBracketMatchData[match.id]||{};
+        const score = saved.score||'';
+        const hasScore = !!score;
+        const parts = hasScore ? score.split('-') : [];
+        const s1 = parts[0]||'', s2 = parts[1]||'';
+        const w = saved.winner||null;
+        return `<div class="bracket-match ${pairClass||''}" onclick="openLowerBracketMatchPopup('${match.id}')">
+          <div class="bracket-player ${w==='player1'?'winner':w==='player2'?'loser':(!match.player1?'tbd':'')}">
+            <span class="bracket-player-name">${escapeHtml(match.player1||'TBD')}</span>
+            ${hasScore?`<span class="bracket-player-score">${s1}</span>`:''}
+          </div>
+          <div class="bracket-player ${w==='player2'?'winner':w==='player1'?'loser':(!match.player2?'tbd':'')}">
+            <span class="bracket-player-name">${escapeHtml(match.player2||'TBD')}</span>
+            ${hasScore?`<span class="bracket-player-score">${s2}</span>`:''}
+          </div>
+        </div>`;
+      }
+
+      const thirdMatch = lowerBracketMatchData[thirdId];
+
+      const roundsHtml = rounds.map((matches, ri) => `
+        <div class="bracket-round">
+          <div class="bracket-round-title">${LROUND_LABELS[ri]}</div>
+          <div class="bracket-matches">
+            ${ri === rounds.length - 1 ? `<div class="bracket-final-title">🏆 DONJE FINALE</div>` : ''}
+            ${matches.map((m,i) => matchHtml(m, i%2===0?'pair-top':'pair-bottom')).join('')}
+            ${ri === rounds.length - 1 ? `
+              <div class="bracket-third-title">🥉 DONJA UTAKMICA ZA 3. MJESTO</div>
+              ${matchHtml({id: thirdId, player1: thirdMatch.player1, player2: thirdMatch.player2})}
+            ` : ''}
+          </div>
+        </div>`).join('');
+
+      container.innerHTML = `
+        <div class="bracket-wrap" id="bracket-wrap-lower">
+          <div class="bracket-rounds">${roundsHtml}</div>
+        </div>
+        <div style="text-align:center;padding:14px 12px;font-size:0.82rem;font-weight:600;color:rgba(255,255,255,0.5);">
+          Adriatic steel league ™ ®
+        </div>`;
+
+      requestAnimationFrame(() => scheduleAllPairOffsets());
+      window.__observeBracketWrap('bracket-wrap-lower');
+    }
+
+    function openLowerBracketMatchPopup(matchId) {
+      const d = lowerBracketMatchData[matchId];
+      if (!d) return;
+      const score = d.score||''; const hasScore = !!score;
+      const p1 = d.player1||'TBD'; const p2 = d.player2||'TBD';
+      const statsRows = hasScore ? `
+        <div class="popup-stats">
+          <div class="popup-stat-val-l">${d.average1??'--'}</div><div class="popup-stat-label">AVG</div><div class="popup-stat-val-r">${d.average2??'--'}</div>
+          <div class="popup-stat-val-l">${d.first9_1??'--'}</div><div class="popup-stat-label">First 9</div><div class="popup-stat-val-r">${d.first9_2??'--'}</div>
+          <div class="popup-stat-val-l">${d.bestleg1??'--'}</div><div class="popup-stat-label">Best Leg</div><div class="popup-stat-val-r">${d.bestleg2??'--'}</div>
+          <div class="popup-stat-val-l">${d.bestcheckout1??'--'}</div><div class="popup-stat-label">Best CO</div><div class="popup-stat-val-r">${d.bestcheckout2??'--'}</div>
+          <div class="popup-stat-val-l">${d['180_1']??'--'}</div><div class="popup-stat-label">180s</div><div class="popup-stat-val-r">${d['180_2']??'--'}</div>
+        </div>` : `<div class="popup-no-score">Meč još nije odigran</div>`;
+      const body = `<div class="popup-match">
+        <div class="popup-match-top">
+          <span class="popup-player-name">${escapeHtml(p1)}</span>
+          <span class="popup-score ${hasScore?'':'empty'}">${score||'-:-'}</span>
+          <span class="popup-player-name right">${escapeHtml(p2)}</span>
+        </div>${statsRows}</div>`;
+      showPopup(d.roundLabel||'', body, '');
+    }
   </script>
 
   <script type="module">
-    import { initializeApp }  from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-    import { getAnalytics }   from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+    import { getAnalytics }  from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
     import { getFirestore, collection, getDocs, query, orderBy, getDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -900,42 +2022,58 @@
 
     async function loadStandings() {
       const content = document.getElementById('content');
-      content.innerHTML = `
-        <div class="loading-state">
-          <div class="loading-spinner"></div>
-          <span class="loading-text">Učitavanje podataka...</span>
-        </div>`;
-
+      content.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje podataka...</span></div>`;
       try {
-        const seasonDoc    = await getDoc(doc(db, 'seasons', 'sezona-2'));
-        const currentKolo  = seasonDoc.data()?.currentKolo || 1;
+        const seasonDoc   = await getDoc(doc(db, 'seasons', 'sezona-2'));
+        const trenutnoKolo = seasonDoc.data()?.trenutnoKolo || [1];
+        const rawKolos = Array.isArray(trenutnoKolo) ? trenutnoKolo : [trenutnoKolo];
+        const visibleKolos = rawKolos
+          .flatMap(v => String(v).split(','))
+          .map(v => parseInt(v.trim()))
+          .filter(v => !isNaN(v));
 
         const groupsSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups'));
         const groups = [];
-        groupsSnap.forEach(d => groups.push({ id: d.id, ...d.data() }));
-        groups.sort((a, b) => a.id.localeCompare(b.id));
+        groupsSnap.forEach(d => groups.push({id:d.id,...d.data()}));
+        groups.sort((a,b) => a.id.localeCompare(b.id));
+
+        const groupStandingsMap = {};
+        const bestMatchByKolo = {};
+        const mvpByKolo = {};
 
         const groupsData = await Promise.all(groups.map(async (group, i) => {
-          const playersSnap = await getDocs(query(
-            collection(db, 'seasons', 'sezona-2', 'groups', group.id, 'players'),
-            orderBy('position')
-          ));
-          const players = [];
-          playersSnap.forEach(p => players.push(p.data().name));
+          const playersSnap = await getDocs(query(collection(db,'seasons','sezona-2','groups',group.id,'players'), orderBy('position')));
+          const players = []; playersSnap.forEach(p => players.push(p.data().name));
 
-          const matchesSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups', group.id, 'matches'));
-          const matchesMap = {};
-          matchesSnap.forEach(m => {
-            const d = m.data();
-            matchesMap[`${d.kolo}_${d.mec}`] = d;
-          });
+          const matchesSnap = await getDocs(collection(db,'seasons','sezona-2','groups',group.id,'matches'));
+          const matchesMap  = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; });
 
           const schedule        = generateSchedule(players);
-          const visibleSchedule = schedule.filter(r => r.kolo <= currentKolo);
+          const visibleSchedule = schedule.filter(r => visibleKolos.includes(r.kolo));
           const standings       = computeStandings(players, schedule, matchesMap);
-          const html            = createAccordion(group.name, i + 1, standings, visibleSchedule, matchesMap);
+          
+          schedule.forEach(({ kolo, matches }) => {
+            matches.forEach(({ mec }) => {
+              const m = matchesMap[`${kolo}_${mec}`];
+              if (m) {
+                considerBestMatch(bestMatchByKolo, kolo, m, group.name);
+                considerMVP(mvpByKolo, kolo, m);
+              }
+            });
+          });
 
-          return { html, standings };
+          // Extract group letter from group.id (e.g. "grupa-a" -> "A")
+          const letter = group.id.replace(/[^a-zA-Z]/g,'').slice(-1).toUpperCase();
+          groupStandingsMap[letter] = standings;
+
+          // Register players for global search/profile database
+          standings.forEach(standingRow => {
+            const playerMatches = buildPlayerMatches(standingRow.name, players, schedule, matchesMap);
+            registerPlayerSeasonData(standingRow.name, 'sezona-2', SEASON_LABELS['sezona-2'], letter, group.name, standingRow, playerMatches);
+          });
+
+          const html = createAccordion(group.name, i+1, standings, visibleSchedule, matchesMap);
+          return {html, standings};
         }));
 
         content.innerHTML = groupsData.map(g => g.html).join('');
@@ -943,18 +2081,69 @@
         const allPlayersStats = [];
         groupsData.forEach(g => allPlayersStats.push(...g.standings));
         renderNajbolji(allPlayersStats);
+        renderBestMatches(bestMatchByKolo, mvpByKolo);
 
         if (seasonDoc.exists() && seasonDoc.data().lastUpdated) {
-          const d = seasonDoc.data().lastUpdated.toDate();
-          document.getElementById('updated-time').textContent = d.toLocaleString('hr-HR');
+          document.getElementById('updated-time').textContent = seasonDoc.data().lastUpdated.toDate().toLocaleString('hr-HR');
         }
 
-      } catch (err) {
-        showError(err);
+        // Load bracket
+        await loadBracket(groupStandingsMap);
+
+      } catch(err) { showError(err); }
+    }
+
+    async function loadSezona1Data() {
+      try {
+        const groupsSnap = await getDocs(collection(db, 'seasons', 'sezona-1', 'groups'));
+        const groups = []; groupsSnap.forEach(d => groups.push({id:d.id,...d.data()}));
+        groups.sort((a,b) => a.id.localeCompare(b.id));
+
+        await Promise.all(groups.map(async group => {
+          const playersSnap = await getDocs(collection(db,'seasons','sezona-1','groups',group.id,'players'));
+          const letter = group.id.replace(/[^a-zA-Z]/g,'').slice(-1).toUpperCase();
+
+          playersSnap.forEach(p => {
+            const d = p.data();
+            const standingsRow = {
+              name: d.name, win: d.win, draw: d.draw, lost: d.lost, total: d.total,
+              legs: d.legs, pts: d.pts, avg: d.avg, f9: d.f9, bl: d.bl, bco: d.bco, x180: d.x180
+            };
+            registerPlayerSeasonData(d.name, 'sezona-1', SEASON_LABELS['sezona-1'], letter, group.name, standingsRow, [], d.playoff || null);
+          });
+        }));
+      } catch(err) {
+        console.error('Greška pri učitavanju sezone 1:', err);
       }
     }
 
+    async function loadBracket(groupStandingsMap) {
+      try {
+        const bracketSnap = await getDocs(collection(db,'seasons','sezona-2','bracket'));
+        const matchesByRound = {};
+        bracketSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
+        renderBracket(matchesByRound, groupStandingsMap);
+      } catch(err) {
+        document.getElementById('gornji-zdrijeb-content').innerHTML =
+          '<div class="error-state">Greška pri učitavanju ždrijeba: ' + escapeHtml(err.message) + '</div>';
+      }
+    }
+
+    async function loadLowerBracket() {
+      try {
+        const lowerBracketSnap = await getDocs(collection(db,'seasons','sezona-2','lower-bracket'));
+        const matchesByRound = {};
+        lowerBracketSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
+        renderLowerBracket(matchesByRound);
+      } catch(err) {
+        document.getElementById('donji-zdrijeb-content').innerHTML =
+          '<div class="error-state">Greška pri učitavanju ždrijeba: ' + escapeHtml(err.message) + '</div>';
+      }
+    }
+
+    loadSezona1Data();
     loadStandings();
+    loadLowerBracket();
   </script>
 </body>
 </html>

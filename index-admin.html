@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="hr">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,20 +8,20 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-status-bar-style" content="black-translucent">
   <title>Adriatic Steel League - Admin</title>
-  <meta name="description" content="Adriatic Steel League - službena darts liga sa 8 grupa, uživo rezultati, tablice i statistike igrača. Pratite ždrijeb, najbolje u ligi i sve matcheve Sezone 2.">
-  <meta name="keywords" content="Adriatic Steel League, ASL, darts liga, darts rezultati, darts tablice, darts Croatia, darts Hrvatska, steel tip darts">
-  <meta name="author" content="Adriatic Steel League">
-  <!-- Preconnect to external domains -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <!-- Google Fonts -->
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
-  <!-- Font Awesome -->
-  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
-	<link rel="icon" href="images/ASL-logo.webp">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap"
+    as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" rel="stylesheet">
+  </noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style"
+    onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  </noscript>
+  <link rel="icon" href="images/ASL-logo.webp">
 
   <style>
     :root {
@@ -30,16 +31,26 @@
       --panel-2: rgba(12, 20, 38, 0.96);
       --header: rgba(21, 49, 99, 0.95);
       --header-hover: rgba(39, 81, 159, 0.98);
-      --line: rgba(255,255,255,0.10);
-      --shadow: 0 18px 50px rgba(0,0,0,0.35);
+      --line: rgba(255, 255, 255, 0.10);
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
       --radius: 18px;
       --accent: #4a90e2;
-      --accent-hover: #5ba3f5;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
 
-    html, body {
+    *::-webkit-scrollbar {
+      display: none;
+    }
+
+    html,
+    body {
       width: 100%;
       min-height: 100%;
       overflow-x: hidden;
@@ -47,6 +58,13 @@
       font-family: 'Lexend', sans-serif;
       font-weight: 400;
       color: var(--text);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font-family: inherit;
     }
 
     .bg-image {
@@ -66,7 +84,25 @@
       background: linear-gradient(rgba(3, 8, 18, 0.65), rgba(3, 8, 18, 0.88));
     }
 
-    /* ── LOGIN SCREEN ── */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* ── LOGIN ── */
     #login-screen {
       position: relative;
       z-index: 10;
@@ -82,24 +118,19 @@
       width: 100%;
       max-width: 420px;
       background: rgba(8, 14, 28, 0.90);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 24px;
       padding: 40px 36px;
       backdrop-filter: blur(12px);
-      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
       animation: fadeInUp 0.5s ease both;
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to   { opacity: 1; transform: translateY(0); }
     }
 
     .login-logo {
       display: block;
       margin: 0 auto 20px;
       max-width: 100px;
-      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.6));
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
     }
 
     .login-title {
@@ -115,7 +146,7 @@
     .login-subtitle {
       text-align: center;
       font-size: 0.8rem;
-      color: rgba(255,255,255,0.35);
+      color: rgba(255, 255, 255, 0.35);
       letter-spacing: 1px;
       text-transform: uppercase;
       margin-bottom: 32px;
@@ -146,11 +177,10 @@
     .form-input {
       width: 100%;
       padding: 13px 16px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
       color: #fff;
-      font-family: 'Lexend', sans-serif;
       font-size: 0.95rem;
       outline: none;
       transition: border-color 0.2s ease, background 0.2s ease;
@@ -162,7 +192,7 @@
     }
 
     .form-input::placeholder {
-      color: rgba(255,255,255,0.2);
+      color: rgba(255, 255, 255, 0.2);
     }
 
     .btn-login {
@@ -170,10 +200,9 @@
       padding: 14px;
       margin-top: 8px;
       background: rgba(21, 49, 99, 1);
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 12px;
       color: #fff;
-      font-family: 'Lexend', sans-serif;
       font-size: 0.95rem;
       font-weight: 700;
       letter-spacing: 1px;
@@ -212,7 +241,7 @@
       text-align: center;
       margin-top: 28px;
       font-size: 0.72rem;
-      color: rgba(255,255,255,0.2);
+      color: rgba(255, 255, 255, 0.2);
       letter-spacing: 0.5px;
     }
 
@@ -249,11 +278,11 @@
       width: 48px;
       height: 48px;
       object-fit: contain;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
     }
 
     .admin-brand-text {
-      font-size: 1rem;
+      font-size: 1.4rem;
       font-weight: 800;
       letter-spacing: 1px;
     }
@@ -263,6 +292,7 @@
       color: var(--muted);
       letter-spacing: 1px;
       text-transform: uppercase;
+      margin-top: 3px;
     }
 
     .admin-user-info {
@@ -294,11 +324,10 @@
 
     .btn-logout {
       padding: 8px 18px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 999px;
       color: var(--muted);
-      font-family: 'Lexend', sans-serif;
       font-size: 0.8rem;
       font-weight: 600;
       cursor: pointer;
@@ -332,6 +361,47 @@
       color: var(--muted);
     }
 
+    /* ── ADMIN TABS ── */
+    .admin-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .admin-tab-btn {
+      padding: 10px 24px;
+      background: rgba(10, 19, 38, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .admin-tab-btn:hover {
+      background: rgba(38, 74, 138, 0.7);
+      color: #fff;
+    }
+
+    .admin-tab-btn.active {
+      background: rgba(21, 49, 99, 1);
+      border-color: rgba(255, 255, 255, 0.7);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+    }
+
+    .admin-tab-panel {
+      display: none;
+    }
+
+    .admin-tab-panel.active {
+      display: block;
+    }
+
+    /* ── GROUPS GRID ── */
     .groups-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -351,9 +421,9 @@
     }
 
     .group-card:hover {
-      border-color: rgba(255,255,255,0.25);
+      border-color: rgba(255, 255, 255, 0.25);
       transform: translateY(-2px);
-      box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
     }
 
     .group-card-header {
@@ -373,10 +443,10 @@
     .group-card-count {
       font-size: 0.75rem;
       color: var(--muted);
-      background: rgba(255,255,255,0.08);
+      background: rgba(255, 255, 255, 0.08);
       padding: 3px 10px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .group-card-body {
@@ -404,6 +474,506 @@
       letter-spacing: 0.5px;
     }
 
+    /* ── BRACKET ADMIN ── */
+    .bracket-admin-wrap {
+      overflow-x: auto;
+    }
+
+    .bracket-admin-rounds {
+      display: flex;
+      gap: 0;
+      min-width: max-content;
+      align-items: stretch;
+    }
+
+    .bracket-admin-round {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+    }
+
+    .bracket-admin-round-title {
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 10px 12px;
+      background: rgba(21, 49, 99, 0.9);
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      white-space: nowrap;
+    }
+
+    .bracket-admin-matches {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-around;
+      padding: 8px 0;
+      position: relative;
+    }
+
+    .bracket-admin-round:last-child .bracket-admin-matches {
+      justify-content: center;
+    }
+
+    /* ── CSS BRACKET CONNECTORS (no JS/SVG) ──
+       Ista logika kao u index.html, prilagođena admin klasama.
+       ::before = ulazna linija s lijeve strane (iz prethodne runde)
+       ::after  = izlazni L-spoj prema sljedećoj rundi (vertikala + kratka
+                  horizontala kombinirane u jednom elementu preko border-a) */
+    .bracket-admin-round:not(:first-child) .bam-match::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: 100%;
+      width: 8px;
+      height: 0;
+      border-top: 1.5px solid rgba(255, 255, 255, 1);
+      pointer-events: none;
+    }
+
+    .bracket-admin-round:not(:last-child) .bam-match.pair-top::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 100%;
+      width: 8px;
+      height: calc(var(--pair-offset, 0px) / 2);
+      border-right: 1.5px solid rgba(255, 255, 255, 1);
+      border-top: 1.5px solid rgba(255, 255, 255, 1);
+      pointer-events: none;
+    }
+
+    .bracket-admin-round:not(:last-child) .bam-match.pair-bottom::after {
+      content: '';
+      position: absolute;
+      bottom: 50%;
+      left: 100%;
+      width: 8px;
+      height: calc(var(--pair-offset, 0px) / 2);
+      border-right: 1.5px solid rgba(255, 255, 255, 1);
+      border-bottom: 1.5px solid rgba(255, 255, 255, 1);
+      pointer-events: none;
+    }
+
+    .bam-match {
+      margin: 4px 8px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      transition: 0.2s ease;
+      position: relative;
+    }
+
+    .bam-match:hover .bam-player {
+      border-color: rgba(0, 102, 255, 0.7);
+    }
+
+    .bam-player {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      background: rgba(12, 20, 38, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.82rem;
+      gap: 8px;
+      transition: 0.2s ease;
+    }
+
+    .bam-player:first-child {
+      border-radius: 8px 8px 0 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .bam-player:last-child {
+      border-radius: 0 0 8px 8px;
+    }
+
+    .bam-player.winner {
+      background: rgba(21, 49, 99, 0.95);
+      border-color: rgba(120, 170, 255, 0.35);
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .bam-player.loser {
+      opacity: 0.4;
+    }
+
+    .bam-player.tbd {
+      color: rgba(255, 255, 255, 0.3);
+      font-style: italic;
+    }
+
+    .bam-player-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bam-player-score {
+      font-weight: 800;
+      font-size: 0.85rem;
+      min-width: 20px;
+      text-align: right;
+      color: #7eb8ff;
+    }
+
+    .bracket-admin-final-title {
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #FFD700;
+      letter-spacing: 1px;
+      margin: 10px;
+      text-shadow: 0 0 12px rgba(255, 215, 0, 0.35);
+    }
+
+    .bracket-admin-third-title {
+      text-align: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #cd7f32;
+      letter-spacing: 0.5px;
+      margin: 10px;
+    }
+
+    /* ── BRACKET EDIT POPUP ── */
+    .bedit-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.72);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeInUp 0.2s ease both;
+    }
+
+    .bedit-popup {
+      background: rgba(8, 14, 28, 0.98);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 24px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+    }
+
+    .bedit-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .bedit-title {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .bedit-close {
+      width: 32px;
+      height: 32px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s ease;
+    }
+
+    .bedit-close:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .bedit-players {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      padding: 14px;
+      background: rgba(6, 12, 24, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+    }
+
+    .bedit-player-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .bedit-player-name.right {
+      text-align: right;
+    }
+
+    .bedit-vs {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .bedit-section {
+      margin-bottom: 18px;
+    }
+
+    .bedit-section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .bedit-score-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .bedit-score-input {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: center;
+      outline: none;
+      transition: 0.2s ease;
+    }
+
+    .bedit-score-input:focus {
+      border-color: rgba(74, 144, 226, 0.6);
+      background: rgba(74, 144, 226, 0.08);
+    }
+
+    .bedit-score-sep {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .bedit-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .bedit-stat-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .bedit-stat-input {
+      width: 100%;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+      outline: none;
+      transition: 0.2s ease;
+    }
+
+    .bedit-stat-input:focus {
+      border-color: rgba(74, 144, 226, 0.6);
+      background: rgba(74, 144, 226, 0.08);
+    }
+
+    .bedit-winner-select {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.85rem;
+      cursor: pointer;
+      outline: none;
+      margin-bottom: 16px;
+    }
+
+    .bedit-winner-select:focus {
+      border-color: rgba(74, 144, 226, 0.6);
+    }
+
+    .bedit-winner-select option {
+      background: #0a1628;
+    }
+
+    .bedit-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .bedit-btn-save {
+      padding: 10px 24px;
+      background: rgba(21, 49, 99, 1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bedit-btn-save:hover {
+      background: rgba(39, 81, 159, 0.98);
+    }
+
+    .bedit-btn-save:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .bedit-btn-save.saved {
+      background: rgba(46, 204, 113, 0.2);
+      border-color: rgba(46, 204, 113, 0.4);
+      color: #2ecc71;
+    }
+
+    .bedit-btn-delete {
+      padding: 10px 20px;
+      background: rgba(231, 76, 60, 0.12);
+      border: 1px solid rgba(231, 76, 60, 0.3);
+      border-radius: 999px;
+      color: #e74c3c;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .bedit-btn-delete:hover {
+      background: rgba(231, 76, 60, 0.25);
+    }
+
+    /* ── AVG LIGE ── */
+    .avg-league-tab-btn {
+      padding: 8px 20px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(10, 19, 38, 0.78);
+      color: var(--muted);
+    }
+
+    .avg-league-tab-btn:hover {
+      background: rgba(38, 74, 138, 0.7);
+      color: #fff;
+    }
+
+    .avg-league-tab-btn.active {
+      background: rgba(21, 49, 99, 1);
+      border-color: rgba(255, 255, 255, 0.7);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+    }
+
+    .avg-create-form {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(7px);
+      animation: fadeInUp 0.4s ease both;
+    }
+
+    .avg-create-form h3 {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .player-multiselect {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 280px;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 8px;
+    }
+
+    .player-checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.15s ease;
+      user-select: none;
+    }
+
+    .player-checkbox-row:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .player-checkbox-row input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: #4a90e2;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .player-checkbox-row label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    /* ── LOADING / TOAST ── */
     .loading-state {
       display: flex;
       flex-direction: column;
@@ -416,13 +986,11 @@
     .loading-spinner {
       width: 34px;
       height: 34px;
-      border: 4px solid rgba(255,255,255,0.1);
-      border-top: 4px solid rgba(120,170,255,0.85);
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-top: 4px solid rgba(120, 170, 255, 0.85);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
 
     .loading-text {
       font-size: 1rem;
@@ -430,41 +998,95 @@
       color: var(--muted);
     }
 
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      padding: 12px 20px;
+      background: rgba(12, 20, 38, 0.97);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: rgba(46, 204, 113, 0.4);
+      color: #2ecc71;
+    }
+
+    .toast.error {
+      border-color: rgba(231, 76, 60, 0.4);
+      color: #e74c3c;
+    }
+
     @media (max-width: 480px) {
-      .login-card { padding: 28px 22px; }
-      .admin-topbar { flex-direction: column; align-items: flex-start; }
-      .groups-grid { grid-template-columns: 1fr; }
+      .login-card {
+        padding: 28px 22px;
+      }
+
+      .admin-topbar {
+        flex-direction: column
+      }
+
+      .groups-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .bracket-admin-round {
+        min-width: 150px;
+      }
+
+      .bedit-popup {
+        padding: 18px;
+      }
+
+      .avg-create-form .two-col {
+        grid-template-columns: 1fr !important;
+      }
+
+      .admin-tabs {
+        justify-content: space-evenly
+      }
     }
   </style>
 </head>
+
 <body>
   <div class="bg-image"></div>
   <div class="bg-overlay"></div>
 
-  <!-- LOGIN SCREEN -->
-  <div id="login-screen">
+  <!-- LOGIN -->
+  <div id="login-screen" style="display: none;">
     <div class="login-card">
-      <a href="index.html"><img class="login-logo" src="images/ASL-logo.webp" alt="ASL Logo" fetchpriority="high" loading="eager"></a>
+      <a href="index.html"><img class="login-logo" src="images/ASL-logo.webp" alt="ASL Logo" fetchpriority="high"
+          loading="eager"></a>
       <div class="login-title">Adriatic Steel League</div>
       <div class="login-subtitle">Admin Panel</div>
       <div class="login-divider"></div>
-
       <div class="form-group">
         <label class="form-label" for="email">Email</label>
         <input class="form-input" type="email" id="email" placeholder="user@asl.com" autocomplete="email">
       </div>
-
       <div class="form-group">
         <label class="form-label" for="password">Lozinka</label>
         <input class="form-input" type="password" id="password" placeholder="••••••••" autocomplete="current-password">
       </div>
-
-      <button class="btn-login" id="btn-login" onclick="handleLogin()">
-        Prijava
-      </button>
-
+      <button class="btn-login" id="btn-login" onclick="handleLogin()">Prijava</button>
       <div class="login-error" id="login-error"></div>
-
       <div class="login-footer">Adriatic Steel League ™ ® · Samo ovlašteni pristup</div>
     </div>
   </div>
@@ -472,10 +1094,9 @@
   <!-- ADMIN PANEL -->
   <div id="admin-screen">
     <div class="admin-container">
-
       <div class="admin-topbar">
         <div class="admin-brand">
-          <a href="index.html"><img class="login-logo" src="images/ASL-logo.webp" alt="ASL Logo" fetchpriority="high" loading="eager"></a>
+          <a href="index.html"><img src="images/ASL-logo.webp" alt="ASL Logo" fetchpriority="high" loading="eager"></a>
           <div>
             <div class="admin-brand-text">ADRIATIC STEEL LEAGUE</div>
             <div class="admin-brand-sub">Admin Panel · Sezona 2</div>
@@ -483,33 +1104,91 @@
         </div>
         <div class="admin-user-info">
           <span class="admin-role-badge admin" id="role-badge">Admin</span>
-          <span id="user-email" style="font-size:0.8rem; color: var(--muted);"></span>
-          <button class="btn-logout" onclick="handleLogout()">
-            <i class="fas fa-sign-out-alt"></i> Odjava
-          </button>
+          <span id="user-email" style="font-size:0.8rem;color:var(--muted);"></span>
+          <button class="btn-logout" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Odjava</button>
         </div>
       </div>
 
       <div class="admin-welcome">
-        <h2 id="welcome-msg">Dobrodošli!</h2>
-        <p id="welcome-sub">Učitavanje podataka...</p>
+        <h2 id="welcome-msg">Dobrodošli U 2. sezonu!</h2>
       </div>
 
-      <div id="groups-container">
-        <div class="loading-state">
-          <div class="loading-spinner"></div>
-          <span class="loading-text">Učitavanje grupa...</span>
+      <div class="admin-tabs">
+        <button class="admin-tab-btn active" onclick="switchAdminTab('grupe', this)">
+          <i class="fas fa-layer-group" style="margin-right:6px;"></i>Grupe
+        </button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('bracket', this)">
+          <i class="fas fa-trophy" style="margin-right:6px;"></i>Gornji ždrijeb
+        </button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('lower-bracket', this)">
+          <i class="fas fa-trophy" style="margin-right:6px;"></i>Donji ždrijeb
+        </button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('avg-lige', this)">
+          <i class="fas fa-chart-bar" style="margin-right:6px;"></i>AVG Lige
+        </button>
+      </div>
+
+      <div id="admin-tab-grupe" class="admin-tab-panel active">
+        <div id="groups-container">
+          <div class="loading-state">
+            <div class="loading-spinner"></div><span class="loading-text">Učitavanje grupa...</span>
+          </div>
         </div>
       </div>
 
+      <div id="admin-tab-bracket" class="admin-tab-panel">
+        <div id="bracket-admin-container">
+          <div class="loading-state">
+            <div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="admin-tab-lower-bracket" class="admin-tab-panel">
+        <div id="lower-bracket-admin-container">
+          <div class="loading-state">
+            <div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="admin-tab-avg-lige" class="admin-tab-panel">
+        <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+          <button class="avg-league-tab-btn active" id="avg-tab-btn-diamond"
+            onclick="switchAvgLeagueTab('diamond', this)">💎 Diamond</button>
+          <button class="avg-league-tab-btn" id="avg-tab-btn-gold" onclick="switchAvgLeagueTab('gold', this)">🥇
+            Gold</button>
+          <button class="avg-league-tab-btn" id="avg-tab-btn-silver" onclick="switchAvgLeagueTab('silver', this)">🥈
+            Silver</button>
+          <button class="avg-league-tab-btn" id="avg-tab-btn-bronze" onclick="switchAvgLeagueTab('bronze', this)">🥉
+            Bronze</button>
+        </div>
+        <div id="avg-league-diamond" class="avg-league-panel">
+          <div id="avg-container-diamond"></div>
+        </div>
+        <div id="avg-league-gold" class="avg-league-panel" style="display:none;">
+          <div id="avg-container-gold"></div>
+        </div>
+        <div id="avg-league-silver" class="avg-league-panel" style="display:none;">
+          <div id="avg-container-silver"></div>
+        </div>
+        <div id="avg-league-bronze" class="avg-league-panel" style="display:none;">
+          <div id="avg-container-bronze"></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Firebase -->
+  <div id="bedit-overlay" class="bedit-overlay" style="display:none;" onclick="closeBEditPopup(event)">
+    <div class="bedit-popup" id="bedit-popup-content"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
 
     const firebaseConfig = {
@@ -527,75 +1206,91 @@
     const db = getFirestore(app);
     getAnalytics(app);
 
-    // Expose functions to global scope
-    window.handleLogin = async function() {
+    let currentIsAdmin = false;
+
+    // ── HELPERS ──
+    const R64_DRAW = [
+      { p1: '1A', p2: '4P' }, { p1: '2N', p2: '3C' }, { p1: '1O', p2: '4B' }, { p1: '2D', p2: '3M' },
+      { p1: '1G', p2: '4J' }, { p1: '2L', p2: '3E' }, { p1: '1I', p2: '4H' }, { p1: '2F', p2: '3K' },
+      { p1: '1C', p2: '4N' }, { p1: '2P', p2: '3A' }, { p1: '1M', p2: '4D' }, { p1: '2B', p2: '3O' },
+      { p1: '1E', p2: '4L' }, { p1: '2J', p2: '3G' }, { p1: '1K', p2: '4F' }, { p1: '2H', p2: '3I' },
+      { p1: '1B', p2: '4O' }, { p1: '2M', p2: '3D' }, { p1: '1P', p2: '4A' }, { p1: '2C', p2: '3N' },
+      { p1: '1H', p2: '4I' }, { p1: '2K', p2: '3F' }, { p1: '1J', p2: '4G' }, { p1: '2E', p2: '3L' },
+      { p1: '1D', p2: '4M' }, { p1: '2O', p2: '3B' }, { p1: '1N', p2: '4C' }, { p1: '2A', p2: '3P' },
+      { p1: '1F', p2: '4K' }, { p1: '2I', p2: '3H' }, { p1: '1L', p2: '4E' }, { p1: '2G', p2: '3J' }
+    ];
+
+    const ROUND_IDS = ['R64', 'R32', 'R16', 'QF', 'SF', 'F'];
+    const ROUND_LABELS = ['Last of 64', 'Last of 32', 'Osmina finala', 'Četvrtfinale', 'Polufinale', 'Finale'];
+
+    const LROUND_IDS = ['LR64', 'LR32', 'LR16', 'LQF', 'LSF', 'LF'];
+    const LROUND_LABELS = ['Donji Last of 64', 'Donji Last of 32', 'Donja Osmina finala', 'Donje Četvrtfinale', 'Donje Polufinale', 'Donje Finale'];
+
+
+    function esc(v) {
+      if (!v) return '';
+      return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      t.textContent = msg; t.className = `toast ${type} show`;
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function pf(v) { const f = parseFloat(v); return isNaN(f) ? null : f; }
+    function pi(v) { const i = parseInt(v); return isNaN(i) ? null : i; }
+
+    function slugify(name) {
+      return name.toLowerCase()
+        .replace(/š/g, 's').replace(/č/g, 'c').replace(/ć/g, 'c')
+        .replace(/ž/g, 'z').replace(/đ/g, 'd')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    // ── ADMIN TABS ──
+    window.switchAdminTab = function (name, btn) {
+      document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('admin-tab-' + name).classList.add('active');
+      btn.classList.add('active');
+      if (name === 'avg-lige') loadAvgLeague('diamond');
+    };
+
+    // ── AUTH ──
+    window.handleLogin = async function () {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       const btn = document.getElementById('btn-login');
       const errorEl = document.getElementById('login-error');
-
-      if (!email || !password) {
-        showError('Unesite email i lozinku.');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = 'Prijava...';
-      errorEl.style.display = 'none';
-
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (err) {
-        btn.disabled = false;
-        btn.textContent = 'Prijava';
-        showError('Pogrešan email ili lozinka.');
-      }
+      if (!email || !password) { showLoginError('Unesite email i lozinku.'); return; }
+      btn.disabled = true; btn.textContent = 'Prijava...'; errorEl.style.display = 'none';
+      try { await signInWithEmailAndPassword(auth, email, password); }
+      catch (err) { btn.disabled = false; btn.textContent = 'Prijava'; showLoginError('Pogrešan email ili lozinka.'); }
     };
 
-    window.handleLogout = async function() {
-      await signOut(auth);
-    };
+    window.handleLogout = async function () { await signOut(auth); };
 
-    function showError(msg) {
-      const el = document.getElementById('login-error');
-      el.textContent = msg;
-      el.style.display = 'block';
-    }
+    function showLoginError(msg) { const el = document.getElementById('login-error'); el.textContent = msg; el.style.display = 'block'; }
 
-    // Enter key on password field
-    document.getElementById('password').addEventListener('keydown', e => {
-      if (e.key === 'Enter') window.handleLogin();
-    });
+    document.getElementById('password').addEventListener('keydown', e => { if (e.key === 'Enter') window.handleLogin(); });
 
-    // Auth state listener
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // Ulogiran — prikaži admin panel
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('admin-screen').style.display = 'block';
         document.getElementById('user-email').textContent = user.email;
-
-        // Dohvati user podatke
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const userData = userDoc.exists() ? userDoc.data() : { role: 'operator', groups: [] };
-
-        const isAdmin = userData.role === 'admin';
-
-        // Postavi badge i welcome poruku
+        currentIsAdmin = userData.role === 'admin';
         const badge = document.getElementById('role-badge');
-        badge.textContent = isAdmin ? 'Admin' : 'Operater';
-        badge.className = 'admin-role-badge ' + (isAdmin ? 'admin' : 'operator');
+        badge.textContent = currentIsAdmin ? 'Admin' : 'Operater';
+        badge.className = 'admin-role-badge ' + (currentIsAdmin ? 'admin' : 'operator');
+        document.getElementById('welcome-msg').textContent = 'Dobrodošli u 2. sezonu, ' + user.email.split('@')[0] + '!';
 
-        document.getElementById('welcome-msg').textContent = 'Dobrodošli, ' + user.email.split('@')[0] + '!';
-        document.getElementById('welcome-sub').textContent = isAdmin
-          ? 'Imate pristup svim grupama — Sezona 2'
-          : 'Imate pristup grupama: ' + (userData.groups || []).join(', ');
-
-        // Učitaj grupe
-        await loadGroups(isAdmin, userData.groups || []);
-
+        await loadGroups(currentIsAdmin, userData.groups || []);
+        await loadBracketAdmin(); await loadLowerBracketAdmin();
       } else {
-        // Odlogiran — prikaži login
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('admin-screen').style.display = 'none';
         document.getElementById('btn-login').disabled = false;
@@ -603,59 +1298,841 @@
       }
     });
 
+    // ── GRUPE (Sezona 2) ──
     async function loadGroups(isAdmin, allowedGroups) {
       const container = document.getElementById('groups-container');
-
       try {
         const groupsSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups'));
         const groups = [];
-
-        groupsSnap.forEach(doc => {
-          const data = doc.data();
-          if (isAdmin || allowedGroups.includes(doc.id)) {
-            groups.push({ id: doc.id, ...data });
-          }
-        });
-
+        groupsSnap.forEach(d => { if (isAdmin || allowedGroups.includes(d.id)) groups.push({ id: d.id, ...d.data() }); });
         groups.sort((a, b) => a.id.localeCompare(b.id));
-
-        if (groups.length === 0) {
-          container.innerHTML = '<div style="text-align:center; color: var(--muted); padding: 40px;">Nema dostupnih grupa.</div>';
-          return;
-        }
-
-        // Učitaj igrače za svaku grupu
-        const groupsWithPlayers = await Promise.all(groups.map(async (group) => {
-          const playersSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups', group.id, 'players'));
-          const players = [];
-          playersSnap.forEach(p => players.push(p.data().name));
-          return { ...group, players };
+        if (!groups.length) { container.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px;">Nema dostupnih grupa.</div>'; return; }
+        const withPlayers = await Promise.all(groups.map(async g => {
+          const ps = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups', g.id, 'players'));
+          const players = []; ps.forEach(p => players.push(p.data().name));
+          return { ...g, players };
         }));
-
         container.innerHTML = '<div class="groups-grid">' +
-          groupsWithPlayers.map((group, i) => `
-            <div class="group-card" style="animation-delay: ${i * 0.04}s" onclick="window.location.href='group-detail.html?group=${group.id}'">
+          withPlayers.map((g, i) => `
+            <div class="group-card" style="animation-delay:${i * 0.04}s" onclick="window.location.href='group-detail.html?group=${g.id}'">
               <div class="group-card-header">
-                <span class="group-card-title">${group.name}</span>
-                <span class="group-card-count">${group.players.length} igrača</span>
+                <span class="group-card-title">${esc(g.name)}</span>
+                <span class="group-card-count">${g.players.length} igrača</span>
               </div>
               <div class="group-card-body">
                 <div class="group-card-players">
-                  ${group.players.slice(0, 4).join('<br>')}
-                  ${group.players.length > 4 ? `<span style="color:rgba(255,255,255,0.3)">+ još ${group.players.length - 4}...</span>` : ''}
+                  ${g.players.slice(0, 4).join('<br>')}
+                  ${g.players.length > 4 ? `<span style="color:rgba(255,255,255,0.3)">+ još ${g.players.length - 4}...</span>` : ''}
                 </div>
               </div>
-              <div class="group-card-footer">
-                <span class="group-card-action">Upravljaj grupom →</span>
-              </div>
-            </div>
-          `).join('') +
-        '</div>';
-
+              <div class="group-card-footer"><span class="group-card-action">Upravljaj grupom →</span></div>
+            </div>`).join('') + '</div>';
       } catch (err) {
-        container.innerHTML = '<div style="color:#ffaaaa; padding: 20px;">Greška pri učitavanju: ' + err.message + '</div>';
+        container.innerHTML = '<div style="color:#ffaaaa;padding:20px;">Greška: ' + esc(err.message) + '</div>';
       }
     }
+
+    // ── BRACKET ADMIN ──
+    async function loadBracketAdmin() {
+      const container = document.getElementById('bracket-admin-container');
+
+      try {
+        const groupsSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups'));
+        const groups = []; groupsSnap.forEach(d => groups.push({ id: d.id, ...d.data() }));
+        groups.sort((a, b) => a.id.localeCompare(b.id));
+
+        const groupStandingsMap = {};
+        await Promise.all(groups.map(async g => {
+          const ps = await getDocs(query(collection(db, 'seasons', 'sezona-2', 'groups', g.id, 'players'), orderBy('position')));
+          const players = []; ps.forEach(p => players.push(p.data().name));
+          const ms = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups', g.id, 'matches'));
+          const mm = {}; ms.forEach(m => { const d = m.data(); mm[`${d.kolo}_${d.mec}`] = d; });
+          const standings = computeStandingsSimple(players, mm);
+          const letter = g.id.replace(/[^a-zA-Z]/g, '').slice(-1).toUpperCase();
+          groupStandingsMap[letter] = standings;
+        }));
+
+        const bracketSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'bracket'));
+        const matchesByRound = {};
+        bracketSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
+
+        renderBracketAdmin(matchesByRound, groupStandingsMap);
+      } catch (err) {
+        container.innerHTML = '<div style="color:#ffaaaa;padding:20px;">Greška: ' + esc(err.message) + '</div>';
+      }
+    }
+
+    async function loadLowerBracketAdmin() {
+      const container = document.getElementById('lower-bracket-admin-container');
+
+      try {
+        const lowerBracketSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'lower-bracket'));
+        const matchesByRound = {};
+        lowerBracketSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
+        renderLowerBracketAdmin(matchesByRound);
+      } catch (err) {
+        container.innerHTML = '<div style="color:#ffaaaa;padding:20px;">Greška: ' + esc(err.message) + '</div>';
+      }
+    }
+
+    function computeStandingsSimple(players, matchesMap) {
+      const stats = {};
+      players.forEach(p => { stats[p] = { pts: 0, legs: 0, avgSum: 0, avgCount: 0 }; });
+      Object.values(matchesMap).forEach(m => {
+        if (!m.score) return;
+        const parts = m.score.split('-'); if (parts.length !== 2) return;
+        const s1 = parseInt(parts[0]), s2 = parseInt(parts[1]); if (isNaN(s1) || isNaN(s2)) return;
+        const st1 = stats[m.player1], st2 = stats[m.player2]; if (!st1 || !st2) return;
+        st1.legs += (s1 - s2); st2.legs += (s2 - s1);
+        if (m.score === '0-0') {
+        } else if (m.score === '5-5') { st1.pts++; st2.pts++; }
+        else if (s1 > s2) { st1.pts += 2; } else { st2.pts += 2; }
+        if (m.average1) { st1.avgSum += parseFloat(m.average1); st1.avgCount++; }
+        if (m.average2) { st2.avgSum += parseFloat(m.average2); st2.avgCount++; }
+      });
+      return players
+        .map(name => { const s = stats[name]; return { name, pts: s.pts, legs: s.legs, avg: s.avgCount > 0 ? s.avgSum / s.avgCount : 0 }; })
+        .sort((a, b) => b.pts - a.pts || b.legs - a.legs || b.avg - a.avg);
+    }
+
+    function resolveName(code, gsm) {
+      if (!code) return null;
+      const m = code.match(/^([1-4])([A-P])$/); if (!m) return code;
+      const rank = parseInt(m[1]) - 1, grp = m[2];
+      const st = gsm[grp]; if (!st || !st[rank]) return code;
+      return st[rank].name;
+    }
+
+    // ── PAIR OFFSET (za connector linije) ──
+    // Nakon rendera, izmjeri stvarni pixel-razmak između centra svakog
+    // "pair-top" meča i njegovog partnera "pair-bottom" unutar iste kolone,
+    // i postavi ga kao CSS varijablu --pair-offset na oba elementa.
+    // Layout (space-around) ostaje potpuno netaknut — ovo samo čita pozicije.
+    function setPairOffsetsAdmin(wrapId) {
+      const wrap = document.getElementById(wrapId);
+      if (!wrap) return;
+      wrap.querySelectorAll('.bracket-admin-round').forEach(round => {
+        const matches = round.querySelectorAll(':scope > .bracket-admin-matches > .bam-match');
+        for (let i = 0; i < matches.length; i += 2) {
+          const top = matches[i];
+          const bottom = matches[i + 1];
+          if (!top || !bottom) continue;
+          const offset = bottom.offsetTop - top.offsetTop; // razmak vrh-do-vrh
+          top.style.setProperty('--pair-offset', offset + 'px');
+          bottom.style.setProperty('--pair-offset', offset + 'px');
+        }
+      });
+    }
+
+    // Pokreni mjerenje tek kad je layout stvarno stabilan: nakon fontova
+    // i dva animacijska framea (da flex/space-around završi).
+    function scheduleAllPairOffsetsAdmin() {
+      const run = () => {
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          if (document.getElementById('bracket-admin-wrap-upper')) setPairOffsetsAdmin('bracket-admin-wrap-upper');
+          if (document.getElementById('bracket-admin-wrap-lower')) setPairOffsetsAdmin('bracket-admin-wrap-lower');
+        }));
+      };
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(run);
+      } else {
+        run();
+      }
+    }
+
+    // ResizeObserver hvata SVE promjene veličine (resize prozora, promjena
+    // tab-a, zoom, orijentacija na mobitelu) — ne samo window resize.
+    let pairOffsetDebounceAdmin = null;
+    function debouncedRecalcAdmin() {
+      clearTimeout(pairOffsetDebounceAdmin);
+      pairOffsetDebounceAdmin = setTimeout(() => {
+        if (document.getElementById('bracket-admin-wrap-upper')) setPairOffsetsAdmin('bracket-admin-wrap-upper');
+        if (document.getElementById('bracket-admin-wrap-lower')) setPairOffsetsAdmin('bracket-admin-wrap-lower');
+      }, 100);
+    }
+
+    if (window.ResizeObserver) {
+      const bracketAdminResizeObserver = new ResizeObserver(debouncedRecalcAdmin);
+      window.__observeBracketAdminWrap = (id) => {
+        const el = document.getElementById(id);
+        if (el) bracketAdminResizeObserver.observe(el);
+      };
+    } else {
+      window.addEventListener('resize', debouncedRecalcAdmin);
+      window.__observeBracketAdminWrap = () => { };
+    }
+
+    // Donji ždrijeb koristi pozicije 5-8 (rank 4-7 u standings nizu)
+    // Store all match data for popup access
+
+    const allMatchData = {};
+
+    function renderBracketAdmin(matchesByRound, groupStandingsMap) {
+      const container = document.getElementById('bracket-admin-container');
+
+      const r64 = R64_DRAW.map((draw, i) => {
+        const id = 'R64_' + (i + 1); const saved = matchesByRound[id] || {};
+        const p1 = saved.player1 || resolveName(draw.p1, groupStandingsMap) || draw.p1;
+        const p2 = saved.player2 || resolveName(draw.p2, groupStandingsMap) || draw.p2;
+        allMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `Last of 64 — Meč ${i + 1}` };
+        return { id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null };
+      });
+
+      const rounds = [r64];
+      for (let r = 1; r < ROUND_IDS.length; r++) {
+        const prev = rounds[r - 1]; const count = prev.length / 2; const cur = [];
+        for (let i = 0; i < count; i++) {
+          const id = `${ROUND_IDS[r]}_${i + 1}`; const saved = matchesByRound[id] || {};
+          const p1 = saved.player1 || (prev[i * 2]?.winner ? (prev[i * 2].winner === 'player1' ? prev[i * 2].player1 : prev[i * 2].player2) : null);
+          const p2 = saved.player2 || (prev[i * 2 + 1]?.winner ? (prev[i * 2 + 1].winner === 'player1' ? prev[i * 2 + 1].player1 : prev[i * 2 + 1].player2) : null);
+          allMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${ROUND_LABELS[r]} — Meč ${i + 1}` };
+          cur.push({ id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null });
+        }
+        rounds.push(cur);
+      }
+
+      const sfMatches = rounds[4];
+      const thirdId = 'THIRD_1'; const savedThird = matchesByRound[thirdId] || {};
+      const third_p1 = savedThird.player1 || (sfMatches[0]?.winner ? (sfMatches[0].winner === 'player1' ? sfMatches[0].player2 : sfMatches[0].player1) : null);
+      const third_p2 = savedThird.player2 || (sfMatches[1]?.winner ? (sfMatches[1].winner === 'player1' ? sfMatches[1].player2 : sfMatches[1].player1) : null);
+      allMatchData[thirdId] = { ...savedThird, player1: third_p1, player2: third_p2, roundLabel: 'Utakmica za 3. mjesto' };
+      const thirdMatch = { id: thirdId, player1: third_p1, player2: third_p2, score: savedThird.score || '', winner: savedThird.winner || null };
+
+      function matchHtml(match, pairClass) {
+        const hasScore = !!match.score;
+        const w = match.winner;
+        const parts = hasScore ? match.score.split('-') : [];
+        const s1 = parts[0] || '', s2 = parts[1] || '';
+        return `<div class="bam-match ${pairClass || ''}" data-match-id="${match.id}">
+          <div class="bam-player ${w === 'player1' ? 'winner' : w === 'player2' ? 'loser' : (!match.player1 ? 'tbd' : '')}">
+            <span class="bam-player-name">${esc(match.player1 || 'TBD')}</span>
+            ${hasScore ? `<span class="bam-player-score">${s1}</span>` : ''}
+          </div>
+          <div class="bam-player ${w === 'player2' ? 'winner' : w === 'player1' ? 'loser' : (!match.player2 ? 'tbd' : '')}">
+            <span class="bam-player-name">${esc(match.player2 || 'TBD')}</span>
+            ${hasScore ? `<span class="bam-player-score">${s2}</span>` : ''}
+          </div>
+        </div>`;
+      }
+
+      const roundsHtml = rounds.map((matches, ri) => `
+        <div class="bracket-admin-round">
+          <div class="bracket-admin-round-title">${ROUND_LABELS[ri]}</div>
+          <div class="bracket-admin-matches">
+            ${ri === rounds.length - 1 ? `<div class="bracket-admin-final-title">🏆 FINALE</div>` : ''}
+            ${matches.map((m, i) => matchHtml(m, i % 2 === 0 ? 'pair-top' : 'pair-bottom')).join('')}
+            ${ri === rounds.length - 1 ? `
+              <div class="bracket-admin-third-title">🥉 Utakmica za 3. mjesto</div>
+              ${matchHtml(thirdMatch)}
+            ` : ''}
+          </div>
+        </div>`).join('');
+
+      container.innerHTML = `
+        <div class="bracket-admin-wrap" id="bracket-admin-wrap-upper">
+          <div class="bracket-admin-rounds">${roundsHtml}</div>
+        </div>`;
+
+      requestAnimationFrame(() => scheduleAllPairOffsetsAdmin());
+      window.__observeBracketAdminWrap('bracket-admin-wrap-upper');
+
+      container.addEventListener('click', e => {
+        const card = e.target.closest('.bam-match');
+        if (!card) return;
+        openBEditPopup(card.dataset.matchId);
+      });
+    }
+
+    // Store lower bracket match data for popup access (separate namespace, IDs overlap with upper bracket)
+    const allLowerMatchData = {};
+
+    function renderLowerBracketAdmin(matchesByRound) {
+      const container = document.getElementById('lower-bracket-admin-container');
+
+      // Build LR64
+      const lr64 = Array.from({ length: 32 }, (_, i) => {
+        const id = 'LR64_' + (i + 1); const saved = matchesByRound[id] || {};
+        const p1 = saved.player1 || null;
+        const p2 = saved.player2 || null;
+        allLowerMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `Donji Last of 64 — Meč ${i + 1}` };
+        return { id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null };
+      });
+
+      const rounds = [lr64];
+      for (let r = 1; r < LROUND_IDS.length; r++) {
+        const prev = rounds[r - 1]; const count = prev.length / 2; const cur = [];
+        for (let i = 0; i < count; i++) {
+          const id = `${LROUND_IDS[r]}_${i + 1}`; const saved = matchesByRound[id] || {};
+          const p1 = saved.player1 || (prev[i * 2]?.winner ? (prev[i * 2].winner === 'player1' ? prev[i * 2].player1 : prev[i * 2].player2) : null);
+          const p2 = saved.player2 || (prev[i * 2 + 1]?.winner ? (prev[i * 2 + 1].winner === 'player1' ? prev[i * 2 + 1].player1 : prev[i * 2 + 1].player2) : null);
+          allLowerMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${LROUND_LABELS[r]} — Meč ${i + 1}` };
+          cur.push({ id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null });
+        }
+        rounds.push(cur);
+      }
+
+      // 3rd place
+      const sfMatches = rounds[4];
+      const thirdId = 'LTHIRD_1'; const savedThird = matchesByRound[thirdId] || {};
+      const third_p1 = savedThird.player1 || (sfMatches[0]?.winner ? (sfMatches[0].winner === 'player1' ? sfMatches[0].player2 : sfMatches[0].player1) : null);
+      const third_p2 = savedThird.player2 || (sfMatches[1]?.winner ? (sfMatches[1].winner === 'player1' ? sfMatches[1].player2 : sfMatches[1].player1) : null);
+      allLowerMatchData[thirdId] = { ...savedThird, player1: third_p1, player2: third_p2, roundLabel: 'Donja utakmica za 3. mjesto' };
+      const thirdMatch = { id: thirdId, player1: third_p1, player2: third_p2, score: savedThird.score || '', winner: savedThird.winner || null };
+
+      function matchHtml(match, pairClass) {
+        const hasScore = !!match.score;
+        const w = match.winner;
+        const parts = hasScore ? match.score.split('-') : [];
+        const s1 = parts[0] || '', s2 = parts[1] || '';
+        return `<div class="bam-match ${pairClass || ''}" data-match-id="${match.id}">
+        <div class="bam-player ${w === 'player1' ? 'winner' : w === 'player2' ? 'loser' : (!match.player1 ? 'tbd' : '')}">
+          <span class="bam-player-name">${esc(match.player1 || 'TBD')}</span>
+          ${hasScore ? `<span class="bam-player-score">${s1}</span>` : ''}
+        </div>
+        <div class="bam-player ${w === 'player2' ? 'winner' : w === 'player1' ? 'loser' : (!match.player2 ? 'tbd' : '')}">
+          <span class="bam-player-name">${esc(match.player2 || 'TBD')}</span>
+          ${hasScore ? `<span class="bam-player-score">${s2}</span>` : ''}
+        </div>
+      </div>`;
+      }
+
+      const roundsHtml = rounds.map((matches, ri) => `
+    <div class="bracket-admin-round">
+      <div class="bracket-admin-round-title">${LROUND_LABELS[ri]}</div>
+      <div class="bracket-admin-matches">
+        ${ri === rounds.length - 1 ? `<div class="bracket-admin-final-title">🏆 DONJE FINALE</div>` : ''}
+        ${matches.map((m, i) => matchHtml(m, i % 2 === 0 ? 'pair-top' : 'pair-bottom')).join('')}
+        ${ri === rounds.length - 1 ? `
+          <div class="bracket-admin-third-title">🥉 Donja utakmica za 3. mjesto</div>
+          ${matchHtml(thirdMatch)}
+        ` : ''}
+      </div>
+    </div>`).join('');
+
+      container.innerHTML = `
+    <div class="bracket-admin-wrap" id="bracket-admin-wrap-lower">
+      <div class="bracket-admin-rounds">${roundsHtml}</div>
+    </div>`;
+
+      requestAnimationFrame(() => scheduleAllPairOffsetsAdmin());
+      window.__observeBracketAdminWrap('bracket-admin-wrap-lower');
+
+      // Click to open popup
+      container.addEventListener('click', e => {
+        const card = e.target.closest('.bam-match');
+        if (!card) return;
+        openLBEditPopup(card.dataset.matchId);
+      });
+    }
+
+    // ── BRACKET EDIT POPUP ──
+    function openBEditPopup(matchId) {
+      const d = allMatchData[matchId];
+      if (!d) return;
+      const p1 = d.player1 || 'TBD';
+      const p2 = d.player2 || 'TBD';
+      const saved = d;
+
+      document.getElementById('bedit-popup-content').innerHTML = `
+        <div class="bedit-header">
+          <span class="bedit-title">${esc(d.roundLabel || matchId)}</span>
+          <button class="bedit-close" onclick="closeBEditPopup()">✕</button>
+        </div>
+        <div class="bedit-players">
+          <span class="bedit-player-name">${esc(p1)}</span>
+          <span class="bedit-vs">VS</span>
+          <span class="bedit-player-name right">${esc(p2)}</span>
+        </div>
+        <div class="bedit-section">
+          <div class="bedit-section-title">Rezultat</div>
+          <div class="bedit-score-row">
+            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[0] || '' : '')}">
+            <span class="bedit-score-sep">—</span>
+            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[1] || '' : '')}">
+          </div>
+        </div>
+        <div class="bedit-section">
+          <div class="bedit-section-title">Statistika</div>
+          <div class="bedit-stats-grid">
+            <input class="bedit-stat-input" id="bedit-avg1" type="number" step="0.01" placeholder="AVG" value="${esc(saved.average1 || '')}">
+            <span class="bedit-stat-label">AVG</span>
+            <input class="bedit-stat-input" id="bedit-avg2" type="number" step="0.01" placeholder="AVG" value="${esc(saved.average2 || '')}">
+            <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" placeholder="First 9" value="${esc(saved.first9_1 || '')}">
+            <span class="bedit-stat-label">First 9</span>
+            <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" placeholder="First 9" value="${esc(saved.first9_2 || '')}">
+            <input class="bedit-stat-input" id="bedit-bl1" type="number" placeholder="Best Leg" value="${esc(saved.bestleg1 || '')}">
+            <span class="bedit-stat-label">Best Leg</span>
+            <input class="bedit-stat-input" id="bedit-bl2" type="number" placeholder="Best Leg" value="${esc(saved.bestleg2 || '')}">
+            <input class="bedit-stat-input" id="bedit-bco1" type="number" placeholder="Best CO" value="${esc(saved.bestcheckout1 || '')}">
+            <span class="bedit-stat-label">Best CO</span>
+            <input class="bedit-stat-input" id="bedit-bco2" type="number" placeholder="Best CO" value="${esc(saved.bestcheckout2 || '')}">
+            <input class="bedit-stat-input" id="bedit-180_1" type="number" placeholder="180s" value="${esc(saved['180_1'] || '')}">
+            <span class="bedit-stat-label">180s</span>
+            <input class="bedit-stat-input" id="bedit-180_2" type="number" placeholder="180s" value="${esc(saved['180_2'] || '')}">
+          </div>
+        </div>
+        <div class="bedit-actions">
+          ${currentIsAdmin ? `
+          <button class="bedit-btn-delete" id="bedit-delete-btn" onclick="deleteBracketMatch('${matchId}')"><i class="fas fa-trash"></i> Izbriši</button>
+          <button class="bedit-btn-save" id="bedit-save-btn" onclick="saveBracketMatch('${matchId}', '${esc(p1)}', '${esc(p2)}')">
+            <i class="fas fa-save"></i> Spremi
+          </button>` : ''}
+        </div>
+        `;
+
+      document.getElementById('bedit-overlay').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    window.closeBEditPopup = function (e) {
+      if (e && e.target !== document.getElementById('bedit-overlay')) return;
+      document.getElementById('bedit-overlay').style.display = 'none';
+      document.body.style.overflow = '';
+    };
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        document.getElementById('bedit-overlay').style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    });
+
+    window.saveBracketMatch = async function (matchId, p1, p2) {
+      const btn = document.getElementById('bedit-save-btn');
+      const s1 = parseInt(document.getElementById('bedit-s1')?.value) || 0;
+      const s2 = parseInt(document.getElementById('bedit-s2')?.value) || 0;
+      const score = (s1 !== '' && s2 !== '') ? `${s1}-${s2}` : '';
+      const winner = s1 > s2 ? 'player1' : s2 > s1 ? 'player2' : null;
+
+      const data = {
+        player1: p1 || null, player2: p2 || null,
+        score: score || null, winner: winner || null,
+        average1: pf(document.getElementById('bedit-avg1')?.value),
+        average2: pf(document.getElementById('bedit-avg2')?.value),
+        first9_1: pf(document.getElementById('bedit-f9_1')?.value),
+        first9_2: pf(document.getElementById('bedit-f9_2')?.value),
+        bestleg1: pi(document.getElementById('bedit-bl1')?.value),
+        bestleg2: pi(document.getElementById('bedit-bl2')?.value),
+        bestcheckout1: pi(document.getElementById('bedit-bco1')?.value),
+        bestcheckout2: pi(document.getElementById('bedit-bco2')?.value),
+        '180_1': pi(document.getElementById('bedit-180_1')?.value),
+        '180_2': pi(document.getElementById('bedit-180_2')?.value),
+      };
+      Object.keys(data).forEach(k => { if (data[k] === null || data[k] === undefined) delete data[k]; });
+
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sprema...';
+
+      try {
+        await setDoc(doc(db, 'seasons', 'sezona-2', 'bracket', matchId), data, { merge: true });
+        btn.classList.add('saved'); btn.innerHTML = '<i class="fas fa-check"></i> Spremljeno';
+        showToast('Meč spremljen!', 'success');
+        setTimeout(() => {
+          document.getElementById('bedit-overlay').style.display = 'none';
+          document.body.style.overflow = '';
+        }, 800);
+        await loadBracketAdmin();
+      } catch (err) {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Spremi';
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
+    window.deleteBracketMatch = async function (matchId) {
+      if (!confirm('Izbrisati sve podatke ovog meča?')) return;
+      const btn = document.getElementById('bedit-delete-btn');
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      try {
+        await deleteDoc(doc(db, 'seasons', 'sezona-2', 'bracket', matchId));
+        showToast('Meč izbrisan!', 'success');
+        document.getElementById('bedit-overlay').style.display = 'none';
+        document.body.style.overflow = '';
+        await loadBracketAdmin();
+      } catch (err) {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-trash"></i> Izbriši';
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
+    // ── LOWER BRACKET POPUP (isti overlay, drugi Firestore target) ──
+    function openLBEditPopup(matchId) {
+      const d = allLowerMatchData[matchId];
+      if (!d) return;
+      const p1 = d.player1 || 'TBD';
+      const p2 = d.player2 || 'TBD';
+      const saved = d;
+
+      document.getElementById('bedit-popup-content').innerHTML = `
+        <div class="bedit-header">
+          <span class="bedit-title">${esc(d.roundLabel || matchId)}</span>
+          <button class="bedit-close" onclick="closeBEditPopup()">✕</button>
+        </div>
+ 
+        <div class="bedit-players">
+          <span class="bedit-player-name">${esc(p1)}</span>
+          <span class="bedit-vs">VS</span>
+          <span class="bedit-player-name right">${esc(p2)}</span>
+        </div>
+ 
+        <div class="bedit-section">
+          <div class="bedit-section-title">Rezultat</div>
+          <div class="bedit-score-row">
+            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[0] || '' : '')}">
+            <span class="bedit-score-sep">—</span>
+            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[1] || '' : '')}">
+          </div>
+        </div>
+ 
+        <div class="bedit-section">
+          <div class="bedit-section-title">Statistika</div>
+          <div class="bedit-stats-grid">
+            <input class="bedit-stat-input" id="bedit-avg1" type="number" step="0.01" placeholder="AVG" value="${esc(saved.average1 || '')}">
+            <span class="bedit-stat-label">AVG</span>
+            <input class="bedit-stat-input" id="bedit-avg2" type="number" step="0.01" placeholder="AVG" value="${esc(saved.average2 || '')}">
+ 
+            <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" placeholder="First 9" value="${esc(saved.first9_1 || '')}">
+            <span class="bedit-stat-label">First 9</span>
+            <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" placeholder="First 9" value="${esc(saved.first9_2 || '')}">
+ 
+            <input class="bedit-stat-input" id="bedit-bl1" type="number" placeholder="Best Leg" value="${esc(saved.bestleg1 || '')}">
+            <span class="bedit-stat-label">Best Leg</span>
+            <input class="bedit-stat-input" id="bedit-bl2" type="number" placeholder="Best Leg" value="${esc(saved.bestleg2 || '')}">
+ 
+            <input class="bedit-stat-input" id="bedit-bco1" type="number" placeholder="Best CO" value="${esc(saved.bestcheckout1 || '')}">
+            <span class="bedit-stat-label">Best CO</span>
+            <input class="bedit-stat-input" id="bedit-bco2" type="number" placeholder="Best CO" value="${esc(saved.bestcheckout2 || '')}">
+ 
+            <input class="bedit-stat-input" id="bedit-180_1" type="number" placeholder="180s" value="${esc(saved['180_1'] || '')}">
+            <span class="bedit-stat-label">180s</span>
+            <input class="bedit-stat-input" id="bedit-180_2" type="number" placeholder="180s" value="${esc(saved['180_2'] || '')}">
+          </div>
+        </div>
+ 
+        <div class="bedit-actions">
+          ${currentIsAdmin ? `
+          <button class="bedit-btn-delete" id="bedit-delete-btn" onclick="deleteLowerBracketMatch('${matchId}')"><i class="fas fa-trash"></i> Izbriši</button>
+          <button class="bedit-btn-save" id="bedit-save-btn" onclick="saveLowerBracketMatch('${matchId}', '${esc(p1)}', '${esc(p2)}')">
+            <i class="fas fa-save"></i> Spremi
+          </button>`: ''}
+        </div>
+      `;
+
+      document.getElementById('bedit-overlay').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    window.openLBEditPopup = openLBEditPopup;
+
+    window.saveLowerBracketMatch = async function (matchId, p1, p2) {
+      const btn = document.getElementById('bedit-save-btn');
+      const s1 = parseInt(document.getElementById('bedit-s1')?.value) || 0;
+      const s2 = parseInt(document.getElementById('bedit-s2')?.value) || 0;
+      const score = (s1 !== '' && s2 !== '') ? `${s1}-${s2}` : '';
+      const winner = s1 > s2 ? 'player1' : s2 > s1 ? 'player2' : null;
+
+      const data = {
+        player1: p1 || null, player2: p2 || null,
+        score: score || null, winner: winner || null,
+        average1: pf(document.getElementById('bedit-avg1')?.value),
+        average2: pf(document.getElementById('bedit-avg2')?.value),
+        first9_1: pf(document.getElementById('bedit-f9_1')?.value),
+        first9_2: pf(document.getElementById('bedit-f9_2')?.value),
+        bestleg1: pi(document.getElementById('bedit-bl1')?.value),
+        bestleg2: pi(document.getElementById('bedit-bl2')?.value),
+        bestcheckout1: pi(document.getElementById('bedit-bco1')?.value),
+        bestcheckout2: pi(document.getElementById('bedit-bco2')?.value),
+        '180_1': pi(document.getElementById('bedit-180_1')?.value),
+        '180_2': pi(document.getElementById('bedit-180_2')?.value),
+      };
+      // Strip nulls
+      Object.keys(data).forEach(k => { if (data[k] === null || data[k] === undefined) delete data[k]; });
+
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sprema...';
+
+      try {
+        await setDoc(doc(db, 'seasons', 'sezona-2', 'lower-bracket', matchId), data, { merge: true });
+        btn.classList.add('saved'); btn.innerHTML = '<i class="fas fa-check"></i> Spremljeno';
+        showToast('Meč spremljen!', 'success');
+        setTimeout(() => {
+          document.getElementById('bedit-overlay').style.display = 'none';
+          document.body.style.overflow = '';
+        }, 800);
+        await loadLowerBracketAdmin();
+      } catch (err) {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Spremi';
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
+    window.deleteLowerBracketMatch = async function (matchId) {
+      if (!confirm('Izbrisati sve podatke ovog meča?')) return;
+      const btn = document.getElementById('bedit-delete-btn');
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      try {
+        await deleteDoc(doc(db, 'seasons', 'sezona-2', 'lower-bracket', matchId));
+        showToast('Meč izbrisan!', 'success');
+        document.getElementById('bedit-overlay').style.display = 'none';
+        document.body.style.overflow = '';
+        await loadLowerBracketAdmin();
+      } catch (err) {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-trash"></i> Izbriši';
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+    //  AVG LIGE 
+    const AVG_LEAGUE_LABELS = {
+      diamond: '💎 Diamond', gold: '🥇 Gold',
+      silver: '🥈 Silver', bronze: '🥉 Bronze'
+    };
+
+    let allSezona2Players = []; // cache — učita se jednom
+    let currentAvgLeague = 'diamond';
+
+    window.switchAvgLeagueTab = function (leagueId, btn) {
+      document.querySelectorAll('.avg-league-panel').forEach(p => p.style.display = 'none');
+      document.querySelectorAll('.avg-league-tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('avg-league-' + leagueId).style.display = 'block';
+      btn.classList.add('active');
+      currentAvgLeague = leagueId;
+      loadAvgLeague(leagueId);
+    };
+
+    async function loadAllSezona2Players() {
+      if (allSezona2Players.length > 0) return;
+      const groupsSnap = await getDocs(collection(db, 'seasons', 'sezona-2', 'groups'));
+      const groupIds = [];
+      groupsSnap.forEach(d => groupIds.push(d.id));
+      groupIds.sort();
+
+      const results = await Promise.all(groupIds.map(async gId => {
+        const ps = await getDocs(query(
+          collection(db, 'seasons', 'sezona-2', 'groups', gId, 'players'),
+          orderBy('position')
+        ));
+        const names = [];
+        ps.forEach(p => names.push(p.data().name));
+        return names;
+      }));
+
+      allSezona2Players = results.flat().sort((a, b) => a.localeCompare(b));
+    }
+
+    async function loadAvgLeague(leagueId) {
+      const container = document.getElementById('avg-container-' + leagueId);
+      container.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje...</span></div>`;
+
+      try {
+        await loadAllSezona2Players();
+
+        const groupsSnap = await getDocs(collection(db, 'avg-leagues', leagueId, 'groups'));
+        const groups = [];
+        groupsSnap.forEach(d => groups.push({ id: d.id, ...d.data() }));
+        groups.sort((a, b) => a.id.localeCompare(b.id));
+
+        const withPlayers = await Promise.all(groups.map(async g => {
+          const ps = await getDocs(collection(db, 'avg-leagues', leagueId, 'groups', g.id, 'players'));
+          const players = []; ps.forEach(p => players.push(p.data().name));
+          return { ...g, players };
+        }));
+
+        const groupsHtml = withPlayers.length > 0
+          ? '<div class="groups-grid">' + withPlayers.map(g => renderAvgGroupCard(g, leagueId)).join('') + '</div>'
+          : '<div style="text-align:center;color:var(--muted);padding:20px 0 28px;">Nema grupa. Kreiraj prvu grupu ispod.</div>';
+
+        container.innerHTML = groupsHtml + renderAvgCreateForm(leagueId);
+
+      } catch (err) {
+        container.innerHTML = `<div style="color:#ffaaaa;padding:20px;">Greška: ${esc(err.message)}</div>`;
+      }
+    }
+
+    function renderAvgGroupCard(g, leagueId) {
+      return `
+        <div class="group-card" onclick="window.location.href='group-detail.html?group=${encodeURIComponent(g.id)}&league=${leagueId}'">
+          <div class="group-card-header">
+            <span class="group-card-title">${esc(g.name || g.id)}</span>
+            <span class="group-card-count">${g.players.length} igrača</span>
+          </div>
+          <div class="group-card-body">
+            <div class="group-card-players">
+              ${g.players.slice(0, 4).map(p => esc(p)).join('<br>')}
+              ${g.players.length > 4 ? `<span style="color:rgba(255,255,255,0.3)">+ još ${g.players.length - 4}...</span>` : ''}
+            </div>
+          </div>
+          <div class="group-card-footer">
+            <span class="group-card-action">Upravljaj grupom →</span>
+            ${currentIsAdmin ? `
+              <button onclick="event.stopPropagation(); deleteAvgGroup('${leagueId}','${esc(g.id)}')"
+                style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);border-radius:999px;color:#e74c3c;font-size:0.72rem;font-weight:700;padding:4px 12px;cursor:pointer;transition:0.2s ease;"
+                onmouseover="this.style.background='rgba(231,76,60,0.25)'" onmouseout="this.style.background='rgba(231,76,60,0.12)'">
+                <i class="fas fa-trash"></i>
+              </button>
+            ` : ''}
+          </div>
+        </div>`;
+    }
+
+    function renderAvgCreateForm(leagueId) {
+      const checkboxes = allSezona2Players.map(name => {
+        const safeId = 'chk_' + leagueId + '_' + name.replace(/[^a-zA-Z0-9]/g, '_');
+        return `<div class="player-checkbox-row">
+          <input type="checkbox" id="${safeId}" value="${esc(name)}">
+          <label for="${safeId}">${esc(name)}</label>
+        </div>`;
+      }).join('');
+
+      return `
+        <div class="avg-create-form" style="margin-top:20px;">
+          <h3>+ Nova grupa — ${AVG_LEAGUE_LABELS[leagueId]}</h3>
+          <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+            <div>
+              <div class="form-label" style="margin-bottom:8px;">Naziv grupe</div>
+              <input class="form-input" type="text" id="avg-group-name-${leagueId}"
+                placeholder="npr. Grupa 1" style="margin-bottom:0;">
+ 
+              <div class="form-label" style="margin-top:16px;margin-bottom:6px;">
+                Odabrani igrači: <span id="avg-selected-count-${leagueId}" style="color:#7eb8ff;">0</span>
+              </div>
+              <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">
+                Označi igrače s desne strane →
+              </div>
+              <button class="bedit-btn-save" onclick="createAvgGroup('${leagueId}')">
+                <i class="fas fa-plus"></i> Kreiraj grupu
+              </button>
+            </div>
+            <div>
+              <div class="form-label" style="margin-bottom:8px;">Igrači Sezone 2 (${allSezona2Players.length})</div>
+              <div class="player-multiselect" id="player-list-${leagueId}"
+                onchange="document.getElementById('avg-selected-count-${leagueId}').textContent =
+                  document.querySelectorAll('#player-list-${leagueId} input:checked').length">
+                ${checkboxes}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    window.createAvgGroup = async function (leagueId) {
+      const nameInput = document.getElementById(`avg-group-name-${leagueId}`);
+      const groupName = nameInput?.value.trim();
+      if (!groupName) { showToast('Unesi naziv grupe!', 'error'); return; }
+
+      const checkboxes = document.querySelectorAll(`#player-list-${leagueId} input[type="checkbox"]:checked`);
+      const selectedPlayers = Array.from(checkboxes).map(c => c.value);
+
+      if (selectedPlayers.length < 2) { showToast('Odaberi najmanje 2 igrača!', 'error'); return; }
+
+      const groupId = slugify(groupName);
+
+      try {
+        // 1. Spremi group doc
+        await setDoc(doc(db, 'avg-leagues', leagueId, 'groups', groupId), { name: groupName });
+
+        // 2. Spremi igrače s position
+        await Promise.all(selectedPlayers.map((name, i) =>
+          setDoc(
+            doc(db, 'avg-leagues', leagueId, 'groups', groupId, 'players', slugify(name)),
+            { name, position: i + 1 }
+          )
+        ));
+
+        // 3. Generiraj raspored (Berger) i zapiši mečeve
+        const schedule = generateAvgSchedule(selectedPlayers);
+        const matchWrites = [];
+        schedule.forEach(({ kolo, matches }) => {
+          matches.forEach(({ mec, player1, player2 }) => {
+            const matchId = `k${kolo}_m${mec}`;
+            matchWrites.push(
+              setDoc(
+                doc(db, 'avg-leagues', leagueId, 'groups', groupId, 'matches', matchId),
+                { kolo, mec, player1, player2 }
+              )
+            );
+          });
+        });
+        await Promise.all(matchWrites);
+
+        showToast(`Grupa "${groupName}" kreirana (${matchWrites.length} mečeva)!`, 'success');
+        loadAvgLeague(leagueId);
+      } catch (err) {
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
+    function generateAvgSchedule(players) {
+      const n = players.length;
+      const berger8 = [
+        [[8, 1], [2, 7], [3, 6], [4, 5]], [[6, 4], [5, 8], [7, 3], [1, 2]], [[4, 7], [3, 1], [8, 2], [5, 6]],
+        [[2, 3], [7, 5], [1, 4], [6, 8]], [[6, 7], [4, 2], [5, 1], [8, 3]], [[2, 5], [1, 6], [7, 8], [3, 4]],
+        [[5, 3], [8, 4], [6, 2], [7, 1]]
+      ];
+      const berger9 = [
+        { bye: 1, matches: [[2, 9], [3, 8], [4, 7], [5, 6]] }, { bye: 6, matches: [[7, 5], [8, 4], [9, 3], [1, 2]] },
+        { bye: 2, matches: [[3, 1], [4, 9], [5, 8], [6, 7]] }, { bye: 7, matches: [[8, 6], [9, 5], [1, 4], [2, 3]] },
+        { bye: 3, matches: [[4, 2], [5, 1], [6, 9], [7, 8]] }, { bye: 8, matches: [[9, 7], [1, 6], [2, 5], [3, 4]] },
+        { bye: 4, matches: [[5, 3], [6, 2], [7, 1], [8, 9]] }, { bye: 9, matches: [[1, 8], [2, 7], [3, 6], [4, 5]] },
+        { bye: 5, matches: [[6, 4], [7, 3], [8, 2], [9, 1]] }
+      ];
+
+      // Za manje grupe generiramo privremenu listu s BYE igračem
+      let list = [...players];
+      let hasBye = false;
+      if (n % 2 !== 0) { list.push('BYE'); hasBye = true; }
+      const total = list.length;
+
+      if (total === 8) {
+        return berger8.map((pairs, ri) => ({
+          kolo: ri + 1,
+          matches: pairs.map((p, mi) => ({ mec: mi + 1, player1: list[p[0] - 1], player2: list[p[1] - 1] }))
+        }));
+      }
+
+      if (total === 9 || (n === 9)) {
+        return berger9.map((round, ri) => ({
+          kolo: ri + 1,
+          matches: round.matches.map((p, mi) => ({ mec: mi + 1, player1: players[p[0] - 1], player2: players[p[1] - 1] }))
+        }));
+      }
+
+      // Generički round-robin za ostale veličine (4, 6, 10, 12...)
+      // Koristimo standardni circle method
+      const rounds = [];
+      const fixed = list[0];
+      const rotating = list.slice(1);
+      const numRounds = total - 1;
+      const matchesPerRound = total / 2;
+
+      for (let r = 0; r < numRounds; r++) {
+        const circle = [fixed, ...rotating];
+        const roundMatches = [];
+        for (let m = 0; m < matchesPerRound; m++) {
+          const p1 = circle[m];
+          const p2 = circle[total - 1 - m];
+          if (p1 !== 'BYE' && p2 !== 'BYE') {
+            roundMatches.push({ mec: roundMatches.length + 1, player1: p1, player2: p2 });
+          }
+        }
+        rounds.push({ kolo: r + 1, matches: roundMatches });
+        // Rotiraj
+        rotating.unshift(rotating.pop());
+      }
+      return rounds;
+    }
+
+    window.deleteAvgGroup = async function (leagueId, groupId) {
+      if (!confirm(`Izbrisati grupu "${groupId}" i sve njene mečeve?`)) return;
+      try {
+        const matchesSnap = await getDocs(collection(db, 'avg-leagues', leagueId, 'groups', groupId, 'matches'));
+        await Promise.all(matchesSnap.docs.map(d => deleteDoc(d.ref)));
+        const playersSnap = await getDocs(collection(db, 'avg-leagues', leagueId, 'groups', groupId, 'players'));
+        await Promise.all(playersSnap.docs.map(d => deleteDoc(d.ref)));
+        await deleteDoc(doc(db, 'avg-leagues', leagueId, 'groups', groupId));
+        showToast('Grupa izbrisana!', 'success');
+        loadAvgLeague(leagueId);
+      } catch (err) {
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
   </script>
 </body>
+
 </html>
