@@ -923,9 +923,28 @@
     const params = new URLSearchParams(window.location.search);
     const groupId = params.get('group');
     const leagueParam = params.get('league');
-    const DB_PATH = leagueParam
+
+    // ── AKTIVNA SEZONA ──
+    // Isti config/active-season dokument koji čitaju index.html i
+    // index-admin.html. group-detail.html za sezonske grupe (ne AVG lige)
+    // uvijek radi na trenutno aktivnoj sezoni - DB_PATH se zato postavlja
+    // tek nakon što se ACTIVE_SEASON_ID razriješi (vidi onAuthStateChanged).
+    const DEFAULT_ACTIVE_SEASON_ID = 'sezona-2';
+    let ACTIVE_SEASON_ID = DEFAULT_ACTIVE_SEASON_ID;
+    let DB_PATH = leagueParam
       ? ['avg-leagues', leagueParam, 'groups', groupId]
-      : ['seasons', 'sezona-2', 'groups', groupId];
+      : ['seasons', DEFAULT_ACTIVE_SEASON_ID, 'groups', groupId]; // privremeni fallback dok se ACTIVE_SEASON_ID ne razriješi
+
+    async function resolveActiveSeasonId() {
+      try {
+        const configDoc = await getDoc(doc(db, 'config', 'active-season'));
+        const seasonId = configDoc.exists() ? configDoc.data()?.seasonId : null;
+        return seasonId || DEFAULT_ACTIVE_SEASON_ID;
+      } catch (err) {
+        console.error('Greška pri čitanju config/active-season, koristim default:', err);
+        return DEFAULT_ACTIVE_SEASON_ID;
+      }
+    }
 
 
     let isAdmin = false;
@@ -952,6 +971,14 @@
         badge.style.display = 'inline-flex';
         badge.textContent = 'Admin';
       }
+
+      // Sezonske grupe (bez ?league=) prate aktivnu sezonu iz configa;
+      // AVG lige su neovisan sustav pa DB_PATH za njih ostaje kako je gore postavljen.
+      if (!leagueParam) {
+        ACTIVE_SEASON_ID = await resolveActiveSeasonId();
+        DB_PATH = ['seasons', ACTIVE_SEASON_ID, 'groups', groupId];
+      }
+
       await populateGroupSelector(isAdmin, userData.groups || []);
       await loadGroup();
     });
@@ -1004,7 +1031,7 @@
       try {
         const basePath = leagueParam
           ? ['avg-leagues', leagueParam, 'groups']
-          : ['seasons', 'sezona-2', 'groups'];
+          : ['seasons', ACTIVE_SEASON_ID, 'groups'];
         const groupsSnap = await getDocs(collection(db, ...basePath));
 
         let groups = [];
@@ -1451,7 +1478,9 @@
         btn.innerHTML = '<i class="fas fa-save"></i> Spremi';
         showToast('Greška: ' + err.message, 'error');
       }
-      await setDoc(doc(db, 'seasons', 'sezona-2'), { lastUpdated: new Date() }, { merge: true });
+      if (!leagueParam) {
+        await setDoc(doc(db, 'seasons', ACTIVE_SEASON_ID), { lastUpdated: new Date() }, { merge: true });
+      }
     };
 
     // ── DELETE MATCH ──
