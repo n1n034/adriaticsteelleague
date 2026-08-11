@@ -670,7 +670,17 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
+      margin-bottom: 8px;
+    }
+
+    .bedit-legs-label {
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
     }
 
     .bedit-title {
@@ -1188,7 +1198,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
 
     const firebaseConfig = {
@@ -1246,6 +1256,36 @@
     const LROUND_IDS = ['LR64', 'LR32', 'LR16', 'LQF', 'LSF', 'LF'];
     const LROUND_LABELS = ['Donji Last of 64', 'Donji Last of 32', 'Donja Osmina finala', 'Donje Četvrtfinale', 'Donje Polufinale', 'Donje Finale'];
 
+    // ── BRACKET CONFIG (Best of X legs) ──
+    // Jedan globalni dokument config/bracket-config, ručno uređivan u
+    // Firestore konzoli. playoff.rounds.{round}.legs vrijedi za gornji I
+    // donji ždrijeb - donji samo skine "L" prefiks prije lookupa
+    // (LQF_3 -> QF, LTHIRD_1 -> THIRD). Ako polje fali, ostaje undefined
+    // i "Best of X" se jednostavno ne prikazuje (nema fallback vrijednosti).
+    let bracketConfig = null;
+
+    async function loadBracketConfig() {
+      try {
+        const configDoc = await getDoc(doc(db, 'config', 'bracket-config'));
+        bracketConfig = configDoc.exists() ? configDoc.data() : {};
+      } catch (err) {
+        console.error('Greška pri čitanju config/bracket-config:', err);
+        bracketConfig = {};
+      }
+    }
+
+    // matchId npr. "R64_3", "QF_1", "LQF_3", "THIRD_1", "LTHIRD_1" -> round key "R64"/"QF"/"THIRD"
+    function roundKeyFromMatchId(matchId) {
+      const withoutIndex = matchId.replace(/_\d+$/, ''); // skini "_N" sufiks
+      return withoutIndex.startsWith('L') ? withoutIndex.slice(1) : withoutIndex;
+    }
+
+    function getPlayoffLegs(matchId, isAvg = false) {
+      const round = roundKeyFromMatchId(matchId);
+      const rounds = isAvg ? bracketConfig?.avgPlayoff?.rounds : bracketConfig?.playoff?.rounds;
+      return rounds?.[round]?.legs;
+    }
+
 
     function esc(v) {
       if (!v) return '';
@@ -1260,6 +1300,15 @@
 
     function pf(v) { const f = parseFloat(v); return isNaN(f) ? null : f; }
     function pi(v) { const i = parseInt(v); return isNaN(i) ? null : i; }
+
+    function formatMatchTimestamp(ts) {
+      try {
+        const dt = ts?.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
+        if (isNaN(dt.getTime())) return '';
+        return dt.toLocaleDateString('hr-HR', { day: 'numeric', month: 'short', year: 'numeric' }) +
+          ', ' + dt.toLocaleTimeString('hr-HR', { hour: '2-digit', minute: '2-digit' });
+      } catch { return ''; }
+    }
 
     function slugify(name) {
       return name.toLowerCase()
@@ -1311,6 +1360,7 @@
         const seasonLabel = SEASON_LABELS[ACTIVE_SEASON_ID] || ACTIVE_SEASON_ID;
         document.getElementById('welcome-msg').textContent = `Dobrodošli u ${seasonLabel}, ${user.email.split('@')[0]}!`;
 
+        await loadBracketConfig();
         await loadGroups(currentIsAdmin, userData.groups || []);
         await loadBracketAdmin(); await loadLowerBracketAdmin();
       } else {
@@ -1656,11 +1706,16 @@
       const p2 = d.player2 || 'TBD';
       const saved = d;
 
+      const legs = getPlayoffLegs(matchId, false);
+      const timestampLabel = saved.timestamp ? formatMatchTimestamp(saved.timestamp) : '';
+      const legsLabel = legs ? `<div class="bedit-legs-label">Best of ${legs} legs${timestampLabel ? `<div style="font-size:0.65rem;color:var(--muted);margin-top:3px;text-transform:none;letter-spacing:0;">${esc(timestampLabel)}</div>` : ''}</div>` : '';
+
       document.getElementById('bedit-popup-content').innerHTML = `
         <div class="bedit-header">
           <span class="bedit-title">${esc(d.roundLabel || matchId)}</span>
           <button class="bedit-close" onclick="closeBEditPopup()">✕</button>
         </div>
+        ${legsLabel}
         <div class="bedit-players">
           <span class="bedit-player-name">${esc(p1)}</span>
           <span class="bedit-vs">VS</span>
@@ -1683,12 +1738,18 @@
             <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" placeholder="First 9" value="${esc(saved.first9_1 || '')}">
             <span class="bedit-stat-label">First 9</span>
             <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" placeholder="First 9" value="${esc(saved.first9_2 || '')}">
-            <input class="bedit-stat-input" id="bedit-bl1" type="number" placeholder="Best Leg" value="${esc(saved.bestleg1 || '')}">
-            <span class="bedit-stat-label">Best Leg</span>
-            <input class="bedit-stat-input" id="bedit-bl2" type="number" placeholder="Best Leg" value="${esc(saved.bestleg2 || '')}">
+            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" placeholder="CO rate %" value="${esc(saved.checkoutrate1 ?? '')}">
+            <span class="bedit-stat-label">CO rate %</span>
+            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" placeholder="CO rate %" value="${esc(saved.checkoutrate2 ?? '')}">
+            <input class="bedit-stat-input" id="bedit-coatt1" type="text" placeholder="6/30" value="${esc(saved.checkouts1 ?? '')}">
+            <span class="bedit-stat-label">Checkouts</span>
+            <input class="bedit-stat-input" id="bedit-coatt2" type="text" placeholder="6/30" value="${esc(saved.checkouts2 ?? '')}">
             <input class="bedit-stat-input" id="bedit-bco1" type="number" placeholder="Best CO" value="${esc(saved.bestcheckout1 || '')}">
             <span class="bedit-stat-label">Best CO</span>
             <input class="bedit-stat-input" id="bedit-bco2" type="number" placeholder="Best CO" value="${esc(saved.bestcheckout2 || '')}">
+            <input class="bedit-stat-input" id="bedit-bl1" type="number" placeholder="Best Leg" value="${esc(saved.bestleg1 || '')}">
+            <span class="bedit-stat-label">Best Leg</span>
+            <input class="bedit-stat-input" id="bedit-bl2" type="number" placeholder="Best Leg" value="${esc(saved.bestleg2 || '')}">
             <input class="bedit-stat-input" id="bedit-180_1" type="number" placeholder="180s" value="${esc(saved['180_1'] || '')}">
             <span class="bedit-stat-label">180s</span>
             <input class="bedit-stat-input" id="bedit-180_2" type="number" placeholder="180s" value="${esc(saved['180_2'] || '')}">
@@ -1740,6 +1801,11 @@
         bestcheckout2: pi(document.getElementById('bedit-bco2')?.value),
         '180_1': pi(document.getElementById('bedit-180_1')?.value),
         '180_2': pi(document.getElementById('bedit-180_2')?.value),
+        checkoutrate1: pf(document.getElementById('bedit-corate1')?.value),
+        checkoutrate2: pf(document.getElementById('bedit-corate2')?.value),
+        checkouts1: document.getElementById('bedit-coatt1')?.value?.trim() || null,
+        checkouts2: document.getElementById('bedit-coatt2')?.value?.trim() || null,
+        timestamp: serverTimestamp(),
       };
       Object.keys(data).forEach(k => { if (data[k] === null || data[k] === undefined) delete data[k]; });
 
@@ -1747,6 +1813,7 @@
 
       try {
         await setDoc(doc(db, 'seasons', ACTIVE_SEASON_ID, 'bracket', matchId), data, { merge: true });
+        await setDoc(doc(db, 'seasons', ACTIVE_SEASON_ID), { lastUpdated: new Date() }, { merge: true });
         btn.classList.add('saved'); btn.innerHTML = '<i class="fas fa-check"></i> Spremljeno';
         showToast('Meč spremljen!', 'success');
         setTimeout(() => {
@@ -1784,12 +1851,16 @@
       const p2 = d.player2 || 'TBD';
       const saved = d;
 
+      const legs = getPlayoffLegs(matchId, false);
+      const timestampLabel = saved.timestamp ? formatMatchTimestamp(saved.timestamp) : '';
+      const legsLabel = legs ? `<div class="bedit-legs-label">Best of ${legs} legs${timestampLabel ? `<div style="font-size:0.65rem;color:var(--muted);margin-top:3px;text-transform:none;letter-spacing:0;">${esc(timestampLabel)}</div>` : ''}</div>` : '';
+
       document.getElementById('bedit-popup-content').innerHTML = `
         <div class="bedit-header">
           <span class="bedit-title">${esc(d.roundLabel || matchId)}</span>
           <button class="bedit-close" onclick="closeBEditPopup()">✕</button>
         </div>
- 
+        ${legsLabel}
         <div class="bedit-players">
           <span class="bedit-player-name">${esc(p1)}</span>
           <span class="bedit-vs">VS</span>
@@ -1811,19 +1882,21 @@
             <input class="bedit-stat-input" id="bedit-avg1" type="number" step="0.01" placeholder="AVG" value="${esc(saved.average1 || '')}">
             <span class="bedit-stat-label">AVG</span>
             <input class="bedit-stat-input" id="bedit-avg2" type="number" step="0.01" placeholder="AVG" value="${esc(saved.average2 || '')}">
- 
             <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" placeholder="First 9" value="${esc(saved.first9_1 || '')}">
             <span class="bedit-stat-label">First 9</span>
             <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" placeholder="First 9" value="${esc(saved.first9_2 || '')}">
- 
-            <input class="bedit-stat-input" id="bedit-bl1" type="number" placeholder="Best Leg" value="${esc(saved.bestleg1 || '')}">
-            <span class="bedit-stat-label">Best Leg</span>
-            <input class="bedit-stat-input" id="bedit-bl2" type="number" placeholder="Best Leg" value="${esc(saved.bestleg2 || '')}">
- 
+            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" placeholder="CO rate %" value="${esc(saved.checkoutrate1 ?? '')}">
+            <span class="bedit-stat-label">CO rate %</span>
+            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" placeholder="CO rate %" value="${esc(saved.checkoutrate2 ?? '')}">
+            <input class="bedit-stat-input" id="bedit-coatt1" type="text" placeholder="6/30" value="${esc(saved.checkouts1 ?? '')}">
+            <span class="bedit-stat-label">Checkouts</span>
+            <input class="bedit-stat-input" id="bedit-coatt2" type="text" placeholder="6/30" value="${esc(saved.checkouts2 ?? '')}">
             <input class="bedit-stat-input" id="bedit-bco1" type="number" placeholder="Best CO" value="${esc(saved.bestcheckout1 || '')}">
             <span class="bedit-stat-label">Best CO</span>
             <input class="bedit-stat-input" id="bedit-bco2" type="number" placeholder="Best CO" value="${esc(saved.bestcheckout2 || '')}">
- 
+            <input class="bedit-stat-input" id="bedit-bl1" type="number" placeholder="Best Leg" value="${esc(saved.bestleg1 || '')}">
+            <span class="bedit-stat-label">Best Leg</span>
+            <input class="bedit-stat-input" id="bedit-bl2" type="number" placeholder="Best Leg" value="${esc(saved.bestleg2 || '')}">
             <input class="bedit-stat-input" id="bedit-180_1" type="number" placeholder="180s" value="${esc(saved['180_1'] || '')}">
             <span class="bedit-stat-label">180s</span>
             <input class="bedit-stat-input" id="bedit-180_2" type="number" placeholder="180s" value="${esc(saved['180_2'] || '')}">
@@ -1864,6 +1937,11 @@
         bestcheckout2: pi(document.getElementById('bedit-bco2')?.value),
         '180_1': pi(document.getElementById('bedit-180_1')?.value),
         '180_2': pi(document.getElementById('bedit-180_2')?.value),
+        checkoutrate1: pf(document.getElementById('bedit-corate1')?.value),
+        checkoutrate2: pf(document.getElementById('bedit-corate2')?.value),
+        checkouts1: document.getElementById('bedit-coatt1')?.value?.trim() || null,
+        checkouts2: document.getElementById('bedit-coatt2')?.value?.trim() || null,
+        timestamp: serverTimestamp(),
       };
       // Strip nulls
       Object.keys(data).forEach(k => { if (data[k] === null || data[k] === undefined) delete data[k]; });
@@ -1872,6 +1950,7 @@
 
       try {
         await setDoc(doc(db, 'seasons', ACTIVE_SEASON_ID, 'lower-bracket', matchId), data, { merge: true });
+        await setDoc(doc(db, 'seasons', ACTIVE_SEASON_ID), { lastUpdated: new Date() }, { merge: true });
         btn.classList.add('saved'); btn.innerHTML = '<i class="fas fa-check"></i> Spremljeno';
         showToast('Meč spremljen!', 'success');
         setTimeout(() => {

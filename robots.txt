@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /index-admin.html
+Disallow: /group-detail.html
+
+Sitemap: https://adriatic-steel-league.web.app/sitemap.xml
