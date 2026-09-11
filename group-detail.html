@@ -754,7 +754,7 @@
       }
     }
 
-    /* ── TOAST ── */
+    /* -- TOAST -- */
     .toast {
       position: fixed;
       bottom: 24px;
@@ -911,15 +911,17 @@
     const groupId = params.get('group');
     const leagueParam = params.get('league');
 
-    // ── AKTIVNA SEZONA ──
+    // -- AKTIVNA SEZONA --
     // Isti config/active-season dokument koji čitaju index.html i
-    // index-admin.html. group-detail.html za sezonske grupe (ne AVG lige)
-    // uvijek radi na trenutno aktivnoj sezoni - DB_PATH se zato postavlja
-    // tek nakon što se ACTIVE_SEASON_ID razriješi (vidi onAuthStateChanged).
+    // index-admin.html. I sezonske grupe I AVG lige sad prate istu aktivnu
+    // sezonu (avg-leagues/{ACTIVE_SEASON_ID}/{leagueId}/{groupId} - grupa je
+    // dokument izravno u {leagueId} kolekciji, nema posrednog "groups" naziva)
+    // - DB_PATH se zato postavlja tek nakon što se ACTIVE_SEASON_ID razriješi
+    // (vidi onAuthStateChanged), za oba slučaja.
     const DEFAULT_ACTIVE_SEASON_ID = 'sezona-2';
     let ACTIVE_SEASON_ID = DEFAULT_ACTIVE_SEASON_ID;
     let DB_PATH = leagueParam
-      ? ['avg-leagues', leagueParam, 'groups', groupId]
+      ? ['avg-leagues', DEFAULT_ACTIVE_SEASON_ID, leagueParam, groupId]
       : ['seasons', DEFAULT_ACTIVE_SEASON_ID, 'groups', groupId]; // privremeni fallback dok se ACTIVE_SEASON_ID ne razriješi
 
     async function resolveActiveSeasonId() {
@@ -940,10 +942,10 @@
     let matchesMap = {}; // "kolo_mec" -> match data
     let schedule = []; // [{kolo, matches:[{mec,p1,p2}], bye}]
 
-    // ── BRACKET CONFIG (Best of X legs) ──
+    // -- BRACKET CONFIG (Best of X legs) --
     // Jedan globalni dokument config/bracket-config. Za grupnu fazu (sezonske
     // grupe) koristi se polje seasonLegs, za AVG lige polje avgLegs.
-    // Ručno se uređuje u Firestore konzoli — ako polje fali, ostaje undefined
+    // Ručno se uređuje u Firestore konzoli - ako polje fali, ostaje undefined
     // i prikaz se jednostavno ne renderira (bez fallback vrijednosti).
     let bracketConfig = null;
 
@@ -961,7 +963,7 @@
       return leagueParam ? bracketConfig?.avgLegs : bracketConfig?.seasonLegs;
     }
 
-    // ── AUTH ──
+    // -- AUTH --
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         window.location.href = 'index-admin.html';
@@ -980,19 +982,18 @@
         badge.textContent = 'Admin';
       }
 
-      // Sezonske grupe (bez ?league=) prate aktivnu sezonu iz configa;
-      // AVG lige su neovisan sustav pa DB_PATH za njih ostaje kako je gore postavljen.
-      if (!leagueParam) {
-        ACTIVE_SEASON_ID = await resolveActiveSeasonId();
-        DB_PATH = ['seasons', ACTIVE_SEASON_ID, 'groups', groupId];
-      }
+      // I sezonske grupe I AVG lige prate istu aktivnu sezonu iz configa.
+      ACTIVE_SEASON_ID = await resolveActiveSeasonId();
+      DB_PATH = leagueParam
+        ? ['avg-leagues', ACTIVE_SEASON_ID, leagueParam, groupId]
+        : ['seasons', ACTIVE_SEASON_ID, 'groups', groupId];
 
       await loadBracketConfig();
       await populateGroupSelector(isAdmin, userData.groups || []);
       await loadGroup();
     });
 
-    // ── LOAD GROUP ──
+    // -- LOAD GROUP --
     async function loadGroup() {
       if (!groupId) {
         document.getElementById('group-name').textContent = 'Greška: nema grupe';
@@ -1036,15 +1037,20 @@
       renderRaspored();
     }
 
+    // avg-leagues/{sezona}/{liga} kolekcija sadrži i rezervirane dokumente
+    // "rezultati" (povijesni rezultati) i "bracket" (ždrijeb) kao susjede
+    // stvarnih grupa - filtrirati ih iz dropdowna.
+    const AVG_RESERVED_DOC_IDS = ['rezultati', 'bracket'];
+
     async function populateGroupSelector(admin, allowedGroups) {
       try {
         const basePath = leagueParam
-          ? ['avg-leagues', leagueParam, 'groups']
+          ? ['avg-leagues', ACTIVE_SEASON_ID, leagueParam]
           : ['seasons', ACTIVE_SEASON_ID, 'groups'];
         const groupsSnap = await getDocs(collection(db, ...basePath));
 
         let groups = [];
-        groupsSnap.forEach(d => groups.push({ id: d.id, ...d.data() }));
+        groupsSnap.forEach(d => { if (!leagueParam || !AVG_RESERVED_DOC_IDS.includes(d.id)) groups.push({ id: d.id, ...d.data() }); });
         groups.sort((a, b) => a.id.localeCompare(b.id));
 
         if (!admin) groups = groups.filter(g => allowedGroups.includes(g.id));
@@ -1072,7 +1078,7 @@
       window.location.href = 'index-admin.html';
     };
 
-    // ── BERGER TABLES ──
+    // -- BERGER TABLES --
     function generateSchedule(players) {
       const n = players.length;
 
@@ -1127,7 +1133,7 @@
 
       // Generički circle-method za ostale veličine (10, 11, 12... 20)
       const list = [...players];
-      if (n % 2 !== 0) list.push('BYE'); // neparni — dodaj BYE
+      if (n % 2 !== 0) list.push('BYE'); // neparni - dodaj BYE
       const total = list.length;
       const fixed = list[0];
       const rotating = list.slice(1);
@@ -1154,7 +1160,7 @@
       return rounds;
     }
 
-    // ── STANDINGS ──
+    // -- STANDINGS --
     function computeStandings() {
       const stats = {};
       players.forEach(p => {
@@ -1219,7 +1225,7 @@
       container.innerHTML = `
         <div class="standings-wrap">
           <div class="standings-header">
-            <h2><i class="fas fa-trophy" style="margin-right:8px;color:#FFD700;"></i>Tablica — ${groupData?.name || ''}</h2>
+            <h2><i class="fas fa-trophy" style="margin-right:8px;color:#FFD700;"></i>Tablica - ${groupData?.name || ''}</h2>
             <span style="font-size:0.75rem;color:var(--muted);">${players.length} igrača</span>
           </div>
           <div class="table-wrap">
@@ -1256,7 +1262,7 @@
       `;
     }
 
-    // ── RASPORED ──
+    // -- RASPORED --
     function renderRaspored() {
       const container = document.getElementById('raspored-container');
 
@@ -1384,7 +1390,7 @@
       `;
     }
 
-    // ── TOGGLE KOLO ──
+    // -- TOGGLE KOLO --
     window.toggleKolo = function (kolo) {
       const body = document.getElementById(`kolo-body-${kolo}`);
       const icon = document.getElementById(`kolo-icon-${kolo}`);
@@ -1393,7 +1399,7 @@
       if (icon) icon.style.transform = open ? '' : 'rotate(180deg)';
     };
 
-    // ── TOGGLE STATS ──
+    // -- TOGGLE STATS --
     window.toggleStats = function (kolo, mec) {
       const stats = document.getElementById(`stats-${kolo}-${mec}`);
       const btn = stats?.previousElementSibling?.querySelector('.btn-toggle-stats') ||
@@ -1409,7 +1415,7 @@
       }
     };
 
-    // ── SAVE MATCH ──
+    // -- SAVE MATCH --
     window.saveMatch = async function (kolo, mec, player1, player2) {
       const btn = document.getElementById(`save-${kolo}-${mec}`);
       const s1 = document.getElementById(`s1-${kolo}-${mec}`)?.value?.trim();
@@ -1485,7 +1491,7 @@
       }
     };
 
-    // ── DELETE MATCH ──
+    // -- DELETE MATCH --
     window.deleteMatch = async function (kolo, mec) {
       if (!confirm('Jesi li siguran da želiš izbrisati sve podatke ovog meča?')) return;
 
@@ -1526,14 +1532,14 @@
       }
     };
 
-    // ── HELPERS ──
+    // -- HELPERS --
     function parseFloatOrNull(v) { const f = parseFloat(v); return isNaN(f) ? null : f; }
     function parseIntOrNull(v) { const i = parseInt(v); return isNaN(i) ? null : i; }
     function esc(v) {
       return String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
-    // ── TAB SWITCH ──
+    // -- TAB SWITCH --
     window.switchTab = function (name, btn) {
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1541,7 +1547,7 @@
       btn.classList.add('active');
     };
 
-    // ── TOAST ──
+    // -- TOAST --
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
       t.textContent = msg;

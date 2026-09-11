@@ -1,20 +1,10 @@
 {
   "hosting": {
-    "predeploy": [
-      "node scripts/sync-index.js"
-    ],
     "public": ".",
     "ignore": [
       "firebase.json",
       "**/.*",
       "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "/",
-        "function": "renderBot",
-        "region": "us-central1"
-      }
     ],
     "headers": [
       {

@@ -102,7 +102,7 @@
       }
     }
 
-    /* ── LOGIN ── */
+    /* -- LOGIN -- */
     #login-screen {
       position: relative;
       z-index: 10;
@@ -245,7 +245,7 @@
       letter-spacing: 0.5px;
     }
 
-    /* ── ADMIN PANEL ── */
+    /* -- ADMIN PANEL -- */
     #admin-screen {
       display: none;
       position: relative;
@@ -361,7 +361,7 @@
       color: var(--muted);
     }
 
-    /* ── ADMIN TABS ── */
+    /* -- ADMIN TABS -- */
     .admin-tabs {
       display: flex;
       gap: 8px;
@@ -401,7 +401,7 @@
       display: block;
     }
 
-    /* ── GROUPS GRID ── */
+    /* -- GROUPS GRID -- */
     .groups-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -474,7 +474,7 @@
       letter-spacing: 0.5px;
     }
 
-    /* ── BRACKET ADMIN ── */
+    /* -- BRACKET ADMIN -- */
     .bracket-admin-wrap {
       overflow-x: auto;
     }
@@ -516,7 +516,7 @@
       justify-content: center;
     }
 
-    /* ── CSS BRACKET CONNECTORS (no JS/SVG) ──
+    /* -- CSS BRACKET CONNECTORS (no JS/SVG) --
        Ista logika kao u index.html, prilagođena admin klasama.
        ::before = ulazna linija s lijeve strane (iz prethodne runde)
        ::after  = izlazni L-spoj prema sljedećoj rundi (vertikala + kratka
@@ -640,7 +640,7 @@
       margin: 10px;
     }
 
-    /* ── BRACKET EDIT POPUP ── */
+    /* -- BRACKET EDIT POPUP -- */
     .bedit-overlay {
       position: fixed;
       inset: 0;
@@ -897,7 +897,7 @@
       background: rgba(231, 76, 60, 0.25);
     }
 
-    /* ── AVG LIGE ── */
+    /* -- AVG LIGE -- */
     .avg-league-tab-btn {
       padding: 8px 20px;
       border-radius: 999px;
@@ -983,7 +983,7 @@
       flex: 1;
     }
 
-    /* ── LOADING / TOAST ── */
+    /* -- LOADING / TOAST -- */
     .loading-state {
       display: flex;
       flex-direction: column;
@@ -1109,7 +1109,7 @@
           <a href="index.html"><img src="images/ASL-logo.webp" alt="ASL Logo" fetchpriority="high" loading="eager"></a>
           <div>
             <div class="admin-brand-text">ADRIATIC STEEL LEAGUE</div>
-            <div class="admin-brand-sub">Admin Panel · Sezona 2</div>
+            <div class="admin-brand-sub">Admin Pristup</div>
           </div>
         </div>
         <div class="admin-user-info">
@@ -1120,7 +1120,7 @@
       </div>
 
       <div class="admin-welcome">
-        <h2 id="welcome-msg">Dobrodošli U 2. sezonu!</h2>
+        <h2 id="welcome-msg"></h2>
       </div>
 
       <div class="admin-tabs">
@@ -1139,6 +1139,7 @@
       </div>
 
       <div id="admin-tab-grupe" class="admin-tab-panel active">
+        <div id="trenutno-kolo-container"></div>
         <div id="groups-container">
           <div class="loading-state">
             <div class="loading-spinner"></div><span class="loading-text">Učitavanje grupa...</span>
@@ -1163,8 +1164,11 @@
       </div>
 
       <div id="admin-tab-avg-lige" class="admin-tab-panel">
+        <div id="trenutno-kolo-avg-container"></div>
         <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
-          <button class="avg-league-tab-btn active" id="avg-tab-btn-diamond"
+          <button class="avg-league-tab-btn active" id="avg-tab-btn-zenska" onclick="switchAvgLeagueTab('zenska', this)">👑
+            Ženska liga</button>
+          <button class="avg-league-tab-btn" id="avg-tab-btn-diamond"
             onclick="switchAvgLeagueTab('diamond', this)">💎 Diamond</button>
           <button class="avg-league-tab-btn" id="avg-tab-btn-gold" onclick="switchAvgLeagueTab('gold', this)">🥇
             Gold</button>
@@ -1172,8 +1176,12 @@
             Silver</button>
           <button class="avg-league-tab-btn" id="avg-tab-btn-bronze" onclick="switchAvgLeagueTab('bronze', this)">🥉
             Bronze</button>
+          
         </div>
-        <div id="avg-league-diamond" class="avg-league-panel">
+        <div id="avg-league-zenska" class="avg-league-panel" style="display: block;">
+          <div id="avg-container-zenska"></div>
+        </div>
+        <div id="avg-league-diamond" class="avg-league-panel" style="display:none;">
           <div id="avg-container-diamond"></div>
         </div>
         <div id="avg-league-gold" class="avg-league-panel" style="display:none;">
@@ -1218,7 +1226,7 @@
 
     let currentIsAdmin = false;
 
-    // ── AKTIVNA SEZONA ──
+    // -- AKTIVNA SEZONA --
     // Isti config/active-season dokument koji čita index.html. Admin panel
     // (grupe, gornji/donji ždrijeb) uvijek radi na sezoni koju taj flag
     // kaže da je trenutno aktivna - promjena flaga u Firestoreu prebacuje
@@ -1227,18 +1235,78 @@
     let ACTIVE_SEASON_ID = DEFAULT_ACTIVE_SEASON_ID;
     const SEASON_LABELS = { 'sezona-1': 'Sezona 1', 'sezona-2': 'Sezona 2', 'sezona-3': 'Sezona 3' };
 
+    let activeSeasonConfig = {};
+
     async function resolveActiveSeasonId() {
       try {
         const configDoc = await getDoc(doc(db, 'config', 'active-season'));
-        const seasonId = configDoc.exists() ? configDoc.data()?.seasonId : null;
-        return seasonId || DEFAULT_ACTIVE_SEASON_ID;
+        activeSeasonConfig = configDoc.exists() ? configDoc.data() : {};
+        return activeSeasonConfig.seasonId || DEFAULT_ACTIVE_SEASON_ID;
       } catch (err) {
         console.error('Greška pri čitanju config/active-season, koristim default:', err);
+        activeSeasonConfig = {};
         return DEFAULT_ACTIVE_SEASON_ID;
       }
     }
 
-    // ── HELPERS ──
+    // -- TRENUTNO KOLO (raspored vidljiv do tog kola, uključivo) --
+    // Zapisuje se u config/active-season (isti dokument koji određuje aktivnu
+    // sezonu), dva odvojena polja: trenutnoKolo (sezonske grupe, Grupe tab) i
+    // trenutnoKoloAvg (AVG lige, primjenjuje se na SVE lige/grupe pod AVG
+    // tabom zajedno - jedan zajednički broj, ne po ligi). Zamjenjuje stari
+    // ručni unos u seasons/{sezona}.trenutnoKolo (obrisano iz Firestore).
+    // Index.html filtrira raspored po istim poljima (kolo <= trenutnoKolo).
+    const KOLO_OPTIONS = Array.from({ length: 20 }, (_, i) => i + 1);
+
+    function renderTrenutnoKoloControls() {
+      const grupeEl = document.getElementById('trenutno-kolo-container');
+      if (grupeEl) {
+        const current = parseInt(activeSeasonConfig.trenutnoKolo) || 1;
+        grupeEl.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 14px;flex-wrap:wrap;">
+            <span class="form-label" style="margin:0;">Trenutno kolo (raspored vidljiv do ovog kola, za sve grupe):</span>
+            <select class="form-input" id="trenutno-kolo-select" style="width:auto;margin-bottom:0;" onchange="updateTrenutnoKolo(this.value)">
+              ${KOLO_OPTIONS.map(n => `<option value="${n}" ${n === current ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+          </div>`;
+      }
+
+      const avgEl = document.getElementById('trenutno-kolo-avg-container');
+      if (avgEl) {
+        const currentAvg = parseInt(activeSeasonConfig.trenutnoKoloAvg) || 1;
+        avgEl.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 14px;flex-wrap:wrap;">
+            <span class="form-label" style="margin:0;">Trenutno kolo (raspored vidljiv do ovog kola, za sve AVG lige):</span>
+            <select class="form-input" id="trenutno-kolo-avg-select" style="width:auto;margin-bottom:0;" onchange="updateTrenutnoKoloAvg(this.value)">
+              ${KOLO_OPTIONS.map(n => `<option value="${n}" ${n === currentAvg ? 'selected' : ''}>${n}</option>`).join('')}
+            </select>
+          </div>`;
+      }
+    }
+
+    window.updateTrenutnoKolo = async function (value) {
+      const n = parseInt(value);
+      try {
+        await setDoc(doc(db, 'config', 'active-season'), { trenutnoKolo: n }, { merge: true });
+        activeSeasonConfig.trenutnoKolo = n;
+        showToast(`Trenutno kolo postavljeno na ${n}.`, 'success');
+      } catch (err) {
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
+    window.updateTrenutnoKoloAvg = async function (value) {
+      const n = parseInt(value);
+      try {
+        await setDoc(doc(db, 'config', 'active-season'), { trenutnoKoloAvg: n }, { merge: true });
+        activeSeasonConfig.trenutnoKoloAvg = n;
+        showToast(`Trenutno AVG kolo postavljeno na ${n}.`, 'success');
+      } catch (err) {
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
+    // -- HELPERS --
     const R64_DRAW = [
       { p1: '1A', p2: '4P' }, { p1: '2N', p2: '3C' }, { p1: '1O', p2: '4B' }, { p1: '2D', p2: '3M' },
       { p1: '1G', p2: '4J' }, { p1: '2L', p2: '3E' }, { p1: '1I', p2: '4H' }, { p1: '2F', p2: '3K' },
@@ -1256,7 +1324,7 @@
     const LROUND_IDS = ['LR64', 'LR32', 'LR16', 'LQF', 'LSF', 'LF'];
     const LROUND_LABELS = ['Donji Last of 64', 'Donji Last of 32', 'Donja Osmina finala', 'Donje Četvrtfinale', 'Donje Polufinale', 'Donje Finale'];
 
-    // ── BRACKET CONFIG (Best of X legs) ──
+    // -- BRACKET CONFIG (Best of X legs) --
     // Jedan globalni dokument config/bracket-config, ručno uređivan u
     // Firestore konzoli. playoff.rounds.{round}.legs vrijedi za gornji I
     // donji ždrijeb - donji samo skine "L" prefiks prije lookupa
@@ -1317,16 +1385,16 @@
         .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     }
 
-    // ── ADMIN TABS ──
+    // -- ADMIN TABS --
     window.switchAdminTab = function (name, btn) {
       document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('admin-tab-' + name).classList.add('active');
       btn.classList.add('active');
-      if (name === 'avg-lige') loadAvgLeague('diamond');
+      if (name === 'avg-lige') loadAvgLeague(currentAvgLeague);
     };
 
-    // ── AUTH ──
+    // -- AUTH --
     window.handleLogin = async function () {
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
@@ -1359,6 +1427,7 @@
         ACTIVE_SEASON_ID = await resolveActiveSeasonId();
         const seasonLabel = SEASON_LABELS[ACTIVE_SEASON_ID] || ACTIVE_SEASON_ID;
         document.getElementById('welcome-msg').textContent = `Dobrodošli u ${seasonLabel}, ${user.email.split('@')[0]}!`;
+        renderTrenutnoKoloControls();
 
         await loadBracketConfig();
         await loadGroups(currentIsAdmin, userData.groups || []);
@@ -1371,22 +1440,53 @@
       }
     });
 
-    // ── GRUPE (Aktivna sezona) ──
+    // -- SVI IGRAČI (globalni registar, players/{slug}) --
+    // Jedna zajednička lista svih poznatih igrača u bazi, neovisna o sezoni/ligi.
+    // Koristi se za multiselect u obje forme za kreiranje grupa (sezonske i AVG),
+    // umjesto ranijeg čitanja imena iz postojećih grupa aktivne sezone.
+    let allPlayers = [];
+
+    async function loadAllPlayers() {
+      if (allPlayers.length > 0) return;
+      const snap = await getDocs(collection(db, 'players'));
+      const names = []; snap.forEach(d => names.push(d.data().name));
+      allPlayers = names.sort((a, b) => a.localeCompare(b, 'hr'));
+    }
+
+    function normalizeForSearch(s) {
+      return s.toLowerCase()
+        .replace(/š/g, 's').replace(/č/g, 'c').replace(/ć/g, 'c')
+        .replace(/ž/g, 'z').replace(/đ/g, 'd');
+    }
+
+    window.filterPlayerMultiselect = function (inputEl, listId) {
+      const q = normalizeForSearch(inputEl.value.trim());
+      document.querySelectorAll(`#${listId} .player-checkbox-row`).forEach(row => {
+        const match = !q || normalizeForSearch(row.querySelector('label').textContent).includes(q);
+        row.style.display = match ? '' : 'none';
+      });
+    };
+
+    // -- GRUPE (Aktivna sezona) --
+    const SEASON_GROUP_LETTERS = 'ABCDEFGHIJKLMNOP'.split(''); // fiksno 16 (gornji ždrijeb R64_DRAW koristi baš ova slova)
+
     async function loadGroups(isAdmin, allowedGroups) {
       const container = document.getElementById('groups-container');
       try {
+        if (isAdmin) await loadAllPlayers();
         const groupsSnap = await getDocs(collection(db, 'seasons', ACTIVE_SEASON_ID, 'groups'));
         const groups = [];
         groupsSnap.forEach(d => { if (isAdmin || allowedGroups.includes(d.id)) groups.push({ id: d.id, ...d.data() }); });
         groups.sort((a, b) => a.id.localeCompare(b.id));
-        if (!groups.length) { container.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px;">Nema dostupnih grupa.</div>'; return; }
+
         const withPlayers = await Promise.all(groups.map(async g => {
           const ps = await getDocs(collection(db, 'seasons', ACTIVE_SEASON_ID, 'groups', g.id, 'players'));
           const players = []; ps.forEach(p => players.push(p.data().name));
           return { ...g, players };
         }));
-        container.innerHTML = '<div class="groups-grid">' +
-          withPlayers.map((g, i) => `
+
+        const gridHtml = withPlayers.length
+          ? '<div class="groups-grid">' + withPlayers.map((g, i) => `
             <div class="group-card" style="animation-delay:${i * 0.04}s" onclick="window.location.href='group-detail.html?group=${g.id}'">
               <div class="group-card-header">
                 <span class="group-card-title">${esc(g.name)}</span>
@@ -1398,14 +1498,109 @@
                   ${g.players.length > 4 ? `<span style="color:rgba(255,255,255,0.3)">+ još ${g.players.length - 4}...</span>` : ''}
                 </div>
               </div>
-              <div class="group-card-footer"><span class="group-card-action">Upravljaj grupom →</span></div>
-            </div>`).join('') + '</div>';
+              <div class="group-card-footer">
+                <span class="group-card-action">Upravljaj grupom →</span>
+                ${isAdmin ? `
+                  <button onclick="event.stopPropagation(); deleteSeasonGroup('${g.id}')"
+                    style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);border-radius:999px;color:#e74c3c;font-size:0.72rem;font-weight:700;padding:4px 12px;cursor:pointer;transition:0.2s ease;"
+                    onmouseover="this.style.background='rgba(231,76,60,0.25)'" onmouseout="this.style.background='rgba(231,76,60,0.12)'">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                ` : ''}
+              </div>
+            </div>`).join('') + '</div>'
+          : '<div style="text-align:center;color:var(--muted);padding:20px 0 28px;">Nema dostupnih grupa.</div>';
+
+        const takenLetters = groups.map(g => g.id.replace(/[^a-zA-Z]/g, '').slice(-1).toUpperCase());
+        container.innerHTML = gridHtml + (isAdmin ? renderSeasonGroupCreateForm(takenLetters) : '');
       } catch (err) {
         container.innerHTML = '<div style="color:#ffaaaa;padding:20px;">Greška: ' + esc(err.message) + '</div>';
       }
     }
 
-    // ── BRACKET ADMIN ──
+    function renderSeasonGroupCreateForm(takenLetters) {
+      const freeLetters = SEASON_GROUP_LETTERS.filter(l => !takenLetters.includes(l));
+      if (!freeLetters.length) {
+        return `<div style="margin-top:20px;text-align:center;color:var(--muted);padding:16px;">Sve grupe (A–P) su popunjene.</div>`;
+      }
+      const nextLetter = freeLetters[0];
+      const checkboxes = allPlayers.map(name => {
+        const safeId = 'chk_season_' + name.replace(/[^a-zA-Z0-9]/g, '_');
+        return `<div class="player-checkbox-row">
+          <input type="checkbox" id="${safeId}" value="${esc(name)}">
+          <label for="${safeId}">${esc(name)}</label>
+        </div>`;
+      }).join('');
+      return `
+        <div class="avg-create-form" style="margin-top:20px;">
+          <h3>Nova grupa - ${SEASON_LABELS[ACTIVE_SEASON_ID] || ACTIVE_SEASON_ID} (Grupa ${nextLetter})</h3>
+          <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
+            <div>
+              <div class="form-label" style="margin-bottom:6px;">
+                Odabrani igrači: <span id="season-group-player-count" style="color:#7eb8ff;">0</span>
+              </div>
+              <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">
+                Označi igrače s desne strane →
+              </div>
+              <button class="bedit-btn-save" onclick="createSeasonGroup('${nextLetter}')">
+                <i class="fas fa-plus"></i> Kreiraj grupu
+              </button>
+            </div>
+            <div>
+              <div class="form-label" style="margin-bottom:8px;">Svi igrači (${allPlayers.length})</div>
+              <input class="form-input" type="text" placeholder="Pretraži igrače..." style="margin-bottom:8px;"
+                oninput="filterPlayerMultiselect(this, 'season-group-player-list')">
+              <div class="player-multiselect" id="season-group-player-list"
+                onchange="document.getElementById('season-group-player-count').textContent =
+                  document.querySelectorAll('#season-group-player-list input:checked').length">
+                ${checkboxes}
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    window.createSeasonGroup = async function (letter) {
+      const groupName = 'Grupa ' + letter;
+
+      const checkboxes = document.querySelectorAll('#season-group-player-list input[type="checkbox"]:checked');
+      const selectedPlayers = Array.from(checkboxes).map(c => c.value);
+
+      if (selectedPlayers.length < 2) { showToast('Odaberi najmanje 2 igrača!', 'error'); return; }
+
+      const groupId = 'grupa-' + letter.toLowerCase();
+
+      try {
+        await setDoc(doc(db, 'seasons', ACTIVE_SEASON_ID, 'groups', groupId), { name: groupName });
+        await Promise.all(selectedPlayers.map((name, i) =>
+          setDoc(
+            doc(db, 'seasons', ACTIVE_SEASON_ID, 'groups', groupId, 'players', slugify(name)),
+            { name, position: i + 1 }
+          )
+        ));
+        showToast(`Grupa "${groupName}" kreirana!`, 'success');
+        loadGroups(currentIsAdmin, []);
+      } catch (err) {
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
+    window.deleteSeasonGroup = async function (groupId) {
+      if (!confirm(`Izbrisati grupu "${groupId}" i sve njene mečeve?`)) return;
+      try {
+        const matchesSnap = await getDocs(collection(db, 'seasons', ACTIVE_SEASON_ID, 'groups', groupId, 'matches'));
+        await Promise.all(matchesSnap.docs.map(d => deleteDoc(d.ref)));
+        const playersSnap = await getDocs(collection(db, 'seasons', ACTIVE_SEASON_ID, 'groups', groupId, 'players'));
+        await Promise.all(playersSnap.docs.map(d => deleteDoc(d.ref)));
+        await deleteDoc(doc(db, 'seasons', ACTIVE_SEASON_ID, 'groups', groupId));
+        showToast('Grupa izbrisana!', 'success');
+        loadGroups(currentIsAdmin, []);
+      } catch (err) {
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
+    // -- BRACKET ADMIN --
     async function loadBracketAdmin() {
       const container = document.getElementById('bracket-admin-container');
 
@@ -1476,11 +1671,11 @@
       return st[rank].name;
     }
 
-    // ── PAIR OFFSET (za connector linije) ──
+    // -- PAIR OFFSET (za connector linije) --
     // Nakon rendera, izmjeri stvarni pixel-razmak između centra svakog
     // "pair-top" meča i njegovog partnera "pair-bottom" unutar iste kolone,
     // i postavi ga kao CSS varijablu --pair-offset na oba elementa.
-    // Layout (space-around) ostaje potpuno netaknut — ovo samo čita pozicije.
+    // Layout (space-around) ostaje potpuno netaknut - ovo samo čita pozicije.
     function setPairOffsetsAdmin(wrapId) {
       const wrap = document.getElementById(wrapId);
       if (!wrap) return;
@@ -1514,7 +1709,7 @@
     }
 
     // ResizeObserver hvata SVE promjene veličine (resize prozora, promjena
-    // tab-a, zoom, orijentacija na mobitelu) — ne samo window resize.
+    // tab-a, zoom, orijentacija na mobitelu) - ne samo window resize.
     let pairOffsetDebounceAdmin = null;
     function debouncedRecalcAdmin() {
       clearTimeout(pairOffsetDebounceAdmin);
@@ -1547,7 +1742,7 @@
         const id = 'R64_' + (i + 1); const saved = matchesByRound[id] || {};
         const p1 = saved.player1 || resolveName(draw.p1, groupStandingsMap) || draw.p1;
         const p2 = saved.player2 || resolveName(draw.p2, groupStandingsMap) || draw.p2;
-        allMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `Last of 64 — Meč ${i + 1}` };
+        allMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `Last of 64 - Meč ${i + 1}` };
         return { id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null };
       });
 
@@ -1558,7 +1753,7 @@
           const id = `${ROUND_IDS[r]}_${i + 1}`; const saved = matchesByRound[id] || {};
           const p1 = saved.player1 || (prev[i * 2]?.winner ? (prev[i * 2].winner === 'player1' ? prev[i * 2].player1 : prev[i * 2].player2) : null);
           const p2 = saved.player2 || (prev[i * 2 + 1]?.winner ? (prev[i * 2 + 1].winner === 'player1' ? prev[i * 2 + 1].player1 : prev[i * 2 + 1].player2) : null);
-          allMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${ROUND_LABELS[r]} — Meč ${i + 1}` };
+          allMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${ROUND_LABELS[r]} - Meč ${i + 1}` };
           cur.push({ id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null });
         }
         rounds.push(cur);
@@ -1627,7 +1822,7 @@
         const id = 'LR64_' + (i + 1); const saved = matchesByRound[id] || {};
         const p1 = saved.player1 || null;
         const p2 = saved.player2 || null;
-        allLowerMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `Donji Last of 64 — Meč ${i + 1}` };
+        allLowerMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `Donji Last of 64 - Meč ${i + 1}` };
         return { id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null };
       });
 
@@ -1638,7 +1833,7 @@
           const id = `${LROUND_IDS[r]}_${i + 1}`; const saved = matchesByRound[id] || {};
           const p1 = saved.player1 || (prev[i * 2]?.winner ? (prev[i * 2].winner === 'player1' ? prev[i * 2].player1 : prev[i * 2].player2) : null);
           const p2 = saved.player2 || (prev[i * 2 + 1]?.winner ? (prev[i * 2 + 1].winner === 'player1' ? prev[i * 2 + 1].player1 : prev[i * 2 + 1].player2) : null);
-          allLowerMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${LROUND_LABELS[r]} — Meč ${i + 1}` };
+          allLowerMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${LROUND_LABELS[r]} - Meč ${i + 1}` };
           cur.push({ id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null });
         }
         rounds.push(cur);
@@ -1698,7 +1893,7 @@
       });
     }
 
-    // ── BRACKET EDIT POPUP ──
+    // -- BRACKET EDIT POPUP --
     function openBEditPopup(matchId) {
       const d = allMatchData[matchId];
       if (!d) return;
@@ -1725,7 +1920,7 @@
           <div class="bedit-section-title">Rezultat</div>
           <div class="bedit-score-row">
             <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[0] || '' : '')}">
-            <span class="bedit-score-sep">—</span>
+            <span class="bedit-score-sep">-</span>
             <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[1] || '' : '')}">
           </div>
         </div>
@@ -1843,7 +2038,7 @@
       }
     };
 
-    // ── LOWER BRACKET POPUP (isti overlay, drugi Firestore target) ──
+    // -- LOWER BRACKET POPUP (isti overlay, drugi Firestore target) --
     function openLBEditPopup(matchId) {
       const d = allLowerMatchData[matchId];
       if (!d) return;
@@ -1871,7 +2066,7 @@
           <div class="bedit-section-title">Rezultat</div>
           <div class="bedit-score-row">
             <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[0] || '' : '')}">
-            <span class="bedit-score-sep">—</span>
+            <span class="bedit-score-sep">-</span>
             <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[1] || '' : '')}">
           </div>
         </div>
@@ -1979,14 +2174,18 @@
         showToast('Greška: ' + err.message, 'error');
       }
     };
-    //  AVG LIGE 
+    //  AVG LIGE
+    // Putanja avg-leagues/{ACTIVE_SEASON_ID}/{leagueId}/{groupId} - grupa je
+    // dokument izravno u {leagueId} kolekciji (nema posrednog "groups" naziva),
+    // pa "rezultati" (povijesni rezultati) i "bracket" (ždrijeb) žive kao
+    // rezervirani susjedi grupa u istoj kolekciji - filtrirati ih pri listanju.
     const AVG_LEAGUE_LABELS = {
       diamond: '💎 Diamond', gold: '🥇 Gold',
-      silver: '🥈 Silver', bronze: '🥉 Bronze'
+      silver: '🥈 Silver', bronze: '🥉 Bronze', zenska: '👑 Ženska liga'
     };
+    const AVG_RESERVED_DOC_IDS = ['rezultati', 'bracket'];
 
-    let allSezona2Players = []; // cache — učita se jednom
-    let currentAvgLeague = 'diamond';
+    let currentAvgLeague = 'zenska';
 
     window.switchAvgLeagueTab = function (leagueId, btn) {
       document.querySelectorAll('.avg-league-panel').forEach(p => p.style.display = 'none');
@@ -1997,40 +2196,20 @@
       loadAvgLeague(leagueId);
     };
 
-    async function loadAllSezona2Players() {
-      if (allSezona2Players.length > 0) return;
-      const groupsSnap = await getDocs(collection(db, 'seasons', ACTIVE_SEASON_ID, 'groups'));
-      const groupIds = [];
-      groupsSnap.forEach(d => groupIds.push(d.id));
-      groupIds.sort();
-
-      const results = await Promise.all(groupIds.map(async gId => {
-        const ps = await getDocs(query(
-          collection(db, 'seasons', ACTIVE_SEASON_ID, 'groups', gId, 'players'),
-          orderBy('position')
-        ));
-        const names = [];
-        ps.forEach(p => names.push(p.data().name));
-        return names;
-      }));
-
-      allSezona2Players = results.flat().sort((a, b) => a.localeCompare(b));
-    }
-
     async function loadAvgLeague(leagueId) {
       const container = document.getElementById('avg-container-' + leagueId);
       container.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje...</span></div>`;
 
       try {
-        await loadAllSezona2Players();
+        await loadAllPlayers();
 
-        const groupsSnap = await getDocs(collection(db, 'avg-leagues', leagueId, 'groups'));
+        const groupsSnap = await getDocs(collection(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId));
         const groups = [];
-        groupsSnap.forEach(d => groups.push({ id: d.id, ...d.data() }));
+        groupsSnap.forEach(d => { if (!AVG_RESERVED_DOC_IDS.includes(d.id)) groups.push({ id: d.id, ...d.data() }); });
         groups.sort((a, b) => a.id.localeCompare(b.id));
 
         const withPlayers = await Promise.all(groups.map(async g => {
-          const ps = await getDocs(collection(db, 'avg-leagues', leagueId, 'groups', g.id, 'players'));
+          const ps = await getDocs(collection(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, g.id, 'players'));
           const players = []; ps.forEach(p => players.push(p.data().name));
           return { ...g, players };
         }));
@@ -2039,7 +2218,7 @@
           ? '<div class="groups-grid">' + withPlayers.map(g => renderAvgGroupCard(g, leagueId)).join('') + '</div>'
           : '<div style="text-align:center;color:var(--muted);padding:20px 0 28px;">Nema grupa. Kreiraj prvu grupu ispod.</div>';
 
-        container.innerHTML = groupsHtml + renderAvgCreateForm(leagueId);
+        container.innerHTML = groupsHtml + renderAvgCreateForm(leagueId, groups);
 
       } catch (err) {
         container.innerHTML = `<div style="color:#ffaaaa;padding:20px;">Greška: ${esc(err.message)}</div>`;
@@ -2072,8 +2251,17 @@
         </div>`;
     }
 
-    function renderAvgCreateForm(leagueId) {
-      const checkboxes = allSezona2Players.map(name => {
+    function nextAvgGroupName(groups) {
+      const used = new Set(
+        groups.map(g => /^Grupa ([A-Z])$/.exec(g.name || '')).filter(Boolean).map(m => m[1])
+      );
+      const nextLetter = SEASON_GROUP_LETTERS.find(l => !used.has(l)) || '?';
+      return 'Grupa ' + nextLetter;
+    }
+
+    function renderAvgCreateForm(leagueId, groups) {
+      const groupName = nextAvgGroupName(groups);
+      const checkboxes = allPlayers.map(name => {
         const safeId = 'chk_' + leagueId + '_' + name.replace(/[^a-zA-Z0-9]/g, '_');
         return `<div class="player-checkbox-row">
           <input type="checkbox" id="${safeId}" value="${esc(name)}">
@@ -2083,25 +2271,23 @@
 
       return `
         <div class="avg-create-form" style="margin-top:20px;">
-          <h3>+ Nova grupa — ${AVG_LEAGUE_LABELS[leagueId]}</h3>
+          <h3>Nova grupa - ${AVG_LEAGUE_LABELS[leagueId]} (${groupName})</h3>
           <div class="two-col" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start;">
             <div>
-              <div class="form-label" style="margin-bottom:8px;">Naziv grupe</div>
-              <input class="form-input" type="text" id="avg-group-name-${leagueId}"
-                placeholder="npr. Grupa 1" style="margin-bottom:0;">
- 
-              <div class="form-label" style="margin-top:16px;margin-bottom:6px;">
+              <div class="form-label" style="margin-bottom:6px;">
                 Odabrani igrači: <span id="avg-selected-count-${leagueId}" style="color:#7eb8ff;">0</span>
               </div>
               <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px;">
                 Označi igrače s desne strane →
               </div>
-              <button class="bedit-btn-save" onclick="createAvgGroup('${leagueId}')">
+              <button class="bedit-btn-save" onclick="createAvgGroup('${leagueId}','${groupName}')">
                 <i class="fas fa-plus"></i> Kreiraj grupu
               </button>
             </div>
             <div>
-              <div class="form-label" style="margin-bottom:8px;">Igrači Sezone 2 (${allSezona2Players.length})</div>
+              <div class="form-label" style="margin-bottom:8px;">Svi igrači (${allPlayers.length})</div>
+              <input class="form-input" type="text" placeholder="Pretraži igrače..." style="margin-bottom:8px;"
+                oninput="filterPlayerMultiselect(this, 'player-list-${leagueId}')">
               <div class="player-multiselect" id="player-list-${leagueId}"
                 onchange="document.getElementById('avg-selected-count-${leagueId}').textContent =
                   document.querySelectorAll('#player-list-${leagueId} input:checked').length">
@@ -2112,11 +2298,7 @@
         </div>`;
     }
 
-    window.createAvgGroup = async function (leagueId) {
-      const nameInput = document.getElementById(`avg-group-name-${leagueId}`);
-      const groupName = nameInput?.value.trim();
-      if (!groupName) { showToast('Unesi naziv grupe!', 'error'); return; }
-
+    window.createAvgGroup = async function (leagueId, groupName) {
       const checkboxes = document.querySelectorAll(`#player-list-${leagueId} input[type="checkbox"]:checked`);
       const selectedPlayers = Array.from(checkboxes).map(c => c.value);
 
@@ -2126,12 +2308,12 @@
 
       try {
         // 1. Spremi group doc
-        await setDoc(doc(db, 'avg-leagues', leagueId, 'groups', groupId), { name: groupName });
+        await setDoc(doc(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, groupId), { name: groupName });
 
         // 2. Spremi igrače s position
         await Promise.all(selectedPlayers.map((name, i) =>
           setDoc(
-            doc(db, 'avg-leagues', leagueId, 'groups', groupId, 'players', slugify(name)),
+            doc(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, groupId, 'players', slugify(name)),
             { name, position: i + 1 }
           )
         ));
@@ -2144,7 +2326,7 @@
             const matchId = `k${kolo}_m${mec}`;
             matchWrites.push(
               setDoc(
-                doc(db, 'avg-leagues', leagueId, 'groups', groupId, 'matches', matchId),
+                doc(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, groupId, 'matches', matchId),
                 { kolo, mec, player1, player2 }
               )
             );
@@ -2222,11 +2404,11 @@
     window.deleteAvgGroup = async function (leagueId, groupId) {
       if (!confirm(`Izbrisati grupu "${groupId}" i sve njene mečeve?`)) return;
       try {
-        const matchesSnap = await getDocs(collection(db, 'avg-leagues', leagueId, 'groups', groupId, 'matches'));
+        const matchesSnap = await getDocs(collection(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, groupId, 'matches'));
         await Promise.all(matchesSnap.docs.map(d => deleteDoc(d.ref)));
-        const playersSnap = await getDocs(collection(db, 'avg-leagues', leagueId, 'groups', groupId, 'players'));
+        const playersSnap = await getDocs(collection(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, groupId, 'players'));
         await Promise.all(playersSnap.docs.map(d => deleteDoc(d.ref)));
-        await deleteDoc(doc(db, 'avg-leagues', leagueId, 'groups', groupId));
+        await deleteDoc(doc(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, groupId));
         showToast('Grupa izbrisana!', 'success');
         loadAvgLeague(leagueId);
       } catch (err) {
