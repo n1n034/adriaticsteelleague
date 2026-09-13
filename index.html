@@ -298,6 +298,41 @@
       text-shadow: 0 0 12px rgba(255,215,0,0.35);
     }
 
+    /* -- TOAST (poruke poslije upload zahtjeva za avatar) -- */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      padding: 12px 20px;
+      background: rgba(12, 20, 38, 0.97);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #fff;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      transform: translateY(80px);
+      opacity: 0;
+      transition: 0.3s ease;
+      max-width: calc(100vw - 32px);
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success {
+      border-color: rgba(46, 204, 113, 0.4);
+      color: #2ecc71;
+    }
+
+    .toast.error {
+      border-color: rgba(231, 76, 60, 0.4);
+      color: #e74c3c;
+    }
+
     /* -- POPUP -- */
     .match-popup-overlay {
       position: fixed; inset: 0; z-index: 1000;
@@ -308,11 +343,14 @@
       overscroll-behavior: contain;
     }
 
+    /* Popup zauzima otprilike 80% ekrana (visina) na svim veličinama -
+       primjetno veći, "punjiji" prikaz nego mala plutajuća kartica, ali bez
+       da doslovno pokriva cijeli ekran. */
     .match-popup {
       position: relative;
       background: linear-gradient(180deg, rgba(13,20,38,0.98), rgba(6,10,20,0.98));
       border: 1px solid rgba(126,184,255,0.18);
-      border-radius: 28px;
+      border-radius: 22px;
       padding: 28px;
       width: 100%;
       max-width: 680px;
@@ -458,12 +496,12 @@
     /* -- v5 MATCH POPUP CARD -- */
     .mpc-titlebar {
       background: var(--header);
-      padding: 12px 20px;
+      padding: 18px 22px;
       text-align: left;
     }
 
     .mpc-titlebar-text {
-      font-size: 0.75rem;
+      font-size: 0.85rem;
       font-weight: 700;
       letter-spacing: 0.5px;
       text-transform: uppercase;
@@ -471,12 +509,12 @@
     }
 
     .mpc-legs-block {
-      padding: 14px 20px 0;
       text-align: center;
+      background: var(--header);
     }
 
     .mpc-legs-title {
-      font-size: 0.75rem;
+      font-size: 0.85rem;
       font-weight: 700;
       color: #fff;
       text-transform: uppercase;
@@ -484,24 +522,27 @@
     }
 
     .mpc-legs-timestamp {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: rgba(255,255,255,0.55);
-      margin-top: 3px;
+      margin-top: 4px;
     }
 
     .mpc-players {
-      padding: 18px 20px 14px;
+      padding: 22px;
+      background: linear-gradient(180deg, var(--header), var(--header-hover) 50%);
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      border-radius: 0 0 28px 28px;
     }
+
 
     .mpc-player-col {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .mpc-player-col.loser {
@@ -509,35 +550,43 @@
     }
 
     .mpc-avatar {
-      width: 48px;
-      height: 48px;
+      width: 62px;
+      height: 62px;
       border-radius: 50%;
       background: rgba(255,255,255,0.08);
+      border: 3px solid rgb(138 187 229 / 50%);
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
-      font-size: 0.95rem;
+      font-size: 1.15rem;
       color: #fff;
+      overflow: hidden;
+    }
+
+    .mpc-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .mpc-player-name {
-      font-size: 0.9rem;
+      font-size: 1.02rem;
       font-weight: 700;
       color: #fff;
       text-align: center;
     }
 
     .mpc-winner-tag {
-      font-size: 0.68rem;
+      font-size: 0.76rem;
       font-weight: 700;
       color: #2ecc71;
-      height: 14px;
+      height: 16px;
     }
 
     .mpc-score {
       display: flex;
-      font-size: 2.1rem;
+      font-size: 2.7rem;
       font-weight: 900;
       color: #fff;
       line-height: 1;
@@ -546,28 +595,28 @@
 
     .mpc-score-sep {
       color: rgba(255,255,255,0.4);
-      font-size: 1.2rem;
-      margin: 0 4px;
+      font-size: 1.5rem;
+      margin: 0 7px;
     }
 
     .mpc-stats {
-      padding: 6px 20px 20px;
+      padding: 16px 20px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 10px;
     }
 
     .mpc-stat-row {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: stretch;
-      gap: 6px;
+      gap: 8px;
     }
 
     .mpc-stat-box {
       background: rgba(255,255,255,0.03);
-      border-radius: 10px;
-      padding: 10px 12px;
+      border-radius: 12px;
+      padding: 13px 14px;
       text-align: center;
     }
 
@@ -576,19 +625,19 @@
     }
 
     .mpc-stat-box-val {
-      font-size: 1rem;
+      font-size: 1.2rem;
       font-weight: 800;
       color: #fff;
     }
 
     .mpc-stat-box-sub {
-      font-size: 0.7rem;
+      font-size: 0.74rem;
       color: rgba(255,255,255,0.5);
-      margin-top: 2px;
+      margin-top: 3px;
     }
 
     .mpc-stat-box-diff {
-      font-size: 0.72rem;
+      font-size: 0.74rem;
       font-weight: 700;
       margin-top: 3px;
     }
@@ -597,11 +646,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 78px;
+      min-width: 82px;
     }
 
     .mpc-stat-mid-label {
-      font-size: 0.65rem;
+      font-size: 0.68rem;
       color: rgba(255,255,255,0.55);
       letter-spacing: 0.5px;
       text-transform: uppercase;
@@ -625,11 +674,19 @@
       min-width: 0;
     }
 
+    /* Wrap (ne .player-avatar) nosi klik/pozicioniranje kamera-ikonice - ona
+       MORA biti izvan .player-avatar (koji ima overflow:hidden za kružnu
+       sliku), inače je taj isti overflow:hidden odreže na pola. */
+    .player-avatar-wrap {
+      position: relative;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
     .player-avatar {
       width: 92px;
       height: 92px;
       border-radius: 999px;
-      flex-shrink: 0;
       background: #2d5fb6;
       border: 3px solid rgb(138 187 229 / 50%);
       display: flex;
@@ -639,6 +696,29 @@
       font-weight: 900;
       color: #fff;
       box-shadow: 0 12px 30px rgba(126,184,255,0.25);
+      overflow: hidden;
+    }
+
+    .player-avatar-camera {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(10,19,38,0.92);
+      border: 2px solid rgba(255,255,255,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      color: #fff;
+    }
+
+    .player-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
       .player-profile-info {
       display: flex;
@@ -829,7 +909,14 @@
       .bracket-round { min-width: 140px; }
       .bracket-player { font-size: 0.72rem; padding: 6px 8px; }
       .yt {height: 200px;}
-      .match-popup { padding: 20px }
+      /* Na mobitelu (uža širina) samo malo smanji horizontalni padding/gapove
+         da se avatari+imena ne stisnu previše - fontovi/veličine ostaju iste
+         kao u baznim pravilima (već zlatna sredina, ne treba dalje mijenjati). */
+      .match-popup { padding: 18px; }
+      .mpc-players { padding: 22px 14px; gap: 8px; }
+      .mpc-stats { padding: 14px 14px; }
+      .mpc-stat-row { gap: 6px; }
+      .mpc-stat-box { padding: 11px 10px; }
       .player-search-wrap { flex-direction: column; align-items: center; margin: 16px auto; width: auto; }
       .player-stats-grid { gap: 6px; }
       .player-stat-box { padding: 10px 6px; }
@@ -858,7 +945,7 @@
         </div>
       </div>
 
-      <div class="last-updated">Zadnje ažuriranje: <span id="updated-time">—</span></div>
+      <div class="last-updated">Zadnje ažuriranje: <span id="updated-time">-</span></div>
 
       <div class="player-search-wrap">
         <div class="player-search-box">
@@ -930,6 +1017,10 @@
   <div id="match-popup-overlay" class="match-popup-overlay" style="display:none;" onclick="closePopup(event)">
     <div class="match-popup" id="match-popup-content"></div>
   </div>
+
+  <div class="toast" id="toast"></div>
+
+  <input type="file" id="avatar-upload-input" accept="image/*" style="display:none" onchange="handleAvatarUploadSelect(this)">
 
   <script>
     // -- HELPERS --
@@ -1044,7 +1135,7 @@
     // -- AVG LIGE --
     const AVG_LEAGUE_LABELS = { diamond: '💎 Diamond', gold: '🥇 Gold', silver: '🥈 Silver', bronze: '🥉 Bronze', zenska: '👑 Ženska liga' };
     const avgLigeDataCache = {}; // leagueId -> html string (izgrađeno jednom, keširano)
-    let activeAvgLigeTab = 'diamond';
+    let activeAvgLigeTab = 'zenska';
 
     function generateAvgSchedule(players) {
       const n = players.length;
@@ -1230,7 +1321,7 @@
             return `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
             <div style="flex:1;min-width:280px;">
               <div class="popup-match" style="margin-bottom:0;">
-                <div class="popup-match-num">${typeof kolo === 'number' ? `Kolo ${kolo}` : escapeHtml(kolo)} — ${escapeHtml(m.groupName)}</div>
+                <div class="popup-match-num">${typeof kolo === 'number' ? `Kolo ${kolo}` : escapeHtml(kolo)} - ${escapeHtml(m.groupName)}</div>
                 <div class="popup-match-top">
                   <span class="popup-player-name">${escapeHtml(m.player1)}</span>
                   <span class="popup-score">${escapeHtml(m.score)}</span>
@@ -1284,7 +1375,7 @@
 
       function processMatch(id, m, bracketLabel) {
         if (!m || !m.score || !m.player1 || !m.player2) return; // samo odigrani, oba igrača poznata
-        const roundKey = `${bracketLabel}: ${(m.roundLabel||id).split('—')[0].trim()}`;
+        const roundKey = `${bracketLabel}: ${(m.roundLabel||id).split('-')[0].trim()}`;
 
         if (m.average1) { const s1 = ensurePlayer(m.player1); s1.avgSum += parseFloat(m.average1); s1.avgCount++; }
         if (m.average2) { const s2 = ensurePlayer(m.player2); s2.avgSum += parseFloat(m.average2); s2.avgCount++; }
@@ -1438,8 +1529,8 @@
       });
     }
 
-    function addPlayoffToAgg(agg, playerName) {
-      addMatchesToAgg(agg, getPlayoffMatchesForPlayer(playerName));
+    function addPlayoffToAgg(agg, playerName, seasonId) {
+      addMatchesToAgg(agg, getPlayoffMatchesForPlayer(playerName, seasonId));
     }
 
     // Grupni standings + playoff mečevi spojeni u jedan stats objekt - koristi
@@ -1467,11 +1558,10 @@
       };
     }
 
-    // Playoff se dodaje samo ako je seasonId trenutno aktivna sezona (isti razlog
-    // kao addPlayoffToAgg - bracketMatchData/lowerBracketMatchData su globalne
-    // mape rezervirane za ACTIVE_SEASON_ID).
+    // getPlayoffMatchesForPlayer sam bira live vs. arhivske bracket mape prema
+    // seasonId, pa ovdje više nema potrebe za "samo aktivna sezona" ogradom.
     function computeSeasonStatsWithPlayoffs(playerName, seasonId, standingsRow) {
-      const playoffMatches = seasonId === (window.ACTIVE_SEASON_ID || 'sezona-2') ? getPlayoffMatchesForPlayer(playerName) : [];
+      const playoffMatches = getPlayoffMatchesForPlayer(playerName, seasonId);
       return computeStatsWithPlayoffMatches(standingsRow, playoffMatches);
     }
 
@@ -1496,12 +1586,12 @@
         if (s.bl !== '--' && s.bl) agg.bl = agg.bl === 0 ? s.bl : Math.min(agg.bl, s.bl);
         if (s.bco !== '--' && s.bco) agg.bco = Math.max(agg.bco, s.bco);
 
-        // Playoff (gornji + donji ždrijeb) se dodaje SAMO za trenutno aktivnu
-        // sezonu - bracketMatchData/lowerBracketMatchData su globalne mape
-        // rezervirane isključivo za ACTIVE_SEASON_ID (arhivirane sezone nemaju
-        // svoje bracketove u ovim mapama). Bez ovoga bi "Sveukupno" AVG bio
+        // Playoff (gornji + donji ždrijeb) se dodaje za SVAKU sezonu koja ga ima -
+        // getPlayoffMatchesForPlayer sam bira live mape za aktivnu sezonu i
+        // archiveBracketMatchData/archiveLowerBracketMatchData za arhivske
+        // (eager učitano u loadArchiveSeason). Bez ovoga bi "Sveukupno" AVG bio
         // manji od "Najbolji u ligi", jer taj drugi već broji playoff u prosjek.
-        if (seasonId === (window.ACTIVE_SEASON_ID || 'sezona-2')) addPlayoffToAgg(agg, playerName);
+        addPlayoffToAgg(agg, playerName, seasonId);
       });
 
       // AVG lige rezultati (povijesni kind:'history' iz registerAvgHistoryData,
@@ -1818,12 +1908,19 @@
       return result;
     }
 
-    // Sezonski playoff (gornji + donji ždrijeb) - uvijek samo ACTIVE_SEASON_ID
-    // (bracketMatchData/lowerBracketMatchData su globalne mape rezervirane za tu sezonu).
-    function getPlayoffMatchesForPlayer(playerName) {
+    // Sezonski playoff (gornji + donji ždrijeb) - za AKTIVNU sezonu čita se iz
+    // live bracketMatchData/lowerBracketMatchData mapa (pune se dok se gradi
+    // ŽDRIJEB prikaz), za ARHIVSKE sezone iz archiveBracketMatchData[seasonId]/
+    // archiveLowerBracketMatchData[seasonId] (pune se u ensureArchiveBracketBuilt/
+    // ensureArchiveLowerBracketBuilt, eager pozvano iz loadArchiveSeason).
+    function getPlayoffMatchesForPlayer(playerName, seasonId) {
+      const targetSeason = seasonId || window.ACTIVE_SEASON_ID;
+      const isActiveSeason = targetSeason === (window.ACTIVE_SEASON_ID || 'sezona-2');
+      const upperData = isActiveSeason ? bracketMatchData : (archiveBracketMatchData[targetSeason] || {});
+      const lowerData = isActiveSeason ? lowerBracketMatchData : (archiveLowerBracketMatchData[targetSeason] || {});
       return [
-        ...collectMatchesFromBracketData(bracketMatchData, 'Gornji ždrijeb', playerName),
-        ...collectMatchesFromBracketData(lowerBracketMatchData, 'Donji ždrijeb', playerName)
+        ...collectMatchesFromBracketData(upperData, 'Gornji ždrijeb', playerName),
+        ...collectMatchesFromBracketData(lowerData, 'Donji ždrijeb', playerName)
       ];
     }
 
@@ -1857,7 +1954,7 @@
         </div>`;
       return `<div class="player-match-row" onclick="togglePlayoffMatchDetail(this, ${idx})">
         <div class="player-match-row-left">
-          <span class="player-match-kolo">${escapeHtml(m.bracketLabel)}${m.roundLabel ? ' · ' + escapeHtml(m.roundLabel.split('—')[0].trim()) : ''}</span>
+          <span class="player-match-kolo">${escapeHtml(m.bracketLabel)}${m.roundLabel ? ' · ' + escapeHtml(m.roundLabel.split('-')[0].trim()) : ''}</span>
           <span class="player-match-opp">vs ${escapeHtml(m.opponent)}</span>
         </div>
         <div class="player-match-result">
@@ -1887,13 +1984,40 @@
       return name.trim().split(/\s+/).map(p => p[0]).slice(0,2).join('').toUpperCase();
     }
 
+    // Identična funkciji u index-admin.html - MORA se poklapati da isti
+    // players/{slug} dokument (i njegov photoURL) bude pronađen za istog igrača.
+    function slugify(name) {
+      return name.toLowerCase()
+        .replace(/š/g, 's').replace(/č/g, 'c').replace(/ć/g, 'c')
+        .replace(/ž/g, 'z').replace(/đ/g, 'd')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+
+    let toastTimeout = null;
+    function showToast(msg, type = 'success') {
+      const t = document.getElementById('toast');
+      if (!t) return;
+      t.textContent = msg;
+      t.className = `toast ${type} show`;
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // Klik na avatar u player profilu - vidi handleAvatarUploadSelect u module
+    // <script> bloku (treba Storage/Firestore importe). window.pendingAvatarUploadTarget
+    // je jedini most između ovog (globalnog) i tog (module) scope-a.
+    function triggerAvatarUpload(name) {
+      window.pendingAvatarUploadTarget = name;
+      document.getElementById('avatar-upload-input').click();
+    }
+
     // Kompaktna kartica za povijesni AVG rezultat (samo avg+result, bez mečeva) -
     // vidi registerAvgHistoryData. Namjerno ne koristi statBoxes (koji očekuje
     // punu standings strukturu koju za ove podatke nemamo).
     function avgHistoryCardHtml(leagueLabel, seasonLabel, avg, result) {
       return `
         <div style="margin:14px 0 10px;padding:14px 16px;background:rgba(6,12,24,0.6);border:1px solid rgba(255,255,255,0.08);border-radius:10px;">
-          <div class="player-profile-group" style="margin-bottom:8px;">${escapeHtml(leagueLabel)} — ${escapeHtml(seasonLabel)}</div>
+          <div class="player-profile-group" style="margin-bottom:8px;">${escapeHtml(leagueLabel)} - ${escapeHtml(seasonLabel)}</div>
           <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;">
             <span style="font-size:1.3rem;font-weight:800;color:#36992b;">${escapeHtml(String(avg))}</span>
             <span style="font-size:0.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">AVG</span>
@@ -1910,7 +2034,7 @@
     // više sekcija renderira u istom popupu.
     function buildProfileSectionHtml(stats, matches, playoffMatches, playoffNote, idxRef) {
       const roundShortLabel = (roundLabel) => {
-        const base = (roundLabel || '').split('—')[0].trim();
+        const base = (roundLabel || '').split('-')[0].trim();
         const map = {
           'Last of 64': 'L64', 'Donji Last of 64': 'L64',
           'Last of 32': 'L32', 'Donji Last of 32': 'L32',
@@ -1985,7 +2109,7 @@
             const stats = computeAvgStatsWithPlayoffs(currentProfilePlayer, seasonId, leagueId, ad.standings);
             const matches = ad.matches.map(m => ({...m, _season: `avg:${seasonId}:${leagueId}`}));
             const playoffMatches = getAvgPlayoffMatchesForPlayer(currentProfilePlayer, seasonId, leagueId).map(m => ({...m, _season: `avg:${seasonId}:${leagueId}`}));
-            const leagueHeader = `<div class="player-profile-group" style="margin:14px 0 10px;font-size:0.95rem;">${escapeHtml(ad.leagueLabel)} — ${escapeHtml(SEASON_LABELS[seasonId] || seasonId)} — ${escapeHtml(ad.groupName)}</div>`;
+            const leagueHeader = `<div class="player-profile-group" style="margin:14px 0 10px;font-size:0.95rem;">${escapeHtml(ad.leagueLabel)} - ${escapeHtml(SEASON_LABELS[seasonId] || seasonId)} - ${escapeHtml(ad.groupName)}</div>`;
             return leagueHeader + buildProfileSectionHtml(stats, matches, playoffMatches, null, idxRef);
           }).join('');
         }).join('');
@@ -2005,14 +2129,12 @@
         const sd = currentProfileSeason !== 'overall' ? entry.seasons[currentProfileSeason] : null;
         const playoffNote = sd?.playoff || null;
 
-        // Playoff mečevi iz ždrijeba (samo za trenutno aktivnu sezonu / Sveukupno,
-        // jer bracketMatchData/lowerBracketMatchData uvijek predstavljaju
-        // ono što je trenutno ACTIVE_SEASON_ID - čita se preko window jer je
-        // ta varijabla postavljena u module <script> bloku).
-        const showBracketPlayoffs = (currentProfileSeason === 'overall' || currentProfileSeason === (window.ACTIVE_SEASON_ID || 'sezona-2'));
-        const playoffMatches = showBracketPlayoffs
-          ? getPlayoffMatchesForPlayer(currentProfilePlayer).map(m => ({...m, _season: window.ACTIVE_SEASON_ID}))
-          : [];
+        // Playoff mečevi iz ždrijeba - za "Sveukupno" spoji playoff iz SVIH
+        // sezona koje ih imaju, za pojedinačni sezonski tab samo te sezone
+        // (getPlayoffMatchesForPlayer sam bira live vs. arhivsku bracket mapu).
+        const playoffMatches = currentProfileSeason === 'overall'
+          ? availableSeasons.flatMap(s => getPlayoffMatchesForPlayer(currentProfilePlayer, s).map(m => ({...m, _season: s})))
+          : getPlayoffMatchesForPlayer(currentProfilePlayer, currentProfileSeason).map(m => ({...m, _season: currentProfileSeason}));
 
         contentHtml = buildProfileSectionHtml(stats, matches, playoffMatches, playoffNote, idxRef);
       }
@@ -2020,7 +2142,14 @@
       const body = `
         <div class="player-profile-header">
           <div class="player-profile-user">
-            <div class="player-avatar">${escapeHtml(getInitials(currentProfilePlayer))}</div>
+            <div class="player-avatar-wrap" onclick="triggerAvatarUpload('${escapeHtml(currentProfilePlayer).replace(/'/g,"\\'")}')" title="Klikni za promjenu slike">
+              <div class="player-avatar">${
+                window.playerPhotos?.[slugify(currentProfilePlayer)]
+                  ? `<img src="${escapeHtml(window.playerPhotos[slugify(currentProfilePlayer)])}" alt="">`
+                  : escapeHtml(getInitials(currentProfilePlayer))
+              }</div>
+              <div class="player-avatar-camera"><i class="fas fa-camera"></i></div>
+            </div>
             <div class="player-profile-info">
               <div class="player-profile-name">${escapeHtml(currentProfilePlayer)}</div>
               <div class="player-profile-group">${escapeHtml(groupLabel)}</div>
@@ -2060,12 +2189,12 @@
     // Nakon rendera, izmjeri stvarni pixel-razmak između centra svakog
     // "pair-top" meča i njegovog partnera "pair-bottom" unutar iste kolone,
     // i postavi ga kao CSS varijablu --pair-offset na oba elementa.
-    // Layout (space-around) ostaje potpuno netaknut — ovo samo čita pozicije.
+    // Layout (space-around) ostaje potpuno netaknut - ovo samo čita pozicije.
     function setPairOffsets(wrapId) {
       const wrap = document.getElementById(wrapId);
       if (!wrap) return;
 
-      // FAZA 1 — READ: pročitaj sve offsetTop vrijednosti prije bilo kakvog upisa,
+      // FAZA 1 - READ: pročitaj sve offsetTop vrijednosti prije bilo kakvog upisa,
       // da se izbjegne layout thrashing (browser bi inače morao reflow-ati
       // nakon svakog pojedinačnog write-a prije sljedećeg read-a).
       const pairs = [];
@@ -2079,7 +2208,7 @@
         }
       });
 
-      // FAZA 2 — WRITE: sad kad su sva čitanja gotova, upiši sve CSS varijable odjednom.
+      // FAZA 2 - WRITE: sad kad su sva čitanja gotova, upiši sve CSS varijable odjednom.
       pairs.forEach(({ top, bottom, offset }) => {
         top.style.setProperty('--pair-offset', offset + 'px');
         bottom.style.setProperty('--pair-offset', offset + 'px');
@@ -2104,7 +2233,7 @@
     }
 
     // ResizeObserver hvata SVE promjene veličine (resize prozora, otvaranje
-    // accordiona, zoom, orijentacija na mobitelu) — ne samo window resize.
+    // accordiona, zoom, orijentacija na mobitelu) - ne samo window resize.
     let pairOffsetDebounce = null;
     function debouncedRecalc() {
       clearTimeout(pairOffsetDebounce);
@@ -2166,7 +2295,7 @@
     // -- v5 MATCH POPUP CARD (zajednička helper funkcija) --
     // Koristi je openKoloPopup, openArchiveKoloPopup, openBracketMatchPopup i
     // openLowerBracketMatchPopup. Prima:
-    //   titleLabel   - tekst u plavoj traci (npr. "Kolo 3" ili "Last of 64 — Meč 5")
+    //   titleLabel   - tekst u plavoj traci (npr. "Kolo 3" ili "Last of 64 - Meč 5")
     //   legs         - broj legova (Best of X) ili undefined/null (label se ne prikaže)
     //   matchTimestamp - Date objekt ili null (ispisuje se ispod "Best of X legs")
     //   p1, p2       - imena igrača
@@ -2181,6 +2310,12 @@
       const p2Winner = hasScore && !isNaN(s1) && !isNaN(s2) && s2 > s1;
 
       const initials = (name) => (name || '?').trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+      // Isti princip kao player profile avatar - stvarna slika (players/{slug}.photoURL)
+      // umjesto inicijala, kad postoji.
+      const avatarHtml = (name) => {
+        const url = name && window.playerPhotos?.[slugify(name)];
+        return url ? `<img src="${escapeHtml(url)}" alt="">` : escapeHtml(initials(name));
+      };
 
       const titlebarHtml = titleLabel ? `<div class="mpc-titlebar"><span class="mpc-titlebar-text">${escapeHtml(titleLabel)}</span></div>` : '';
 
@@ -2193,13 +2328,13 @@
       const playersHtml = `
         <div class="mpc-players">
           <div class="mpc-player-col ${hasScore && p2Winner ? 'loser' : ''}">
-            <div class="mpc-avatar">${escapeHtml(initials(p1))}</div>
+            <div class="mpc-avatar">${avatarHtml(p1)}</div>
             <div class="mpc-player-name">${escapeHtml(p1)}</div>
             <div class="mpc-winner-tag">${p1Winner ? 'pobjeda' : ''}</div>
           </div>
           <div class="mpc-score">${hasScore ? `${escapeHtml(scoreParts[0])}<span class="mpc-score-sep">:</span>${escapeHtml(scoreParts[1])}` : '<span style="color:rgba(255,255,255,0.2);">- : -</span>'}</div>
           <div class="mpc-player-col ${hasScore && p1Winner ? 'loser' : ''}">
-            <div class="mpc-avatar">${escapeHtml(initials(p2))}</div>
+            <div class="mpc-avatar">${avatarHtml(p2)}</div>
             <div class="mpc-player-name">${escapeHtml(p2)}</div>
             <div class="mpc-winner-tag">${p2Winner ? 'pobjeda' : ''}</div>
           </div>
@@ -2586,7 +2721,7 @@
     });
 
     // -- BRACKET RENDER --
-    // R64 fixed draw — 32 matches
+    // R64 fixed draw - 32 matches
     const R64_DRAW = [
       {p1:'1A',p2:'4P'},{p1:'2N',p2:'3C'},{p1:'1O',p2:'4B'},{p1:'2D',p2:'3M'},
       {p1:'1G',p2:'4J'},{p1:'2L',p2:'3E'},{p1:'1I',p2:'4H'},{p1:'2F',p2:'3K'},
@@ -2598,8 +2733,31 @@
       {p1:'1F',p2:'4K'},{p1:'2I',p2:'3H'},{p1:'1L',p2:'4E'},{p1:'2G',p2:'3J'}
     ];
 
+    // Donji ždrijeb (LR64) - isto ogledalo R64_DRAW rasporeda parova, samo za
+    // mjesta 5.-8. iz svake grupe umjesto 1.-4. (rank + 4). Gornji ždrijeb
+    // uzima "prvake" grupa, donji "ostatak" - ista logika izbjegavanja da
+    // igrači iz iste grupe padnu jedni na druge u prvom kolu.
+    const LR64_DRAW = R64_DRAW.map(({p1, p2}) => ({
+      p1: String(parseInt(p1) + 4) + p1.slice(-1),
+      p2: String(parseInt(p2) + 4) + p2.slice(-1)
+    }));
+
     const ROUND_LABELS = ['Last of 64','Last of 32','Osmina finala','Četvrtfinale','Polufinale','Finale'];
     const ROUND_IDS    = ['R64','R32','R16','QF','SF','F'];
+
+    // Resolve ime igrača iz kôda seeda (npr. "1A" = 1. mjesto grupe A, "5A" =
+    // 5. mjesto grupe A) preko group standings mape - koristi ga i gornji
+    // (R64_DRAW) i donji (LR64_DRAW) ždrijeb.
+    function resolveName(code, gsm) {
+      if (!code) return null;
+      const m = code.match(/^(\d+)([A-P])$/);
+      if (!m) return code;
+      const rank = parseInt(m[1])-1;
+      const grp  = m[2];
+      const standings = gsm[grp];
+      if (!standings || !standings[rank]) return null;
+      return standings[rank].name;
+    }
 
     // Gradi HTML gornjeg žrijeba i puni proslijeđenu matchDataStore mapu (umjesto
     // da uvijek piše u globalnu bracketMatchData) - tako isti builder služi i za
@@ -2607,28 +2765,18 @@
     // bez kolizije. popupCallBuilder(matchId) vraća onclick JS string, pa live i
     // arhivski prikaz mogu pozivati različite popup handlere.
     function buildBracketHtml(matchesByRound, groupStandingsMap, matchDataStore, popupCallBuilder, wrapId) {
-      // Resolve player names from group standings
-      function resolveName(code, gsm) {
-        if (!code) return null;
-        const m = code.match(/^([1-4])([A-P])$/);
-        if (!m) return code;
-        const rank = parseInt(m[1])-1;
-        const grp  = m[2];
-        const standings = gsm[grp];
-        if (!standings || !standings[rank]) return code;
-        return standings[rank].name;
-      }
-
       // Build R64 matches with names
       const r64Matches = R64_DRAW.map((draw, i) => {
         const id = `R64_${i + 1}`;
         const saved = matchesByRound[id] || {};
 
-        // Prikaži pravo ime samo ako je meč već odigran, inače kod
-        const p1name = saved.player1 || resolveName(draw.p1, groupStandingsMap) || draw.p1;
-        const p2name = saved.player2 || resolveName(draw.p2, groupStandingsMap) || draw.p2;
+        // Prikaži pravo ime samo ako je poznato (odigrano ili standings
+        // razrješivi) - inače null, pa matchHtml-ov postojeći "TBD" fallback
+        // preuzme prikaz (ne sirovi seed-kod poput "1A").
+        const p1name = saved.player1 || resolveName(draw.p1, groupStandingsMap);
+        const p2name = saved.player2 || resolveName(draw.p2, groupStandingsMap);
 
-        matchDataStore[id] = { ...saved, player1: p1name, player2: p2name, roundLabel: `Last of 64 — Meč ${i + 1}` };
+        matchDataStore[id] = { ...saved, player1: p1name, player2: p2name, roundLabel: `Last of 64 - Meč ${i + 1}` };
         return { id, player1: p1name, player2: p2name, score: saved.score || '', winner: saved.winner || null };
       });
 
@@ -2643,7 +2791,7 @@
           const saved = matchesByRound[id] || {};
           const p1 = saved.player1 || (prev[i*2]?.winner   ? (prev[i*2].winner==='player1'   ? prev[i*2].player1   : prev[i*2].player2)   : null);
           const p2 = saved.player2 || (prev[i*2+1]?.winner ? (prev[i*2+1].winner==='player1' ? prev[i*2+1].player1 : prev[i*2+1].player2) : null);
-          matchDataStore[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${ROUND_LABELS[r]} — Meč ${i+1}` };
+          matchDataStore[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${ROUND_LABELS[r]} - Meč ${i+1}` };
           cur.push({ id, player1: p1, player2: p2, score: saved.score||'', winner: saved.winner||null });
         }
         rounds.push(cur);
@@ -2720,15 +2868,17 @@
     const LROUND_LABELS = ['Donji Last of 64','Donji Last of 32','Donja Osmina finala','Donje Četvrtfinale','Donje Polufinale','Donje Finale'];
     const lowerBracketMatchData = {};
 
-    function buildLowerBracketHtml(matchesByRound, matchDataStore, popupCallBuilder, wrapId) {
-      // Build LR64 (nema šablone kodova - imena se upisuju ručno u admin panelu)
-      const lr64Matches = Array.from({ length: 32 }, (_, i) => {
+    function buildLowerBracketHtml(matchesByRound, groupStandingsMap, matchDataStore, popupCallBuilder, wrapId) {
+      // Build LR64 - isti obrazac kao gornji R64 (R64_DRAW + resolveName), samo
+      // s LR64_DRAW (mjesta 5.-8. umjesto 1.-4.). Prikaz koda (npr. "5A") dok
+      // meč nije odigran, ime igrača čim se standings mogu razriješiti.
+      const lr64Matches = LR64_DRAW.map((draw, i) => {
         const id = `LR64_${i + 1}`;
         const saved = matchesByRound[id] || {};
-        const p1 = saved.player1 || null;
-        const p2 = saved.player2 || null;
-        matchDataStore[id] = { ...saved, player1: p1, player2: p2, roundLabel: `Donji Last of 64 — Meč ${i + 1}` };
-        return { id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null };
+        const p1name = saved.player1 || resolveName(draw.p1, groupStandingsMap);
+        const p2name = saved.player2 || resolveName(draw.p2, groupStandingsMap);
+        matchDataStore[id] = { ...saved, player1: p1name, player2: p2name, roundLabel: `Donji Last of 64 - Meč ${i + 1}` };
+        return { id, player1: p1name, player2: p2name, score: saved.score || '', winner: saved.winner || null };
       });
 
       // Build subsequent rounds
@@ -2742,7 +2892,7 @@
           const saved = matchesByRound[id] || {};
           const p1 = saved.player1 || (prev[i*2]?.winner   ? (prev[i*2].winner==='player1'   ? prev[i*2].player1   : prev[i*2].player2)   : null);
           const p2 = saved.player2 || (prev[i*2+1]?.winner ? (prev[i*2+1].winner==='player1' ? prev[i*2+1].player1 : prev[i*2+1].player2) : null);
-          matchDataStore[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${LROUND_LABELS[r]} — Meč ${i+1}` };
+          matchDataStore[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${LROUND_LABELS[r]} - Meč ${i+1}` };
           cur.push({ id, player1: p1, player2: p2, score: saved.score||'', winner: saved.winner||null });
         }
         rounds.push(cur);
@@ -2807,9 +2957,9 @@
         </div>`;
     }
 
-    function renderLowerBracket(matchesByRound) {
+    function renderLowerBracket(matchesByRound, groupStandingsMap) {
       const container = document.getElementById('donji-zdrijeb-content');
-      container.innerHTML = buildLowerBracketHtml(matchesByRound, lowerBracketMatchData, id => `openLowerBracketMatchPopup('${id}')`, 'bracket-wrap-lower');
+      container.innerHTML = buildLowerBracketHtml(matchesByRound, groupStandingsMap, lowerBracketMatchData, id => `openLowerBracketMatchPopup('${id}')`, 'bracket-wrap-lower');
       requestAnimationFrame(() => scheduleAllPairOffsets());
       window.__observeBracketWrap('bracket-wrap-lower');
     }
@@ -2867,7 +3017,9 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAnalytics }  from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
-    import { getFirestore, collection, getDocs, query, orderBy, getDoc, doc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, query, orderBy, getDoc, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-storage.js";
+    import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app-check.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDyG6WN60VOhp-iHq_18vOLDcHP6zHNoRk",
@@ -2880,8 +3032,29 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    // App Check (reCAPTCHA Enterprise) - štiti Firestore/Storage od izravnih
+    // API poziva izvan ove stranice (npr. botovi koji zaobiđu UI i gomilaju
+    // photoRequests/player-photos-pending zahtjeve). Site key je javan (kao i
+    // firebaseConfig), sigurnosna provjera se radi na Firebase strani preko
+    // rules "Enforce" postavke - vidi App Check odjeljak u Firebase Console.
+    //
+    // Debug token SAMO za lokalni razvoj (localhost/127.0.0.1) - stvarna
+    // domena (produkcija) je već registrirana na reCAPTCHA ključu i radi bez
+    // ovoga. Bez ovog bloka bi Enforce mode odbijao SVE zahtjeve s localhosta,
+    // jer taj origin nije (i ne treba biti) na popisu dopuštenih domena.
+    // Prvi put kad se ovo učita na localhostu, u konzoli će se ispisati novi
+    // debug token - taj token treba dodati u Firebase Console → App Check →
+    // "Manage debug tokens" da bi lokalno testiranje uopće proradilo.
+    if (['localhost', '127.0.0.1'].includes(location.hostname)) {
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = '12743B0F-CD2A-4254-8324-84AE9E2DF80A';
+    }
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider('6LdfcbktAAAAAGWaLVaJXHIBI8ST_nISw-DSFKuT'),
+      isTokenAutoRefreshEnabled: true
+    });
     getAnalytics(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     // -- AKTIVNA SEZONA (skalabilno rješenje za prelazak sezona) --
     // Jedno mjesto u Firestoreu (config/active-season, polje seasonId) određuje
@@ -2927,11 +3100,89 @@
       }
     }
 
+    // Globalni players/{slug} registar - samo photoURL nas ovdje zanima (slug ->
+    // photoURL), za prikaz u player profile avataru umjesto inicijala. Jedno
+    // jeftino čitanje kod bootstrapa - igrač bez slike jednostavno nema unos.
+    async function loadPlayerPhotos() {
+      try {
+        const snap = await getDocs(collection(db, 'players'));
+        const photos = {};
+        snap.forEach(d => { const url = d.data().photoURL; if (url) photos[d.id] = url; });
+        window.playerPhotos = photos;
+      } catch (err) {
+        console.error('Greška pri čitanju players/ (foto registar):', err);
+        window.playerPhotos = {};
+      }
+    }
+
+    // -- JAVNI UPLOAD AVATARA (čeka admin odobrenje) --
+    // Klik na avatar u player profilu (vidi triggerAvatarUpload u glavnom
+    // <script> bloku) postavi window.pendingAvatarUploadTarget i otvori skriveni
+    // #avatar-upload-input. Nema logina/identiteta na javnoj stranici, pa slika
+    // NE postaje odmah javna - upisuje se u photoRequests/{slug} (privremena
+    // slika u player-photos-pending/), a admin je u index-admin.html odobrava
+    // (prebacuje u players/{slug}.photoURL) ili odbija. Ista kompresija na
+    // klijentu kao admin-upload flow (canvas, max 500px, JPEG q0.85).
+    function compressImageForUpload(file, maxSize, quality) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = e => { img.src = e.target.result; };
+        reader.onerror = () => reject(new Error('Nije moguće pročitati datoteku.'));
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > height) {
+            if (width > maxSize) { height = Math.round(height * maxSize / width); width = maxSize; }
+          } else {
+            if (height > maxSize) { width = Math.round(width * maxSize / height); height = maxSize; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Kompresija slike nije uspjela.')), 'image/jpeg', quality);
+        };
+        img.onerror = () => reject(new Error('Nije moguće učitati sliku.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function storagePathFromDownloadURL(url) {
+      const m = url.match(/\/o\/([^?]+)/);
+      return m ? decodeURIComponent(m[1]) : null;
+    }
+
+    window.handleAvatarUploadSelect = async function (inputEl) {
+      const file = inputEl.files?.[0];
+      const name = window.pendingAvatarUploadTarget;
+      inputEl.value = '';
+      if (!file || !name) return;
+      const slug = slugify(name);
+      try {
+        // Stari neregledan zahtjev (ako postoji) - obrisati mu Storage fajl prije novog uploada
+        const existingReq = await getDoc(doc(db, 'photoRequests', slug));
+        if (existingReq.exists()) {
+          const oldPath = storagePathFromDownloadURL(existingReq.data().photoURL || '');
+          if (oldPath) { try { await deleteObject(ref(storage, oldPath)); } catch (e) { /* ignoriraj */ } }
+        }
+
+        const blob = await compressImageForUpload(file, 500, 0.85);
+        const storageRef = ref(storage, `player-photos-pending/${slug}-${Date.now()}.jpg`);
+        await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
+        const url = await getDownloadURL(storageRef);
+        await setDoc(doc(db, 'photoRequests', slug), { playerName: name, photoURL: url, submittedAt: serverTimestamp() });
+
+        showToast('Zahtjev poslan! Admin će uskoro pregledati sliku.', 'success');
+      } catch (err) {
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
     async function loadStandings(seasonId) {
       const content = document.getElementById('content');
       content.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje podataka...</span></div>`;
       try {
         const maxKolo = parseInt(window.activeSeasonConfig?.trenutnoKolo) || 1;
+        const seasonDoc = await getDoc(doc(db, 'seasons', seasonId));
 
         const groupsSnap = await getDocs(collection(db, 'seasons', seasonId, 'groups'));
         const groups = [];
@@ -2990,8 +3241,9 @@
           document.getElementById('updated-time').textContent = seasonDoc.data().lastUpdated.toDate().toLocaleString('hr-HR');
         }
 
-        // Load bracket
+        // Load bracket (gornji + donji, oba trebaju groupStandingsMap za seed kodove)
         await loadBracket(seasonId, groupStandingsMap);
+        await loadLowerBracket(seasonId, groupStandingsMap);
 
       } catch(err) { showError(err); }
     }
@@ -3040,12 +3292,12 @@
       }
     }
 
-    async function loadLowerBracket(seasonId) {
+    async function loadLowerBracket(seasonId, groupStandingsMap) {
       try {
         const lowerBracketSnap = await getDocs(collection(db,'seasons',seasonId,'lower-bracket'));
         const matchesByRound = {};
         lowerBracketSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
-        renderLowerBracket(matchesByRound);
+        renderLowerBracket(matchesByRound, groupStandingsMap || {});
         lowerBracketReady = true;
         refreshNajboljiWithPlayoffs();
       } catch(err) {
@@ -3391,8 +3643,46 @@
         archiveDataCache[seasonId] = groupsHtml.join('');
         archiveGroupStandingsMap[seasonId] = groupStandingsMap;
         renderGlobalSeasonToggle(); // sezona sad ima podataka - prikaži joj pil u toggleu
+
+        // Eager preload playoff (gornji+donji ždrijeb) mečeva ove arhivske
+        // sezone - potrebno da player profile odmah prikaže i zbroji playoff
+        // mečeve za ovu sezonu (getPlayoffMatchesForPlayer), a ne tek nakon
+        // što netko ručno otvori Ždrijeb tab arhive. Isti helperi (ensure...)
+        // koriste se i tamo, pa se HTML ne gradi dvaput.
+        await ensureArchiveBracketBuilt(seasonId, groupStandingsMap);
+        await ensureArchiveLowerBracketBuilt(seasonId, groupStandingsMap);
       } catch (err) {
         console.error(`Greška pri učitavanju arhive za ${seasonId}:`, err);
+      }
+    }
+
+    async function ensureArchiveBracketBuilt(seasonId, groupStandingsMap) {
+      if (archiveBracketDataCache[seasonId]) return;
+      try {
+        const bracketSnap = await getDocs(collection(db, 'seasons', seasonId, 'bracket'));
+        const matchesByRound = {}; bracketSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
+        archiveBracketMatchData[seasonId] = {};
+        archiveBracketDataCache[seasonId] = buildBracketHtml(
+          matchesByRound, groupStandingsMap || archiveGroupStandingsMap[seasonId] || {}, archiveBracketMatchData[seasonId],
+          id => `openArchiveBracketMatchPopup('${seasonId}','${id}')`, 'archive-bracket-wrap-upper'
+        );
+      } catch (err) {
+        console.error(`Greška pri učitavanju gornjeg ždrijeba (playoff) za ${seasonId}:`, err);
+      }
+    }
+
+    async function ensureArchiveLowerBracketBuilt(seasonId, groupStandingsMap) {
+      if (archiveLowerBracketDataCache[seasonId]) return;
+      try {
+        const lowerSnap = await getDocs(collection(db, 'seasons', seasonId, 'lower-bracket'));
+        const matchesByRound = {}; lowerSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
+        archiveLowerBracketMatchData[seasonId] = {};
+        archiveLowerBracketDataCache[seasonId] = buildLowerBracketHtml(
+          matchesByRound, groupStandingsMap || archiveGroupStandingsMap[seasonId] || {}, archiveLowerBracketMatchData[seasonId],
+          id => `openArchiveLowerBracketMatchPopup('${seasonId}','${id}')`, 'archive-bracket-wrap-lower'
+        );
+      } catch (err) {
+        console.error(`Greška pri učitavanju donjeg ždrijeba (playoff) za ${seasonId}:`, err);
       }
     }
 
@@ -3464,16 +3754,9 @@
       }
       contentEl.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>`;
       try {
-        await loadArchiveSeason(seasonId); // osigurava archiveGroupStandingsMap[seasonId]
-        const groupStandingsMap = archiveGroupStandingsMap[seasonId] || {};
-        const bracketSnap = await getDocs(collection(db, 'seasons', seasonId, 'bracket'));
-        const matchesByRound = {}; bracketSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
-        archiveBracketMatchData[seasonId] = {};
-        archiveBracketDataCache[seasonId] = buildBracketHtml(
-          matchesByRound, groupStandingsMap, archiveBracketMatchData[seasonId],
-          id => `openArchiveBracketMatchPopup('${seasonId}','${id}')`, 'archive-bracket-wrap-upper'
-        );
-        contentEl.innerHTML = archiveBracketDataCache[seasonId];
+        await loadArchiveSeason(seasonId); // osigurava archiveGroupStandingsMap[seasonId] + poziva ensureArchiveBracketBuilt
+        await ensureArchiveBracketBuilt(seasonId, archiveGroupStandingsMap[seasonId] || {});
+        contentEl.innerHTML = archiveBracketDataCache[seasonId] || '<div class="empty-state">Nema podataka o ždrijebu.</div>';
         requestAnimationFrame(() => scheduleAllPairOffsets());
         window.__observeBracketWrap('archive-bracket-wrap-upper');
       } catch (err) {
@@ -3491,14 +3774,8 @@
       }
       contentEl.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>`;
       try {
-        const lowerSnap = await getDocs(collection(db, 'seasons', seasonId, 'lower-bracket'));
-        const matchesByRound = {}; lowerSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
-        archiveLowerBracketMatchData[seasonId] = {};
-        archiveLowerBracketDataCache[seasonId] = buildLowerBracketHtml(
-          matchesByRound, archiveLowerBracketMatchData[seasonId],
-          id => `openArchiveLowerBracketMatchPopup('${seasonId}','${id}')`, 'archive-bracket-wrap-lower'
-        );
-        contentEl.innerHTML = archiveLowerBracketDataCache[seasonId];
+        await ensureArchiveLowerBracketBuilt(seasonId);
+        contentEl.innerHTML = archiveLowerBracketDataCache[seasonId] || '<div class="empty-state">Nema podataka o ždrijebu.</div>';
         requestAnimationFrame(() => scheduleAllPairOffsets());
         window.__observeBracketWrap('archive-bracket-wrap-lower');
       } catch (err) {
@@ -3524,12 +3801,31 @@
       activeNajboljiSeason = ACTIVE_SEASON_ID;
 
       await loadBracketConfig();
+      loadPlayerPhotos();
       loadSezona1Data();
-      loadStandings(ACTIVE_SEASON_ID);
-      loadLowerBracket(ACTIVE_SEASON_ID);
+      loadStandings(ACTIVE_SEASON_ID); // sad interno zove i loadBracket i loadLowerBracket (trebaju groupStandingsMap)
       loadAdditionalLeagueStatSeasons();
       loadArchiveSeasons();
       loadAllAvgLeagues();
+
+      openProfileFromUrl();
+    }
+
+    // Podrška za duboku poveznicu ?player=Ime - koristi je group-detail.html
+    // (nema svoj player profile modal, otvara ovu stranicu u novom tabu).
+    // playerDatabase se puni asinkrono iz više neovisnih loadera iznad, pa se
+    // čeka (kratko pollanje) dok ime ne postane dostupno, umjesto da se odmah
+    // odustane ako bootstrap još nije gotov.
+    function openProfileFromUrl() {
+      const name = new URLSearchParams(window.location.search).get('player');
+      if (!name) return;
+      let attempts = 0;
+      const tryOpen = () => {
+        if (playerDatabase[name]) { openPlayerProfile(name); return; }
+        if (++attempts > 30) return; // ~6s, odustani tiho ako igrač ne postoji
+        setTimeout(tryOpen, 200);
+      };
+      tryOpen();
     }
 
     bootstrap();

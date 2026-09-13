@@ -838,7 +838,7 @@
               fetchpriority="high" loading="eager"></a>
           <div>
             <div class="group-name" id="group-name">Učitavanje...</div>
-            <div class="group-sub">Adriatic Steel League - Sezona 2</div>
+            <div class="group-sub">Adriatic Steel League</div>
           </div>
           <div class="group-select-wrap" id="group-select-wrap" style="display:none;">
             <select class="group-select" id="group-select" onchange="switchGroup(this.value)">
@@ -1218,6 +1218,15 @@
         .sort((a, b) => b.pts - a.pts || b.legs - a.legs);
     }
 
+    // group-detail.html nema svoj player profile modal (to je infrastruktura
+    // vezana uz playerDatabase iz index.html) - klik na ime otvara javnu
+    // stranicu u novom tabu s ?player= parametrom, koji index.html čita i
+    // sam otvori taj profil čim se podaci učitaju (vidi bootstrap u index.html).
+    function openPlayerProfileTab(name) {
+      window.open('index.html?player=' + encodeURIComponent(name), '_blank');
+    }
+    window.openPlayerProfileTab = openPlayerProfileTab;
+
     function renderStandings() {
       const standings = computeStandings();
       const container = document.getElementById('standings-container');
@@ -1244,7 +1253,7 @@
                 ${standings.map((p, i) => `
                   <tr>
                     <td class="rank-cell">${i + 1}</td>
-                    <td style="text-align:left;font-weight:700;">${esc(p.name)}</td>
+                    <td style="text-align:left;font-weight:700;cursor:pointer;" onclick="openPlayerProfileTab('${esc(p.name).replace(/'/g,"\\'")}')">${esc(p.name)}</td>
                     <td style="color:#2ecc71;font-weight:700;">${p.win}</td>
                     <td style="color:#f39c12;font-weight:700;">${p.draw}</td>
                     <td style="color:#e74c3c;font-weight:700;">${p.lost}</td>
@@ -1351,6 +1360,11 @@
                 <input class="stat-input" type="number" step="0.01" id="corate2-${kolo}-${mec}" value="${saved.checkoutrate2 ?? ''}" ${disabled} placeholder="0.00">
               </div>
               <div class="stat-row-3col">
+                <input class="stat-input" type="text" id="coattempts1-${kolo}-${mec}" value="${saved.checkouts1 ?? ''}" ${disabled} placeholder="0/0">
+                <span class="stat-label-mid">Checkouts</span>
+                <input class="stat-input" type="text" id="coattempts2-${kolo}-${mec}" value="${saved.checkouts2 ?? ''}" ${disabled} placeholder="0/0">
+              </div>
+              <div class="stat-row-3col">
                 <input class="stat-input" type="number" id="bco1-${kolo}-${mec}" value="${saved.bestcheckout1 || ''}" ${disabled} placeholder="0">
                 <span class="stat-label-mid">Best CO</span>
                 <input class="stat-input" type="number" id="bco2-${kolo}-${mec}" value="${saved.bestcheckout2 || ''}" ${disabled} placeholder="0">
@@ -1364,11 +1378,6 @@
                 <input class="stat-input" type="number" id="180_1-${kolo}-${mec}" value="${saved['180_1'] || ''}" ${disabled} placeholder="0">
                 <span class="stat-label-mid">180s</span>
                 <input class="stat-input" type="number" id="180_2-${kolo}-${mec}" value="${saved['180_2'] || ''}" ${disabled} placeholder="0">
-              </div>
-              <div class="stat-row-3col">
-                <input class="stat-input" type="text" id="coattempts1-${kolo}-${mec}" value="${saved.checkouts1 ?? ''}" ${disabled} placeholder="0/0">
-                <span class="stat-label-mid">Checkouts</span>
-                <input class="stat-input" type="text" id="coattempts2-${kolo}-${mec}" value="${saved.checkouts2 ?? ''}" ${disabled} placeholder="0/0">
               </div>
             </div>
           </div>

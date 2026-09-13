@@ -983,6 +983,143 @@
       flex: 1;
     }
 
+    /* -- IGRAČI (foto upload) -- */
+    .players-photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 14px;
+    }
+
+    .player-photo-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 10px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .player-photo-avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .player-photo-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .player-photo-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #fff;
+      line-height: 1.3;
+    }
+
+    .player-photo-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .player-photo-btn {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: #7eb8ff;
+      background: rgba(126, 184, 255, 0.1);
+      border: 1px solid rgba(126, 184, 255, 0.25);
+      border-radius: 50%;
+      padding: 0;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .player-photo-btn:hover {
+      background: rgba(126, 184, 255, 0.22);
+    }
+
+    .player-photo-btn.delete {
+      color: #e74c3c;
+      background: rgba(231, 76, 60, 0.1);
+      border-color: rgba(231, 76, 60, 0.25);
+    }
+
+    .player-photo-btn.delete:hover {
+      background: rgba(231, 76, 60, 0.22);
+    }
+
+    .player-photo-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    /* -- ZAHTJEVI ZA SLIKE (javni upload čeka odobrenje) -- */
+    .photo-requests-section {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .photo-requests-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #FFD700;
+      margin-bottom: 12px;
+    }
+
+    .photo-request-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .photo-request-btn {
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .photo-request-btn.approve {
+      color: #2ecc71;
+      background: rgba(46, 204, 113, 0.12);
+      border-color: rgba(46, 204, 113, 0.3);
+    }
+
+    .photo-request-btn.approve:hover {
+      background: rgba(46, 204, 113, 0.25);
+    }
+
+    .photo-request-btn.decline {
+      color: #e74c3c;
+      background: rgba(231, 76, 60, 0.12);
+      border-color: rgba(231, 76, 60, 0.3);
+    }
+
+    .photo-request-btn.decline:hover {
+      background: rgba(231, 76, 60, 0.25);
+    }
+
     /* -- LOADING / TOAST -- */
     .loading-state {
       display: flex;
@@ -1136,6 +1273,9 @@
         <button class="admin-tab-btn" onclick="switchAdminTab('avg-lige', this)">
           <i class="fas fa-chart-bar" style="margin-right:6px;"></i>AVG Lige
         </button>
+        <button class="admin-tab-btn" onclick="switchAdminTab('igraci', this)">
+          <i class="fas fa-image" style="margin-right:6px;"></i>Igrači
+        </button>
       </div>
 
       <div id="admin-tab-grupe" class="admin-tab-panel active">
@@ -1194,6 +1334,17 @@
           <div id="avg-container-bronze"></div>
         </div>
       </div>
+
+      <div id="admin-tab-igraci" class="admin-tab-panel">
+        <div id="photo-requests-container"></div>
+        <input class="form-input" type="text" placeholder="Pretraži igrače..." style="margin-bottom:14px;"
+          oninput="filterPlayersPhotoGrid(this)">
+        <div id="players-photo-grid" class="players-photo-grid">
+          <div class="loading-state">
+            <div class="loading-spinner"></div><span class="loading-text">Učitavanje igrača...</span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1206,7 +1357,9 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc, deleteField, collection, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-storage.js";
+    import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app-check.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
 
     const firebaseConfig = {
@@ -1220,8 +1373,24 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    // App Check (reCAPTCHA Enterprise) - isti site key kao Index.html, štiti
+    // Firestore/Storage od izravnih API poziva izvan ove dvije stranice.
+    //
+    // Debug token SAMO za lokalni razvoj (localhost/127.0.0.1) - vidi
+    // identičan komentar u Index.html. Bez ovoga Enforce mode odbija sve
+    // zahtjeve s localhosta (nije, i ne treba biti, na popisu domena na
+    // reCAPTCHA ključu). Prvi put na localhostu ispiše se novi debug token u
+    // konzoli - dodati ga u Firebase Console → App Check → "Manage debug tokens".
+    if (['localhost', '127.0.0.1'].includes(location.hostname)) {
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = '12743B0F-CD2A-4254-8324-84AE9E2DF80A';
+    }
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider('6LdfcbktAAAAAGWaLVaJXHIBI8ST_nISw-DSFKuT'),
+      isTokenAutoRefreshEnabled: true
+    });
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const storage = getStorage(app);
     getAnalytics(app);
 
     let currentIsAdmin = false;
@@ -1256,17 +1425,21 @@
     // tabom zajedno - jedan zajednički broj, ne po ligi). Zamjenjuje stari
     // ručni unos u seasons/{sezona}.trenutnoKolo (obrisano iz Firestore).
     // Index.html filtrira raspored po istim poljima (kolo <= trenutnoKolo).
-    const KOLO_OPTIONS = Array.from({ length: 20 }, (_, i) => i + 1);
+    const KOLO_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1);
+    const KOLO_SELECT_STYLE = 'background:rgba(10,19,38,0.9);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:1rem;font-weight:600;padding:8px 14px;cursor:pointer;';
+    const koloOptionsHtml = current => KOLO_OPTIONS.map(n =>
+      `<option value="${n}" style="background:#0a1326;color:#fff;" ${n === current ? 'selected' : ''}>${n}</option>`
+    ).join('');
 
     function renderTrenutnoKoloControls() {
       const grupeEl = document.getElementById('trenutno-kolo-container');
       if (grupeEl) {
         const current = parseInt(activeSeasonConfig.trenutnoKolo) || 1;
         grupeEl.innerHTML = `
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 14px;flex-wrap:wrap;">
-            <span class="form-label" style="margin:0;">Trenutno kolo (raspored vidljiv do ovog kola, za sve grupe):</span>
-            <select class="form-input" id="trenutno-kolo-select" style="width:auto;margin-bottom:0;" onchange="updateTrenutnoKolo(this.value)">
-              ${KOLO_OPTIONS.map(n => `<option value="${n}" ${n === current ? 'selected' : ''}>${n}</option>`).join('')}
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <span style="font-size:1rem;color:var(--muted);">Trenutno kolo:</span>
+            <select id="trenutno-kolo-select" style="${KOLO_SELECT_STYLE}" onchange="updateTrenutnoKolo(this.value)">
+              ${koloOptionsHtml(current)}
             </select>
           </div>`;
       }
@@ -1275,10 +1448,10 @@
       if (avgEl) {
         const currentAvg = parseInt(activeSeasonConfig.trenutnoKoloAvg) || 1;
         avgEl.innerHTML = `
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 14px;flex-wrap:wrap;">
-            <span class="form-label" style="margin:0;">Trenutno kolo (raspored vidljiv do ovog kola, za sve AVG lige):</span>
-            <select class="form-input" id="trenutno-kolo-avg-select" style="width:auto;margin-bottom:0;" onchange="updateTrenutnoKoloAvg(this.value)">
-              ${KOLO_OPTIONS.map(n => `<option value="${n}" ${n === currentAvg ? 'selected' : ''}>${n}</option>`).join('')}
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <span style="font-size:1rem;color:var(--muted);">Trenutno kolo:</span>
+            <select id="trenutno-kolo-avg-select" style="${KOLO_SELECT_STYLE}" onchange="updateTrenutnoKoloAvg(this.value)">
+              ${koloOptionsHtml(currentAvg)}
             </select>
           </div>`;
       }
@@ -1323,6 +1496,13 @@
 
     const LROUND_IDS = ['LR64', 'LR32', 'LR16', 'LQF', 'LSF', 'LF'];
     const LROUND_LABELS = ['Donji Last of 64', 'Donji Last of 32', 'Donja Osmina finala', 'Donje Četvrtfinale', 'Donje Polufinale', 'Donje Finale'];
+
+    // Donji ždrijeb (LR64) - ogledalo R64_DRAW rasporeda parova, za mjesta
+    // 5.-8. iz svake grupe umjesto 1.-4. (rank + 4).
+    const LR64_DRAW = R64_DRAW.map(({ p1, p2 }) => ({
+      p1: String(parseInt(p1) + 4) + p1.slice(-1),
+      p2: String(parseInt(p2) + 4) + p2.slice(-1)
+    }));
 
     // -- BRACKET CONFIG (Best of X legs) --
     // Jedan globalni dokument config/bracket-config, ručno uređivan u
@@ -1392,6 +1572,209 @@
       document.getElementById('admin-tab-' + name).classList.add('active');
       btn.classList.add('active');
       if (name === 'avg-lige') loadAvgLeague(currentAvgLeague);
+      if (name === 'igraci') { loadPlayersPhotoGrid(); loadPhotoRequests(); }
+    };
+
+    // -- IGRAČI (foto upload) --
+    // players/{slug} dokumenti već postoje (samo polje name, iz zajedničkog
+    // registra za grupne multiselect forme) - ovdje im se dodaje photoURL kad
+    // admin uploada sliku. Slika se komprimira na klijentu (canvas, max 500px,
+    // JPEG q0.85) prije uploada u Storage na player-photos/{slug}.jpg.
+    let playersPhotoCache = []; // [{id, name, photoURL}] - puni se jednom, keširano
+
+    async function loadPlayersPhotoGrid() {
+      if (playersPhotoCache.length === 0) {
+        const snap = await getDocs(collection(db, 'players'));
+        const docs = []; snap.forEach(d => docs.push({ id: d.id, ...d.data() }));
+        playersPhotoCache = docs.sort((a, b) => a.name.localeCompare(b.name, 'hr'));
+      }
+      renderPlayersPhotoGrid();
+    }
+
+    function renderPlayersPhotoGrid() {
+      const grid = document.getElementById('players-photo-grid');
+      grid.innerHTML = playersPhotoCache.map(p => {
+        const initials = p.name.trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+        const avatarInner = p.photoURL ? `<img src="${esc(p.photoURL)}" alt="">` : esc(initials);
+        return `
+          <div class="player-photo-card" data-name="${esc(p.name)}">
+            <div class="player-photo-avatar" id="photo-avatar-${p.id}">${avatarInner}</div>
+            <div class="player-photo-name">${esc(p.name)}</div>
+            <input type="file" accept="image/*" id="photo-input-${p.id}" style="display:none"
+              onchange="handlePlayerPhotoSelect('${p.id}', this)">
+            <div class="player-photo-actions">
+              <button class="player-photo-btn" id="photo-btn-${p.id}" title="${p.photoURL ? 'Promijeni sliku' : 'Dodaj sliku'}"
+                onclick="document.getElementById('photo-input-${p.id}').click()">
+                <i class="fas fa-camera"></i>
+              </button>
+              <button class="player-photo-btn delete" id="photo-delete-${p.id}" title="Ukloni sliku"
+                onclick="deletePlayerPhoto('${p.id}')" ${p.photoURL ? '' : 'style="display:none"'}>
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    window.filterPlayersPhotoGrid = function (inputEl) {
+      const q = normalizeForSearch(inputEl.value.trim());
+      document.querySelectorAll('#players-photo-grid .player-photo-card').forEach(card => {
+        const match = !q || normalizeForSearch(card.dataset.name).includes(q);
+        card.style.display = match ? '' : 'none';
+      });
+    };
+
+    // Resize/kompresija na klijentu prije uploada - max 500px po dužoj strani,
+    // JPEG kvaliteta 0.85, da slike u Storageu ostanu male.
+    function compressImageForUpload(file, maxSize, quality) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = e => { img.src = e.target.result; };
+        reader.onerror = () => reject(new Error('Nije moguće pročitati datoteku.'));
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > height) {
+            if (width > maxSize) { height = Math.round(height * maxSize / width); width = maxSize; }
+          } else {
+            if (height > maxSize) { width = Math.round(width * maxSize / height); height = maxSize; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Kompresija slike nije uspjela.')), 'image/jpeg', quality);
+        };
+        img.onerror = () => reject(new Error('Nije moguće učitati sliku.'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    window.handlePlayerPhotoSelect = async function (slug, inputEl) {
+      const file = inputEl.files?.[0];
+      if (!file) return;
+      const btn = document.getElementById(`photo-btn-${slug}`);
+      const deleteBtn = document.getElementById(`photo-delete-${slug}`);
+      const avatarEl = document.getElementById(`photo-avatar-${slug}`);
+      btn.disabled = true;
+      try {
+        const blob = await compressImageForUpload(file, 500, 0.85);
+        const storageRef = ref(storage, `player-photos/${slug}.jpg`);
+        await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
+        const url = await getDownloadURL(storageRef);
+        await setDoc(doc(db, 'players', slug), { photoURL: url, updatedAt: serverTimestamp() }, { merge: true });
+
+        avatarEl.innerHTML = `<img src="${url}" alt="">`;
+        btn.title = 'Promijeni sliku';
+        deleteBtn.style.display = '';
+        const cached = playersPhotoCache.find(p => p.id === slug);
+        if (cached) cached.photoURL = url;
+        showToast('Slika spremljena!', 'success');
+      } catch (err) {
+        showToast('Greška: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        inputEl.value = '';
+      }
+    };
+
+    window.deletePlayerPhoto = async function (slug) {
+      if (!confirm('Ukloniti sliku ovog igrača?')) return;
+      const btn = document.getElementById(`photo-btn-${slug}`);
+      const deleteBtn = document.getElementById(`photo-delete-${slug}`);
+      const avatarEl = document.getElementById(`photo-avatar-${slug}`);
+      deleteBtn.disabled = true;
+      try {
+        try { await deleteObject(ref(storage, `player-photos/${slug}.jpg`)); }
+        catch (e) { /* fajl možda već ne postoji - ignoriraj */ }
+        await setDoc(doc(db, 'players', slug), { photoURL: deleteField(), updatedAt: serverTimestamp() }, { merge: true });
+
+        const initials = (playersPhotoCache.find(p => p.id === slug)?.name || '')
+          .trim().split(/\s+/).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+        avatarEl.innerHTML = esc(initials);
+        btn.title = 'Dodaj sliku';
+        deleteBtn.style.display = 'none';
+        const cached = playersPhotoCache.find(p => p.id === slug);
+        if (cached) delete cached.photoURL;
+        showToast('Slika uklonjena.', 'success');
+      } catch (err) {
+        showToast('Greška: ' + err.message, 'error');
+      } finally {
+        deleteBtn.disabled = false;
+      }
+    };
+
+    // -- ZAHTJEVI ZA SLIKE (javni upload s Index.html, čeka admin odobrenje) --
+    // photoRequests/{slug}: { playerName, photoURL (privremena slika, u
+    // player-photos-pending/), submittedAt }. Piše ga bilo tko s javne stranice -
+    // ovdje admin odobrava (prebaci photoURL u players/{slug}) ili odbija
+    // (obriše zahtjev + pripadajući Storage fajl).
+    function storagePathFromDownloadURL(url) {
+      const m = url.match(/\/o\/([^?]+)/);
+      return m ? decodeURIComponent(m[1]) : null;
+    }
+
+    async function loadPhotoRequests() {
+      const container = document.getElementById('photo-requests-container');
+      try {
+        const snap = await getDocs(collection(db, 'photoRequests'));
+        const requests = []; snap.forEach(d => requests.push({ id: d.id, ...d.data() }));
+        if (!requests.length) { container.innerHTML = ''; return; }
+        requests.sort((a, b) => (a.playerName || '').localeCompare(b.playerName || '', 'hr'));
+        container.innerHTML = `
+          <div class="photo-requests-section">
+            <div class="photo-requests-title">Zahtjevi za slike (${requests.length})</div>
+            <div class="players-photo-grid">
+              ${requests.map(r => `
+                <div class="player-photo-card" id="photo-request-${r.id}">
+                  <div class="player-photo-avatar"><img src="${esc(r.photoURL)}" alt=""></div>
+                  <div class="player-photo-name">${esc(r.playerName || r.id)}</div>
+                  <div class="photo-request-actions">
+                    <button class="photo-request-btn approve" onclick="approvePhotoRequest('${r.id}')">Odobri</button>
+                    <button class="photo-request-btn decline" onclick="declinePhotoRequest('${r.id}')">Odbij</button>
+                  </div>
+                </div>`).join('')}
+            </div>
+          </div>`;
+      } catch (err) {
+        container.innerHTML = `<div style="color:#ffaaaa;padding:10px 0;">Greška: ${esc(err.message)}</div>`;
+      }
+    }
+
+    window.approvePhotoRequest = async function (slug) {
+      try {
+        const reqDoc = await getDoc(doc(db, 'photoRequests', slug));
+        if (!reqDoc.exists()) { showToast('Zahtjev više ne postoji.', 'error'); return; }
+        const { photoURL } = reqDoc.data();
+        await setDoc(doc(db, 'players', slug), { photoURL, updatedAt: serverTimestamp() }, { merge: true });
+        await deleteDoc(doc(db, 'photoRequests', slug));
+
+        const cached = playersPhotoCache.find(p => p.id === slug);
+        if (cached) cached.photoURL = photoURL;
+        renderPlayersPhotoGrid();
+        showToast('Slika odobrena!', 'success');
+        loadPhotoRequests();
+      } catch (err) {
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
+    window.declinePhotoRequest = async function (slug) {
+      if (!confirm('Odbiti ovaj zahtjev za sliku?')) return;
+      try {
+        const reqDoc = await getDoc(doc(db, 'photoRequests', slug));
+        if (reqDoc.exists()) {
+          const path = storagePathFromDownloadURL(reqDoc.data().photoURL);
+          if (path) {
+            try { await deleteObject(ref(storage, path)); }
+            catch (e) { console.error('Brisanje pending slike nije uspjelo:', e); }
+          }
+        }
+        await deleteDoc(doc(db, 'photoRequests', slug));
+        showToast('Zahtjev odbijen.', 'success');
+        loadPhotoRequests();
+      } catch (err) {
+        showToast('Greška: ' + err.message, 'error');
+      }
     };
 
     // -- AUTH --
@@ -1512,19 +1895,21 @@
           : '<div style="text-align:center;color:var(--muted);padding:20px 0 28px;">Nema dostupnih grupa.</div>';
 
         const takenLetters = groups.map(g => g.id.replace(/[^a-zA-Z]/g, '').slice(-1).toUpperCase());
-        container.innerHTML = gridHtml + (isAdmin ? renderSeasonGroupCreateForm(takenLetters) : '');
+        const assignedNames = new Set(withPlayers.flatMap(g => g.players));
+        container.innerHTML = gridHtml + (isAdmin ? renderSeasonGroupCreateForm(takenLetters, assignedNames) : '');
       } catch (err) {
         container.innerHTML = '<div style="color:#ffaaaa;padding:20px;">Greška: ' + esc(err.message) + '</div>';
       }
     }
 
-    function renderSeasonGroupCreateForm(takenLetters) {
+    function renderSeasonGroupCreateForm(takenLetters, assignedNames) {
       const freeLetters = SEASON_GROUP_LETTERS.filter(l => !takenLetters.includes(l));
       if (!freeLetters.length) {
         return `<div style="margin-top:20px;text-align:center;color:var(--muted);padding:16px;">Sve grupe (A–P) su popunjene.</div>`;
       }
       const nextLetter = freeLetters[0];
-      const checkboxes = allPlayers.map(name => {
+      const availablePlayers = allPlayers.filter(name => !assignedNames.has(name));
+      const checkboxes = availablePlayers.map(name => {
         const safeId = 'chk_season_' + name.replace(/[^a-zA-Z0-9]/g, '_');
         return `<div class="player-checkbox-row">
           <input type="checkbox" id="${safeId}" value="${esc(name)}">
@@ -1547,7 +1932,7 @@
               </button>
             </div>
             <div>
-              <div class="form-label" style="margin-bottom:8px;">Svi igrači (${allPlayers.length})</div>
+              <div class="form-label" style="margin-bottom:8px;">Slobodni igrači (${availablePlayers.length})</div>
               <input class="form-input" type="text" placeholder="Pretraži igrače..." style="margin-bottom:8px;"
                 oninput="filterPlayerMultiselect(this, 'season-group-player-list')">
               <div class="player-multiselect" id="season-group-player-list"
@@ -1634,10 +2019,25 @@
       const container = document.getElementById('lower-bracket-admin-container');
 
       try {
+        const groupsSnap = await getDocs(collection(db, 'seasons', ACTIVE_SEASON_ID, 'groups'));
+        const groups = []; groupsSnap.forEach(d => groups.push({ id: d.id, ...d.data() }));
+        groups.sort((a, b) => a.id.localeCompare(b.id));
+
+        const groupStandingsMap = {};
+        await Promise.all(groups.map(async g => {
+          const ps = await getDocs(query(collection(db, 'seasons', ACTIVE_SEASON_ID, 'groups', g.id, 'players'), orderBy('position')));
+          const players = []; ps.forEach(p => players.push(p.data().name));
+          const ms = await getDocs(collection(db, 'seasons', ACTIVE_SEASON_ID, 'groups', g.id, 'matches'));
+          const mm = {}; ms.forEach(m => { const d = m.data(); mm[`${d.kolo}_${d.mec}`] = d; });
+          const standings = computeStandingsSimple(players, mm);
+          const letter = g.id.replace(/[^a-zA-Z]/g, '').slice(-1).toUpperCase();
+          groupStandingsMap[letter] = standings;
+        }));
+
         const lowerBracketSnap = await getDocs(collection(db, 'seasons', ACTIVE_SEASON_ID, 'lower-bracket'));
         const matchesByRound = {};
         lowerBracketSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
-        renderLowerBracketAdmin(matchesByRound);
+        renderLowerBracketAdmin(matchesByRound, groupStandingsMap);
       } catch (err) {
         container.innerHTML = '<div style="color:#ffaaaa;padding:20px;">Greška: ' + esc(err.message) + '</div>';
       }
@@ -1665,7 +2065,7 @@
 
     function resolveName(code, gsm) {
       if (!code) return null;
-      const m = code.match(/^([1-4])([A-P])$/); if (!m) return code;
+      const m = code.match(/^(\d+)([A-P])$/); if (!m) return code;
       const rank = parseInt(m[1]) - 1, grp = m[2];
       const st = gsm[grp]; if (!st || !st[rank]) return code;
       return st[rank].name;
@@ -1814,14 +2214,15 @@
     // Store lower bracket match data for popup access (separate namespace, IDs overlap with upper bracket)
     const allLowerMatchData = {};
 
-    function renderLowerBracketAdmin(matchesByRound) {
+    function renderLowerBracketAdmin(matchesByRound, groupStandingsMap) {
       const container = document.getElementById('lower-bracket-admin-container');
 
-      // Build LR64
-      const lr64 = Array.from({ length: 32 }, (_, i) => {
+      // Build LR64 - isti obrazac kao gornji R64 (R64_DRAW + resolveName), samo
+      // s LR64_DRAW (mjesta 5.-8. umjesto 1.-4.).
+      const lr64 = LR64_DRAW.map((draw, i) => {
         const id = 'LR64_' + (i + 1); const saved = matchesByRound[id] || {};
-        const p1 = saved.player1 || null;
-        const p2 = saved.player2 || null;
+        const p1 = saved.player1 || resolveName(draw.p1, groupStandingsMap) || draw.p1;
+        const p2 = saved.player2 || resolveName(draw.p2, groupStandingsMap) || draw.p2;
         allLowerMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `Donji Last of 64 - Meč ${i + 1}` };
         return { id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null };
       });
@@ -2218,7 +2619,8 @@
           ? '<div class="groups-grid">' + withPlayers.map(g => renderAvgGroupCard(g, leagueId)).join('') + '</div>'
           : '<div style="text-align:center;color:var(--muted);padding:20px 0 28px;">Nema grupa. Kreiraj prvu grupu ispod.</div>';
 
-        container.innerHTML = groupsHtml + renderAvgCreateForm(leagueId, groups);
+        const assignedNames = new Set(withPlayers.flatMap(g => g.players));
+        container.innerHTML = groupsHtml + renderAvgCreateForm(leagueId, groups, assignedNames);
 
       } catch (err) {
         container.innerHTML = `<div style="color:#ffaaaa;padding:20px;">Greška: ${esc(err.message)}</div>`;
@@ -2259,9 +2661,10 @@
       return 'Grupa ' + nextLetter;
     }
 
-    function renderAvgCreateForm(leagueId, groups) {
+    function renderAvgCreateForm(leagueId, groups, assignedNames) {
       const groupName = nextAvgGroupName(groups);
-      const checkboxes = allPlayers.map(name => {
+      const availablePlayers = allPlayers.filter(name => !assignedNames.has(name));
+      const checkboxes = availablePlayers.map(name => {
         const safeId = 'chk_' + leagueId + '_' + name.replace(/[^a-zA-Z0-9]/g, '_');
         return `<div class="player-checkbox-row">
           <input type="checkbox" id="${safeId}" value="${esc(name)}">
@@ -2285,7 +2688,7 @@
               </button>
             </div>
             <div>
-              <div class="form-label" style="margin-bottom:8px;">Svi igrači (${allPlayers.length})</div>
+              <div class="form-label" style="margin-bottom:8px;">Slobodni igrači (${availablePlayers.length})</div>
               <input class="form-input" type="text" placeholder="Pretraži igrače..." style="margin-bottom:8px;"
                 oninput="filterPlayerMultiselect(this, 'player-list-${leagueId}')">
               <div class="player-multiselect" id="player-list-${leagueId}"
