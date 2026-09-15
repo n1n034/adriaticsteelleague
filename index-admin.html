@@ -1261,19 +1261,19 @@
       </div>
 
       <div class="admin-tabs">
-        <button class="admin-tab-btn active" onclick="switchAdminTab('grupe', this)">
+        <button class="admin-tab-btn active" id="tab-btn-grupe" onclick="switchAdminTab('grupe', this)">
           <i class="fas fa-layer-group" style="margin-right:6px;"></i>Grupe
         </button>
-        <button class="admin-tab-btn" onclick="switchAdminTab('bracket', this)">
+        <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('bracket', this)">
           <i class="fas fa-trophy" style="margin-right:6px;"></i>Gornji ždrijeb
         </button>
-        <button class="admin-tab-btn" onclick="switchAdminTab('lower-bracket', this)">
+        <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('lower-bracket', this)">
           <i class="fas fa-trophy" style="margin-right:6px;"></i>Donji ždrijeb
         </button>
-        <button class="admin-tab-btn" onclick="switchAdminTab('avg-lige', this)">
+        <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('avg-lige', this)">
           <i class="fas fa-chart-bar" style="margin-right:6px;"></i>AVG Lige
         </button>
-        <button class="admin-tab-btn" onclick="switchAdminTab('igraci', this)">
+        <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('igraci', this)">
           <i class="fas fa-image" style="margin-right:6px;"></i>Igrači
         </button>
       </div>
@@ -1807,14 +1807,17 @@
         badge.textContent = currentIsAdmin ? 'Admin' : 'Operater';
         badge.className = 'admin-role-badge ' + (currentIsAdmin ? 'admin' : 'operator');
 
+        document.querySelectorAll('.admin-only-tab').forEach(b => b.style.display = currentIsAdmin ? '' : 'none');
+        if (!currentIsAdmin) switchAdminTab('grupe', document.getElementById('tab-btn-grupe'));
+
         ACTIVE_SEASON_ID = await resolveActiveSeasonId();
         const seasonLabel = SEASON_LABELS[ACTIVE_SEASON_ID] || ACTIVE_SEASON_ID;
         document.getElementById('welcome-msg').textContent = `Dobrodošli u ${seasonLabel}, ${user.email.split('@')[0]}!`;
-        renderTrenutnoKoloControls();
+        if (currentIsAdmin) renderTrenutnoKoloControls();
 
         await loadBracketConfig();
         await loadGroups(currentIsAdmin, userData.groups || []);
-        await loadBracketAdmin(); await loadLowerBracketAdmin();
+        if (currentIsAdmin) { await loadBracketAdmin(); await loadLowerBracketAdmin(); }
       } else {
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('admin-screen').style.display = 'none';
@@ -1853,13 +1856,18 @@
     // -- GRUPE (Aktivna sezona) --
     const SEASON_GROUP_LETTERS = 'ABCDEFGHIJKLMNOP'.split(''); // fiksno 16 (gornji ždrijeb R64_DRAW koristi baš ova slova)
 
+    // users/{uid}.groups sprema samo slovo grupe (npr. "a"), ne puni ID ("grupa-a")
+    function groupIdToLetter(groupId) {
+      return groupId.replace(/^grupa-/, '').toLowerCase();
+    }
+
     async function loadGroups(isAdmin, allowedGroups) {
       const container = document.getElementById('groups-container');
       try {
         if (isAdmin) await loadAllPlayers();
         const groupsSnap = await getDocs(collection(db, 'seasons', ACTIVE_SEASON_ID, 'groups'));
         const groups = [];
-        groupsSnap.forEach(d => { if (isAdmin || allowedGroups.includes(d.id)) groups.push({ id: d.id, ...d.data() }); });
+        groupsSnap.forEach(d => { if (isAdmin || allowedGroups.includes(groupIdToLetter(d.id))) groups.push({ id: d.id, ...d.data() }); });
         groups.sort((a, b) => a.id.localeCompare(b.id));
 
         const withPlayers = await Promise.all(groups.map(async g => {

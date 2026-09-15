@@ -937,6 +937,7 @@
 
 
     let isAdmin = false;
+    let canEditGroup = false; // admin, ili operater kojem je BAŠ ova grupa dodijeljena
     let groupData = null;
     let players = [];
     let matchesMap = {}; // "kolo_mec" -> match data
@@ -975,6 +976,9 @@
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       const userData = userDoc.exists() ? userDoc.data() : { role: 'user', groups: [] };
       isAdmin = userData.role === 'admin';
+      // Operater smije upisivati rezultate samo u sezonskim grupama (ne AVG ligama)
+      // i samo u onoj grupi koja mu je dodijeljena (users/{uid}.groups sadrži slovo grupe).
+      canEditGroup = isAdmin || (!leagueParam && !!groupId && (userData.groups || []).includes(groupIdToLetter(groupId)));
 
       const badge = document.getElementById('role-badge');
       if (isAdmin) {
@@ -1042,6 +1046,11 @@
     // stvarnih grupa - filtrirati ih iz dropdowna.
     const AVG_RESERVED_DOC_IDS = ['rezultati', 'bracket'];
 
+    // users/{uid}.groups sprema samo slovo grupe (npr. "a"), ne puni ID ("grupa-a")
+    function groupIdToLetter(groupId) {
+      return groupId.replace(/^grupa-/, '').toLowerCase();
+    }
+
     async function populateGroupSelector(admin, allowedGroups) {
       try {
         const basePath = leagueParam
@@ -1053,7 +1062,7 @@
         groupsSnap.forEach(d => { if (!leagueParam || !AVG_RESERVED_DOC_IDS.includes(d.id)) groups.push({ id: d.id, ...d.data() }); });
         groups.sort((a, b) => a.id.localeCompare(b.id));
 
-        if (!admin) groups = groups.filter(g => allowedGroups.includes(g.id));
+        if (!admin) groups = groups.filter(g => allowedGroups.includes(groupIdToLetter(g.id)));
         if (groups.length <= 1) return; // nema potrebe za dropdown
 
         const select = document.getElementById('group-select');
@@ -1315,7 +1324,7 @@
         ? `<span class="score-display">${esc(score)}</span>`
         : `<span class="score-display empty">- : -</span>`;
 
-      const disabled = isAdmin ? '' : 'disabled';
+      const disabled = canEditGroup ? '' : 'disabled';
 
       const legs = getGroupPhaseLegs();
       const legsLabel = legs ? `<div class="best-of-label">Best of ${legs} legs</div>` : '';
@@ -1387,7 +1396,7 @@
               <i class="fas fa-chart-bar" style="margin-right:4px;"></i>
               ${hasScore ? 'Sakrij statistiku' : 'Prikaži statistiku'}
             </button>
-            ${isAdmin ? `
+            ${canEditGroup ? `
             <button class="btn-delete" id="delete-${kolo}-${mec}" onclick="deleteMatch(${kolo}, ${mec})">
               <i class="fas fa-trash"></i> Izbriši
             </button>
