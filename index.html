@@ -549,6 +549,14 @@
       opacity: 0.55;
     }
 
+    .mpc-player-col.clickable {
+      cursor: pointer;
+    }
+    
+    .player-name-link {
+      cursor: pointer;
+    }
+
     .mpc-avatar {
       width: 62px;
       height: 62px;
@@ -1215,6 +1223,17 @@
       btn.style.background='rgba(21,49,99,1)'; btn.style.borderColor='rgba(255,255,255,0.2)'; btn.style.color='#fff';
     }
 
+    // Klik na ime igrača otvara njegov profil - koristi se u "Najbolji u ligi"
+    // tabu (renderNajbolji) i svugdje drugdje gdje se ime igrača prikazuje kao
+    // običan tekst umjesto punog mpc-player-col bloka. Nema efekta (obično ime,
+    // bez klika) ako igrač iz nekog razloga još nije registriran u playerDatabase.
+    function playerNameLinkHtml(name) {
+      const safe = escapeHtml(name);
+      if (!playerDatabase[name]) return safe;
+      const nameJs = safe.replace(/'/g, "\\'");
+      return `<span class="player-name-link" onclick="openPlayerProfile('${nameJs}')">${safe}</span>`;
+    }
+
     function renderNajbolji(allPlayersStats) {
       const medal = i => i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
       const top5avg  = [...allPlayersStats].filter(p=>p.avg!=='--').sort((a,b)=>parseFloat(b.avg)-parseFloat(a.avg)).slice(0,5);
@@ -1224,11 +1243,11 @@
       const top5x180 = [...allPlayersStats].filter(p=>p.x180>0).sort((a,b)=>b.x180-a.x180).slice(0,5);
       const rows = Array.from({length:5},(_,i)=>`
         <tr>
-          <td style="text-align:left;">${top5avg[i]  ?`${medal(i)} ${escapeHtml(top5avg[i].name)} - ${top5avg[i].avg}`  :''}</td>
-          <td style="text-align:left;">${top5f9[i]   ?`${medal(i)} ${escapeHtml(top5f9[i].name)} - ${top5f9[i].f9}`    :''}</td>
-          <td style="text-align:left;">${top5bl[i]   ?`${medal(i)} ${escapeHtml(top5bl[i].name)} - ${top5bl[i].bl}`    :''}</td>
-          <td style="text-align:left;">${top5bco[i]  ?`${medal(i)} ${escapeHtml(top5bco[i].name)} - ${top5bco[i].bco}` :''}</td>
-          <td style="text-align:left;">${top5x180[i] ?`${medal(i)} ${escapeHtml(top5x180[i].name)} - ${top5x180[i].x180}`:''}</td>
+          <td style="text-align:left;">${top5avg[i]  ?`${medal(i)} ${playerNameLinkHtml(top5avg[i].name)} - ${top5avg[i].avg}`  :''}</td>
+          <td style="text-align:left;">${top5f9[i]   ?`${medal(i)} ${playerNameLinkHtml(top5f9[i].name)} - ${top5f9[i].f9}`    :''}</td>
+          <td style="text-align:left;">${top5bl[i]   ?`${medal(i)} ${playerNameLinkHtml(top5bl[i].name)} - ${top5bl[i].bl}`    :''}</td>
+          <td style="text-align:left;">${top5bco[i]  ?`${medal(i)} ${playerNameLinkHtml(top5bco[i].name)} - ${top5bco[i].bco}` :''}</td>
+          <td style="text-align:left;">${top5x180[i] ?`${medal(i)} ${playerNameLinkHtml(top5x180[i].name)} - ${top5x180[i].x180}`:''}</td>
         </tr>`).join('');
       document.getElementById('najbolji-content').innerHTML = `
         <div class="accordion-item open">
@@ -1311,7 +1330,7 @@
               <span style="font-size:1.3rem;">🏆</span>
               <div style="text-align:left;">
                 <div style="font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.55);">MVP kola</div>
-                <div style="font-size:1.05rem;font-weight:800;color:#fff;">${escapeHtml(mvp.name)}</div>
+                <div style="font-size:1.05rem;font-weight:800;color:#fff;">${playerNameLinkHtml(mvp.name)}</div>
               </div>
               <div style="margin-left:auto;text-align:right;">
                 <div style="font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.55);">AVG</div>
@@ -1323,9 +1342,9 @@
               <div class="popup-match" style="margin-bottom:0;">
                 <div class="popup-match-num">${typeof kolo === 'number' ? `Kolo ${kolo}` : escapeHtml(kolo)} - ${escapeHtml(m.groupName)}</div>
                 <div class="popup-match-top">
-                  <span class="popup-player-name">${escapeHtml(m.player1)}</span>
+                  <span class="popup-player-name">${playerNameLinkHtml(m.player1)}</span>
                   <span class="popup-score">${escapeHtml(m.score)}</span>
-                  <span class="popup-player-name right">${escapeHtml(m.player2)}</span>
+                  <span class="popup-player-name right">${playerNameLinkHtml(m.player2)}</span>
                 </div>
                 <div class="popup-stats">
                   <div class="popup-stat-val-l">${m.average1 ?? '--'}</div><div class="popup-stat-label">AVG</div><div class="popup-stat-val-r">${m.average2 ?? '--'}</div>
@@ -1508,11 +1527,9 @@
     }
 
     // -- AGGREGATED ("Sveukupno") STATS --
-    // Dodaje playoff mečeve (gornji+donji ždrijeb) tog igrača u postojeći agg
-    // objekt - koriste ga i computeOverallStats (kroz SEASON_ORDER petlju) i
-    // computeSeasonStatsWithPlayoffs (pojedinačni sezonski tab). Playoff se
-    // uvijek odnosi samo na ACTIVE_SEASON_ID (bracketMatchData/
-    // lowerBracketMatchData su globalne mape rezervirane za tu sezonu).
+    // Dodaje mečeve (koriste se za playoff, gornji+donji ždrijeb) tog igrača u
+    // postojeći agg objekt - koristi je computeStatsWithPlayoffMatches (i
+    // sezonski i AVG tab u player profilu prolaze kroz nju).
     function addMatchesToAgg(agg, matches) {
       matches.forEach(m => {
         const avgN = parseFloat(m.avgSelf), f9N = parseFloat(m.f9Self);
@@ -1527,10 +1544,6 @@
         else if (m.result === 'loss') agg.lost += 1;
         else if (m.result === 'draw') agg.draw += 1;
       });
-    }
-
-    function addPlayoffToAgg(agg, playerName, seasonId) {
-      addMatchesToAgg(agg, getPlayoffMatchesForPlayer(playerName, seasonId));
     }
 
     // Grupni standings + playoff mečevi spojeni u jedan stats objekt - koristi
@@ -1574,59 +1587,74 @@
     function computeOverallStats(playerName) {
       const entry = playerDatabase[playerName];
       if (!entry) return null;
-      const agg = {win:0,draw:0,lost:0,total:0,legs:0,pts:0,avgSum:0,avgCount:0,f9Sum:0,f9Count:0,bl:0,bco:0,x180:0};
+
+      // "Sveukupno" = zbroj/min/max/prosjek preko BLOKOVA, gdje je jedan blok
+      // = već izračunati stats objekt jednog profil-taba (isti oblik kao
+      // computeSeasonStatsWithPlayoffs/computeAvgStatsWithPlayoffs vraćaju):
+      //   - svaka sezona (Sezona 1/2/3 tab) = jedan blok
+      //   - svaka "live" AVG liga (AVG tab kartica s mečevima) = jedan blok
+      // Poziva iste funkcije koje pune pojedinačne tabove (ne re-derivira
+      // agregaciju ovdje), da "Sveukupno" nikad ne može odstupiti od zbroja
+      // onoga što je stvarno prikazano na tim tabovima.
+      const blocks = [];
       SEASON_ORDER.forEach(seasonId => {
         const sd = entry.seasons[seasonId];
         if (!sd) return;
-        const s = sd.standings;
-        agg.win += s.win; agg.draw += s.draw; agg.lost += s.lost; agg.total += s.total;
-        agg.legs += s.legs; agg.pts += s.pts; agg.x180 += s.x180;
-        if (s.avg !== '--') { agg.avgSum += parseFloat(s.avg) * s.total; agg.avgCount += s.total; }
-        if (s.f9 !== '--') { agg.f9Sum += parseFloat(s.f9) * s.total; agg.f9Count += s.total; }
-        if (s.bl !== '--' && s.bl) agg.bl = agg.bl === 0 ? s.bl : Math.min(agg.bl, s.bl);
-        if (s.bco !== '--' && s.bco) agg.bco = Math.max(agg.bco, s.bco);
-
-        // Playoff (gornji + donji ždrijeb) se dodaje za SVAKU sezonu koja ga ima -
-        // getPlayoffMatchesForPlayer sam bira live mape za aktivnu sezonu i
-        // archiveBracketMatchData/archiveLowerBracketMatchData za arhivske
-        // (eager učitano u loadArchiveSeason). Bez ovoga bi "Sveukupno" AVG bio
-        // manji od "Najbolji u ligi", jer taj drugi već broji playoff u prosjek.
-        addPlayoffToAgg(agg, playerName, seasonId);
+        blocks.push(computeSeasonStatsWithPlayoffs(playerName, seasonId, sd.standings));
       });
 
-      // AVG lige rezultati (povijesni kind:'history' iz registerAvgHistoryData,
-      // ili aktivni kind:'live' iz registerAvgPlayerData) nemaju broj mečeva
-      // usklađen sa sezonskim standingsima za ponderiranje - dogovoreno da svaki
-      // takav zapis (jedna liga u jednoj sezoni) broji kao DODATNI blok jednake
-      // težine cijelom sezonskom bloku iznad (prost prosjek blokova, ne mečeva).
-      // "Live" blok koristi computeAvgStatsWithPlayoffs (isti izračun kao AVG tab
-      // kartica te lige) da uključi i eventualne playoff mečeve te lige.
-      // Igrač bez ikakvih AVG lige podataka dobiva identičan rezultat kao prije
-      // (jedan blok = sezonski, prosjek od 1 broja = taj isti broj).
-      const seasonsBlockAvg = agg.avgCount > 0 ? agg.avgSum / agg.avgCount : null;
-      const seasonsBlockF9  = agg.f9Count  > 0 ? agg.f9Sum  / agg.f9Count  : null;
-      const avgHistoryValues = [];
+      // "history" AVG zapisi (registerAvgHistoryData, arhivski rezultati bez
+      // mečeva) nemaju win/draw/lost/total/legs/pts/x180/bl/bco/f9 - Firestore
+      // dokument (avg-leagues/{sezona}/{liga}/rezultati) ih genuinely ne sprema.
+      // Zato ne postaju puni blok, nego doprinose SAMO prosjeku AVG-a.
+      const historyAvgValues = [];
       Object.entries(entry.avgLeagues || {}).forEach(([seasonId, byLeague]) => {
         Object.entries(byLeague).forEach(([leagueId, ad]) => {
-          if (ad.kind === 'history') {
-            avgHistoryValues.push(parseFloat(ad.avg));
-          } else if (ad.kind === 'live') {
-            const liveStats = computeAvgStatsWithPlayoffs(playerName, seasonId, leagueId, ad.standings);
-            if (liveStats.avg !== '--') avgHistoryValues.push(parseFloat(liveStats.avg));
+          if (ad.kind === 'live') {
+            blocks.push(computeAvgStatsWithPlayoffs(playerName, seasonId, leagueId, ad.standings));
+          } else if (ad.kind === 'history') {
+            const v = parseFloat(ad.avg);
+            if (!isNaN(v)) historyAvgValues.push(v);
           }
         });
       });
-      const avgBlocks = [seasonsBlockAvg, ...avgHistoryValues].filter(v => v != null && !isNaN(v));
-      const f9Blocks  = [seasonsBlockF9].filter(v => v != null); // povijesni zapisi nemaju First 9
-      const finalAvg = avgBlocks.length ? avgBlocks.reduce((a,b) => a+b, 0) / avgBlocks.length : null;
-      const finalF9  = f9Blocks.length  ? f9Blocks.reduce((a,b) => a+b, 0)  / f9Blocks.length  : null;
+
+      // win/draw/lost/total/legs/pts/x180 - pravi zbroj preko svih blokova
+      // (sezone + live AVG lige). Playoff je već uključen u svaki blok (obje
+      // izvorne funkcije to rade), pa se ovdje ne dodaje ponovno.
+      const sums = {win:0, draw:0, lost:0, total:0, legs:0, pts:0, x180:0};
+      blocks.forEach(b => {
+        sums.win += b.win; sums.draw += b.draw; sums.lost += b.lost; sums.total += b.total;
+        sums.legs += b.legs; sums.pts += b.pts; sums.x180 += b.x180;
+      });
+
+      // Best leg / best checkout - min/max preko istog seta blokova. Blok bez
+      // te vrijednosti ('--', npr. AVG liga koja još nije odigrala meč) se
+      // isključuje iz usporedbe, isto kao svugdje drugdje u ovoj datoteci.
+      let bl = 0, bco = 0;
+      blocks.forEach(b => {
+        if (b.bl !== '--') bl = bl === 0 ? b.bl : Math.min(bl, b.bl);
+        if (b.bco !== '--') bco = Math.max(bco, b.bco);
+      });
+
+      // AVG/First 9 - prost prosjek blokova (svaki blok jednake težine,
+      // bez obzira na broj mečeva u njemu - dogovoreno s korisnikom).
+      // avgValues uključuje i povijesne AVG zapise (imaju samo avg);
+      // f9Values ne, jer povijesni zapisi nemaju First 9 podatak.
+      const avgValues = [
+        ...blocks.map(b => b.avg).filter(v => v !== '--').map(parseFloat),
+        ...historyAvgValues
+      ];
+      const f9Values = blocks.map(b => b.f9).filter(v => v !== '--').map(parseFloat);
+
+      const avg = avgValues.length ? (avgValues.reduce((a,b) => a+b, 0) / avgValues.length).toFixed(2) : '--';
+      const f9  = f9Values.length  ? (f9Values.reduce((a,b) => a+b, 0)  / f9Values.length).toFixed(2)  : '--';
 
       return {
-        win: agg.win, draw: agg.draw, lost: agg.lost, total: agg.total,
-        legs: agg.legs, pts: agg.pts, x180: agg.x180,
-        avg: finalAvg != null ? finalAvg.toFixed(2) : '--',
-        f9:  finalF9  != null ? finalF9.toFixed(2)  : '--',
-        bl:  agg.bl || '--', bco: agg.bco || '--'
+        win: sums.win, draw: sums.draw, lost: sums.lost, total: sums.total,
+        legs: sums.legs, pts: sums.pts, x180: sums.x180,
+        avg, f9,
+        bl: bl || '--', bco: bco || '--'
       };
     }
 
@@ -2325,19 +2353,26 @@
           ${matchTimestamp ? `<div class="mpc-legs-timestamp">${formatMatchTimestamp(matchTimestamp)}</div>` : ''}
         </div>` : '';
 
+      // Klik na igrača otvara njegov profil (isti popup overlay, showPopup se
+      // samo pozove ponovno s novim sadržajem) - samo ako igrač stvarno postoji
+      // u playerDatabase (npr. "TBD" u ždrijebu prije nego je poznat protivnik
+      // se ne smije moći kliknuti).
+      const playerColHtml = (name, isLoser, isWinner) => {
+        const clickable = name && name !== 'TBD' && playerDatabase[name];
+        const nameJs = escapeHtml(name || '').replace(/'/g, "\\'");
+        return `
+          <div class="mpc-player-col ${isLoser ? 'loser' : ''} ${clickable ? 'clickable' : ''}" ${clickable ? `onclick="openPlayerProfile('${nameJs}')"` : ''}>
+            <div class="mpc-avatar">${avatarHtml(name)}</div>
+            <div class="mpc-player-name">${escapeHtml(name)}</div>
+            <div class="mpc-winner-tag">${isWinner ? 'pobjeda' : ''}</div>
+          </div>`;
+      };
+
       const playersHtml = `
         <div class="mpc-players">
-          <div class="mpc-player-col ${hasScore && p2Winner ? 'loser' : ''}">
-            <div class="mpc-avatar">${avatarHtml(p1)}</div>
-            <div class="mpc-player-name">${escapeHtml(p1)}</div>
-            <div class="mpc-winner-tag">${p1Winner ? 'pobjeda' : ''}</div>
-          </div>
+          ${playerColHtml(p1, hasScore && p2Winner, p1Winner)}
           <div class="mpc-score">${hasScore ? `${escapeHtml(scoreParts[0])}<span class="mpc-score-sep">:</span>${escapeHtml(scoreParts[1])}` : '<span style="color:rgba(255,255,255,0.2);">- : -</span>'}</div>
-          <div class="mpc-player-col ${hasScore && p1Winner ? 'loser' : ''}">
-            <div class="mpc-avatar">${avatarHtml(p2)}</div>
-            <div class="mpc-player-name">${escapeHtml(p2)}</div>
-            <div class="mpc-winner-tag">${p2Winner ? 'pobjeda' : ''}</div>
-          </div>
+          ${playerColHtml(p2, hasScore && p1Winner, p2Winner)}
         </div>`;
 
       if (!hasScore) {
