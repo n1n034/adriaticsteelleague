@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Read(//tmp/**)",
-      "Bash(npx firebase *)",
-      "Bash(gcloud run *)"
-    ]
-  }
-}
