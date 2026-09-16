@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a1628">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Izvlačenje grupa · Adriatic Steel League</title>
+  <meta name="description" content="Adriatic Steel League - uživo izvlačenje igrača po grupama.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
+  <link rel="icon" href="images/ASL-logo.webp">
+
+  <style>
+    :root {
+      --text: #ffffff;
+      --muted: #c8d3ea;
+      --panel: rgba(8, 14, 28, 0.82);
+      --panel-2: rgba(12, 20, 38, 0.96);
+      --header: rgba(21, 49, 99, 0.95);
+      --header-hover: rgba(39, 81, 159, 0.98);
+      --line: rgba(255,255,255,0.10);
+      --shadow: 0 18px 50px rgba(0,0,0,0.35);
+      --radius: 18px;
+      --accent: #7eb8ff;
+      --gold: #ffd700;
+    }
+
+    * { box-sizing: border-box; scrollbar-width: none; -ms-overflow-style: none; }
+    *::-webkit-scrollbar { display: none; }
+
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; min-height: 100%;
+      overflow-x: hidden;
+      background: #1a3a5c;
+      font-family: 'Lexend', sans-serif;
+      font-weight: 400;
+      color: var(--text);
+    }
+
+    button, input, textarea { font-family: inherit; }
+
+    .bg-image {
+      position: fixed; inset: 0; z-index: 0;
+      background-image: url("images/background.webp");
+      background-size: cover; background-position: center center; background-repeat: no-repeat;
+    }
+
+    .bg-overlay {
+      position: fixed; inset: 0; z-index: -1;
+      background: linear-gradient(rgba(3,8,18,0.55), rgba(3,8,18,0.78));
+    }
+
+    .page { position: relative; min-height: 100vh; width: 100%; padding: 26px; }
+    .container { max-width: 1300px; margin: 0 auto; animation: fadeInUp 0.5s ease both; }
+
+    .back-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--muted); text-decoration: none; font-size: 0.85rem; font-weight: 600;
+      margin-bottom: 18px; transition: 0.2s ease;
+    }
+    .back-link:hover { color: #fff; }
+
+    .hero { text-align: center; margin-bottom: 40px; }
+    .league-logo {
+      display: block; margin: 0 auto; height: auto; max-width: 130px;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.75)) drop-shadow(0 0 18px rgba(120,170,255,0.18));
+    }
+    h1 { margin: 15px 0 15px 0; font-size: 2.2rem; letter-spacing: 1px; text-align: center; text-shadow: 0 6px 6px rgba(0,0,0,0.5); }
+    .hero p { margin: 15px 0 15px 0; font-size: 1.1rem; font-weight: 600; letter-spacing: 1px; text-align: center; text-shadow: 0 6px 6px rgba(0,0,0,0.5); }
+
+    @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.85) translateY(-8px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 16px rgba(126,184,255,0.35); }
+      50% { box-shadow: 0 0 34px rgba(126,184,255,0.7); }
+    }
+    @keyframes pulseGlowLanded {
+      0%, 100% { box-shadow: 0 0 22px rgba(126,184,255,0.55); }
+      50% { box-shadow: 0 0 56px rgba(126,184,255,0.95); }
+    }
+    @keyframes tickPop {
+      0% { transform: scale(0.86); opacity: 0.55; }
+      55% { transform: scale(1.06); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes landBounce {
+      0% { transform: scale(0.6); }
+      55% { transform: scale(1.18); }
+      75% { transform: scale(0.96); }
+      100% { transform: scale(1); }
+    }
+    @keyframes confettiBurst {
+      0% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.25) rotate(220deg); opacity: 0; }
+    }
+
+    /* -- BUTTONS -- */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 999px;
+      padding: 12px 26px; font-size: 0.95rem; font-weight: 700; letter-spacing: 0.4px;
+      cursor: pointer; transition: 0.25s ease; background: rgba(21,49,99,1); color: #fff;
+    }
+    .btn:hover:not(:disabled) { background: rgba(38,74,138,0.92); box-shadow: 0 0 14px rgba(255,255,255,0.35); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-ghost { background: rgba(10,19,38,0.78); }
+    .btn-big { padding: 16px 34px; font-size: 1.05rem; border-radius: 16px; }
+
+    /* -- SETUP -- */
+    .setup-panel {
+      background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+      box-shadow: var(--shadow); backdrop-filter: blur(7px); padding: 24px;
+      margin-bottom: 26px; animation: fadeInUp 0.5s ease both;
+    }
+    .setup-panel label {
+      display: block; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+    }
+    .player-textarea {
+      width: 100%; min-height: 220px; resize: vertical;
+      background: rgba(10,19,38,0.78); border: 1px solid var(--line); border-radius: 12px;
+      color: #fff; padding: 14px 16px; font-size: 0.92rem; line-height: 1.6; outline: none;
+    }
+    .player-textarea::placeholder { color: rgba(255,255,255,0.3); }
+    .player-textarea:focus { border-color: rgba(126,184,255,0.4); box-shadow: 0 0 0 3px rgba(126,184,255,0.12); }
+
+    .setup-footer {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+      gap: 16px; margin-top: 16px;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--line);
+      padding: 8px 16px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; color: var(--muted);
+    }
+    .pill strong { color: #fff; font-weight: 800; }
+
+    .group-count-field { display: flex; align-items: center; gap: 10px; }
+    .group-count-field label { margin: 0; font-size: 0.78rem; font-weight: 700; color: var(--muted); letter-spacing: 0.4px; text-transform: uppercase; }
+    .stepper { display: flex; align-items: center; gap: 0; background: rgba(10,19,38,0.78); border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+    .stepper button {
+      width: 36px; height: 36px; border: none; background: transparent; color: #fff;
+      font-size: 1.1rem; cursor: pointer; transition: 0.2s ease;
+    }
+    .stepper button:hover:not(:disabled) { background: rgba(38,74,138,0.92); }
+    .stepper button:disabled { opacity: 0.35; cursor: not-allowed; }
+    .stepper input {
+      width: 44px; text-align: center; background: transparent; border: none; outline: none;
+      color: #fff; font-size: 1.05rem; font-weight: 800;
+    }
+    .setup-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+
+    .setup-panel-hint { font-size: 0.78rem; color: rgba(255,255,255,0.45); margin-bottom: 14px; line-height: 1.5; }
+    .nositelji-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .nositelj-row {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(10,19,38,0.6); border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px;
+      transition: 0.2s ease;
+    }
+    .nositelj-row:has(.nositelj-input:not(:placeholder-shown)) { border-color: rgba(255,215,0,0.35); background: rgba(255,215,0,0.05); }
+    .nositelj-letter {
+      width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+      background: rgba(255,215,0,0.15); color: var(--gold);
+      font-size: 0.72rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
+    }
+    .nositelj-input {
+      flex: 1; min-width: 0; background: transparent; border: none; outline: none;
+      color: #fff; font-size: 0.85rem; padding: 6px 0;
+    }
+    .nositelj-input::placeholder { color: rgba(255,255,255,0.3); }
+
+    /* -- SPOTLIGHT -- */
+    .spotlight-wrap { margin-bottom: 26px; animation: fadeInUp 0.4s ease both; }
+    .spotlight {
+      position: relative; text-align: center; overflow: hidden;
+      background: linear-gradient(180deg, rgba(13,20,38,0.98), rgba(6,10,20,0.98));
+      border: 1px solid rgba(126,184,255,0.3); border-radius: 24px;
+      padding: 40px 24px; box-shadow: 0 30px 80px rgba(0,0,0,0.65);
+      animation: pulseGlow 1.6s ease-in-out infinite;
+      transition: 0.3s ease;
+    }
+    .spotlight.landed { animation: pulseGlowLanded 0.9s ease-in-out 2; }
+    .spotlight-label { font-size: 0.75rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+    .spotlight-target { font-size: 1rem; color: #fff; font-weight: 700; margin-bottom: 18px; }
+    .spotlight-group-chip {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 28px; height: 26px; padding: 0 9px; margin-left: 4px;
+      background: rgba(126,184,255,0.16); border: 1px solid rgba(126,184,255,0.45);
+      border-radius: 8px; color: #fff; font-weight: 900; font-size: 0.92rem;
+      vertical-align: middle;
+    }
+    .spotlight-name-wrap { position: relative; min-height: 1.5em; margin-bottom: 10px; }
+    .spotlight-name { font-size: clamp(1.9rem, 5vw, 3.2rem); font-weight: 900; color: #fff; display: inline-block; }
+    .spotlight-name.tick { animation: tickPop 0.14s ease; }
+    .spotlight-name.landed {
+      animation: landBounce 0.55s cubic-bezier(.34,1.56,.64,1);
+      color: #fff; text-shadow: 0 0 18px rgba(126,184,255,0.85), 0 0 40px rgba(126,184,255,0.5);
+    }
+    .confetti-piece { position: absolute; width: 6px; height: 6px; border-radius: 2px; pointer-events: none; animation: confettiBurst 0.85s ease-out forwards; }
+    .spotlight-progress { font-size: 0.8rem; color: rgba(255,255,255,0.4); letter-spacing: 0.5px; margin-bottom: 8px; }
+    .spotlight-progress-bar {
+      width: 100%; max-width: 280px; height: 4px; margin: 0 auto 20px;
+      background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden;
+    }
+    .spotlight-progress-fill {
+      height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #cfe6ff);
+      border-radius: 999px; transition: width 0.4s ease;
+    }
+    .spotlight-done { font-size: 1.3rem; font-weight: 800; color: #2ecc71; padding: 10px 0 4px; }
+
+    .fastforward-btn {
+      position: absolute; bottom: 8px; right: 8px; z-index: 5;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.4); font-size: 0.72rem; cursor: pointer; transition: 0.2s ease;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .fastforward-btn:hover { background: rgba(255,255,255,0.15); color: #fff; border-color: rgba(255,255,255,0.3); }
+
+    /* -- FLYING TOKEN -- */
+    .flying-token {
+      position: fixed; z-index: 2000; pointer-events: none;
+      background: linear-gradient(135deg, rgba(38,74,138,0.98), rgba(15,26,50,0.98));
+      color: #fff; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 0.92rem;
+      box-shadow: 0 14px 36px rgba(0,0,0,0.55); border: 1px solid rgba(126,184,255,0.4);
+      transition: transform 0.65s cubic-bezier(.22,1,.36,1), opacity 0.65s ease 0.15s;
+      white-space: nowrap;
+    }
+
+    /* -- GROUPS GRID -- */
+    .groups-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+    }
+    .group-card {
+      background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+      overflow: hidden; backdrop-filter: blur(7px); box-shadow: var(--shadow);
+      animation: fadeInUp 0.4s ease both; transition: 0.25s ease;
+    }
+    .group-card.filling { border-color: rgba(126,184,255,0.6); box-shadow: 0 0 22px rgba(126,184,255,0.45); }
+    .group-card.done { border-color: rgba(46,204,113,0.4); }
+    .group-card-header {
+      background: var(--header); padding: 13px 18px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .group-card-title { font-size: 1rem; font-weight: 800; letter-spacing: 0.5px; }
+    .group-card-count {
+      font-size: 0.72rem; color: var(--muted); background: rgba(255,255,255,0.08);
+      padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.1); white-space: nowrap;
+    }
+    .group-card-body { padding: 12px 16px; min-height: 52px; }
+    .group-card-empty { font-size: 0.78rem; color: rgba(255,255,255,0.3); font-style: italic; padding: 6px 0; }
+    .group-card-player {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 10px; font-size: 0.88rem; font-weight: 600; color: #edf3ff;
+      background: rgba(255,255,255,0.035); border-radius: 10px; margin-bottom: 6px;
+      animation: popIn 0.3s ease both;
+    }
+    .group-card-player:last-child { margin-bottom: 0; }
+    .group-card-player-num {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(126,184,255,0.15); color: var(--accent); font-size: 0.7rem; font-weight: 800;
+    }
+    .group-card-player-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .group-card-player.seed { background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.3); }
+    .group-card-player-num.seed-badge { background: rgba(255,215,0,0.18); color: var(--gold); }
+    .seed-tag {
+      font-size: 0.6rem; font-weight: 800; color: var(--gold); background: rgba(255,215,0,0.15);
+      padding: 2px 8px; border-radius: 999px; letter-spacing: 0.5px; flex-shrink: 0;
+    }
+
+    .draw-header {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+      gap: 12px; margin-bottom: 18px;
+    }
+    .draw-title {
+      font-size: 1.6rem; font-weight: 800; letter-spacing: 1px; color: #fff; text-transform: uppercase;
+      text-shadow: 0 3px 8px rgba(0,0,0,0.7);
+    }
+
+    .disclaimer { text-align: center; font-size: 0.78rem; color: rgba(255,255,255,0.4); margin-top: 26px; }
+
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      padding: 12px 20px; background: rgba(12, 20, 38, 0.97);
+      border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px;
+      font-size: 0.85rem; font-weight: 600; color: #fff; line-height: 1.5;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      transform: translateY(80px); opacity: 0; transition: 0.3s ease;
+      max-width: min(420px, calc(100vw - 32px));
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.error { border-color: rgba(231, 76, 60, 0.4); color: #e74c3c; }
+
+    @media (max-width: 900px) {
+      .groups-grid { grid-template-columns: repeat(3, 1fr); }
+      .nositelji-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .page { padding: 18px; }
+      h1 { font-size: 1.9rem; }
+      .setup-footer { flex-direction: column; align-items: stretch; }
+      .setup-actions { justify-content: center; }
+      .groups-grid { grid-template-columns: repeat(2, 1fr); }
+      .nositelji-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      h1 { font-size: 1.5rem; }
+      .hero p { font-size: 0.95rem; }
+      .spotlight { padding: 26px 16px; }
+      .btn { padding: 11px 18px; font-size: 0.85rem; }
+      .btn-big { padding: 14px 22px; font-size: 0.95rem; }
+      .groups-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .group-card-title { font-size: 0.85rem; }
+      .nositelji-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-image" fetchpriority="high"></div>
+  <div class="bg-overlay" fetchpriority="high"></div>
+
+  <div class="page">
+    <div class="container">
+      <div class="hero">
+        <img class="league-logo" src="images/ASL-logo.webp" alt="ASL Logo" width="130" height="130" fetchpriority="high" loading="eager">
+        <h1>IZVLAČENJE GRUPA</h1>
+        <p>SEZONA 3</p>
+      </div>
+
+      <div id="setup-wrap">
+        <div class="setup-panel">
+          <label for="players-textarea">Popis igrača</label>
+          <textarea class="player-textarea" id="players-textarea" placeholder="Ivan Horvat&#10;Ana Kovač&#10;Marko Marić&#10;..."></textarea>
+          <div class="setup-footer">
+            <div class="pill"><i class="fas fa-users"></i> Igrača uneseno: <strong id="entered-count">0</strong></div>
+            <div class="setup-actions">
+              <div class="group-count-field">
+                <label for="group-count-input">Broj grupa</label>
+                <div class="stepper">
+                  <button type="button" id="btn-count-minus" aria-label="Manje grupa">−</button>
+                  <input type="number" id="group-count-input" value="16" min="2" max="16" inputmode="numeric">
+                  <button type="button" id="btn-count-plus" aria-label="Više grupa">+</button>
+                </div>
+              </div>
+              <button class="btn" id="btn-create-groups"><i class="fas fa-layer-group"></i> Kreiraj grupe</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="setup-panel">
+          <label>Nositelji grupa</label>
+          <div class="setup-panel-hint">Upiši ime igrača koji je nositelj te grupe.</div>
+          <div class="nositelji-grid" id="nositelji-grid"></div>
+        </div>
+      </div>
+
+      <div id="draw-wrap" style="display:none;">
+
+        <div class="spotlight-wrap">
+          <div class="spotlight" id="spotlight">
+            <div class="spotlight-label">Sljedeća grupa</div>
+            <div class="spotlight-target">Grupa <span class="spotlight-group-chip" id="spotlight-target">—</span></div>
+            <div class="spotlight-name-wrap">
+              <span class="spotlight-name" id="spotlight-name">?</span>
+            </div>
+            <div class="spotlight-progress" id="spotlight-progress">0 / 0 izvučeno</div>
+            <div class="spotlight-progress-bar"><div class="spotlight-progress-fill" id="spotlight-progress-fill"></div></div>
+            <button class="btn btn-big" id="btn-draw-next"><i class="fas fa-dice"></i> Izvuci prvog igrača</button>
+            <div class="spotlight-done" id="spotlight-done" style="display:none;"><i class="fas fa-trophy"></i> Sve grupe su popunjene!</div>
+            <button class="fastforward-btn" id="btn-fastforward" type="button" title="Ubrzano dovrši izvlačenje (za testiranje)"><i class="fas fa-forward"></i></button>
+          </div>
+        </div>
+
+        <div class="draw-header">
+          <span class="draw-title">Grupe</span>
+          <button class="btn btn-ghost" id="btn-restart"><i class="fas fa-rotate-left"></i> Nova izvlačenja (izmijeni popis)</button>
+        </div>
+
+        <div class="groups-grid" id="groups-grid"></div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const GROUP_LETTERS = 'ABCDEFGHIJKLMNOP'.split('');
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function showToast(msg, type = '') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show' + (type ? ' ' + type : '');
+      clearTimeout(t._hideTimer);
+      const duration = Math.min(8000, Math.max(3200, msg.length * 60));
+      t._hideTimer = setTimeout(() => { t.className = 'toast'; }, duration);
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // Fisher-Yates sa kriptografski jakim random brojevima - pravo nasumično
+    // miješanje za javno izvlačenje uživo. Redoslijed se odredi jednom na
+    // početku (kao fizičko izvlačenje kuglica) - svaki klik na "Izvuci
+    // sljedećeg" samo otkriva sljedeći već određeni element tog redoslijeda.
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor((crypto.getRandomValues(new Uint32Array(1))[0] / 4294967296) * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    let drawOrder = [];
+    let drawnCount = 0;
+    let groupCount = 0;
+    let busy = false;
+    let nositeljValues = {};
+
+    function parsePlayers(raw) {
+      const lines = raw.split('\n').map(s => s.trim()).filter(Boolean);
+      const seen = new Set();
+      const deduped = [];
+      const duplicateNames = [];
+      lines.forEach(name => {
+        const key = name.toLowerCase();
+        if (!seen.has(key)) { seen.add(key); deduped.push(name); }
+        else { duplicateNames.push(name); }
+      });
+      return { names: deduped, duplicateNames };
+    }
+
+    function updateEnteredCount() {
+      const { names } = parsePlayers(document.getElementById('players-textarea').value);
+      document.getElementById('entered-count').textContent = names.length;
+    }
+    document.getElementById('players-textarea').addEventListener('input', updateEnteredCount);
+
+    function clampGroupCount() {
+      const input = document.getElementById('group-count-input');
+      let v = parseInt(input.value, 10) || 2;
+      v = Math.max(2, Math.min(16, v));
+      input.value = v;
+      return v;
+    }
+
+    function syncNositeljValuesFromDOM() {
+      document.querySelectorAll('.nositelj-input').forEach(inp => {
+        nositeljValues[inp.dataset.letter] = inp.value.trim();
+      });
+    }
+
+    function renderNositeljiInputs(count) {
+      syncNositeljValuesFromDOM();
+      const wrap = document.getElementById('nositelji-grid');
+      wrap.innerHTML = GROUP_LETTERS.slice(0, count).map(letter => `
+        <div class="nositelj-row">
+          <span class="nositelj-letter">${letter}</span>
+          <input type="text" class="nositelj-input" data-letter="${letter}" value="${escapeHtml(nositeljValues[letter] || '')}" placeholder="Nositelj grupe ${letter}">
+        </div>`).join('');
+    }
+
+    function updateGroupCount() {
+      const count = clampGroupCount();
+      renderNositeljiInputs(count);
+      return count;
+    }
+
+    document.getElementById('btn-count-minus').addEventListener('click', () => {
+      const input = document.getElementById('group-count-input');
+      input.value = Math.max(2, (parseInt(input.value, 10) || 2) - 1);
+      updateGroupCount();
+    });
+    document.getElementById('btn-count-plus').addEventListener('click', () => {
+      const input = document.getElementById('group-count-input');
+      input.value = Math.min(16, (parseInt(input.value, 10) || 2) + 1);
+      updateGroupCount();
+    });
+    document.getElementById('group-count-input').addEventListener('change', updateGroupCount);
+
+    function buildEmptyGroups(count, seeds) {
+      const grid = document.getElementById('groups-grid');
+      grid.innerHTML = GROUP_LETTERS.slice(0, count).map((letter, i) => {
+        const seedName = seeds[i];
+        const bodyContent = seedName
+          ? `<div class="group-card-player seed">
+               <span class="group-card-player-num seed-badge"><i class="fas fa-star"></i></span>
+               <span class="group-card-player-name">${escapeHtml(seedName)}</span>
+               <span class="seed-tag">NOSITELJ</span>
+             </div>`
+          : `<div class="group-card-empty">čeka izvlačenje...</div>`;
+        return `
+        <div class="group-card" id="group-card-${i}" style="animation-delay:${i * 0.03}s">
+          <div class="group-card-header">
+            <span class="group-card-title">Grupa ${letter}</span>
+            <span class="group-card-count" id="group-count-${i}">${seedName ? 1 : 0} igrača</span>
+          </div>
+          <div class="group-card-body" id="group-body-${i}">${bodyContent}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function addPlayerToGroup(groupIdx, name) {
+      const body = document.getElementById(`group-body-${groupIdx}`);
+      const empty = body.querySelector('.group-card-empty');
+      if (empty) empty.remove();
+      const position = body.querySelectorAll('.group-card-player').length + 1;
+      const row = document.createElement('div');
+      row.className = 'group-card-player';
+      row.innerHTML = `<span class="group-card-player-num">${position}</span><span class="group-card-player-name">${escapeHtml(name)}</span>`;
+      body.appendChild(row);
+      document.getElementById(`group-count-${groupIdx}`).textContent = position + ' igrača';
+    }
+
+    function burstConfetti(container) {
+      const colors = ['#7eb8ff', '#2ecc71', '#f39c12', '#ffffff', '#ffd700'];
+      for (let i = 0; i < 18; i++) {
+        const p = document.createElement('span');
+        p.className = 'confetti-piece';
+        const angle = Math.random() * Math.PI * 2;
+        const dist = 50 + Math.random() * 70;
+        p.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+        p.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+        p.style.background = colors[i % colors.length];
+        p.style.left = '50%';
+        p.style.top = '38%';
+        container.appendChild(p);
+        setTimeout(() => p.remove(), 900);
+      }
+    }
+
+    function flyToGroup(name, fromRect, toEl) {
+      return new Promise(resolve => {
+        const token = document.createElement('div');
+        token.className = 'flying-token';
+        token.textContent = name;
+        token.style.left = fromRect.left + 'px';
+        token.style.top = fromRect.top + 'px';
+        document.body.appendChild(token);
+        const toRect = toEl.getBoundingClientRect();
+        requestAnimationFrame(() => {
+          token.style.transform = `translate(${toRect.left - fromRect.left + 10}px, ${toRect.top - fromRect.top + 10}px) scale(0.55)`;
+          token.style.opacity = '0';
+        });
+        setTimeout(() => { token.remove(); resolve(); }, 700);
+      });
+    }
+
+    async function drawNext() {
+      if (busy || drawnCount >= drawOrder.length) return;
+      busy = true;
+      const btn = document.getElementById('btn-draw-next');
+      btn.disabled = true;
+
+      const player = drawOrder[drawnCount];
+      const groupIdx = drawnCount % groupCount;
+      const letter = GROUP_LETTERS[groupIdx];
+      const spotlight = document.getElementById('spotlight');
+      const spotlightName = document.getElementById('spotlight-name');
+      const spotlightTarget = document.getElementById('spotlight-target');
+
+      spotlightTarget.textContent = letter;
+      spotlightName.classList.remove('landed');
+
+      const remaining = drawOrder.slice(drawnCount);
+      const ticks = 16;
+      let delay = 45;
+      for (let t = 0; t < ticks; t++) {
+        spotlightName.textContent = remaining[Math.floor(Math.random() * remaining.length)];
+        spotlightName.classList.remove('tick');
+        void spotlightName.offsetWidth;
+        spotlightName.classList.add('tick');
+        await sleep(delay);
+        delay += 11;
+      }
+
+      spotlightName.textContent = player;
+      spotlightName.classList.remove('tick');
+      spotlightName.classList.add('landed');
+      spotlight.classList.add('landed');
+      burstConfetti(spotlight);
+      setTimeout(() => spotlight.classList.remove('landed'), 1100);
+
+      await sleep(600);
+
+      const card = document.getElementById(`group-card-${groupIdx}`);
+      card.classList.add('filling');
+      const fromRect = spotlightName.getBoundingClientRect();
+      await flyToGroup(player, fromRect, card);
+
+      drawnCount++;
+      addPlayerToGroup(groupIdx, player);
+      card.classList.remove('filling');
+      card.classList.add('done');
+
+      busy = false;
+      updateDrawUIState();
+    }
+
+    function updateDrawUIState() {
+      const btn = document.getElementById('btn-draw-next');
+      const doneEl = document.getElementById('spotlight-done');
+      document.getElementById('spotlight-progress').textContent = `${drawnCount} / ${drawOrder.length} izvučeno`;
+      const pct = drawOrder.length ? Math.round((drawnCount / drawOrder.length) * 100) : 0;
+      document.getElementById('spotlight-progress-fill').style.width = pct + '%';
+      if (drawnCount >= drawOrder.length) {
+        btn.style.display = 'none';
+        doneEl.style.display = 'block';
+      } else {
+        btn.disabled = false;
+        btn.style.display = '';
+        doneEl.style.display = 'none';
+        btn.innerHTML = drawnCount === 0
+          ? '<i class="fas fa-dice"></i> Izvuci prvog igrača'
+          : `<i class="fas fa-dice"></i> Izvuci sljedećeg igrača (${drawOrder.length - drawnCount} preostalo)`;
+      }
+    }
+
+    document.getElementById('btn-draw-next').addEventListener('click', drawNext);
+
+    // Fast-forward - samo za brzo testiranje toka, ne za stvarni event: trenutno
+    // dovršava sve preostalo izvlačenje bez animacije.
+    document.getElementById('btn-fastforward').addEventListener('click', () => {
+      if (busy || drawnCount >= drawOrder.length || groupCount === 0) return;
+      while (drawnCount < drawOrder.length) {
+        const player = drawOrder[drawnCount];
+        const groupIdx = drawnCount % groupCount;
+        drawnCount++;
+        addPlayerToGroup(groupIdx, player);
+      }
+      const lastGroupIdx = (drawnCount - 1) % groupCount;
+      document.getElementById('spotlight-name').textContent = drawOrder[drawOrder.length - 1];
+      document.getElementById('spotlight-name').classList.remove('tick');
+      document.getElementById('spotlight-target').textContent = GROUP_LETTERS[lastGroupIdx];
+      updateDrawUIState();
+    });
+
+    document.getElementById('btn-create-groups').addEventListener('click', () => {
+      const { names, duplicateNames } = parsePlayers(document.getElementById('players-textarea').value);
+      if (duplicateNames.length > 0) {
+        const n = duplicateNames.length;
+        const maxShow = 5;
+        const shown = duplicateNames.slice(0, maxShow).join(', ');
+        const extra = n > maxShow ? ` i još ${n - maxShow}` : '';
+        const verb = n === 1 ? 'Uklonjeno je' : 'Uklonjena su';
+        const noun = n === 1 ? 'duplicirano ime' : 'duplicirana imena';
+        showToast(`${verb} ${n} ${noun} s popisa jer se pojavljuju više puta: ${shown}${extra}.`);
+      }
+
+      groupCount = clampGroupCount();
+
+      syncNositeljValuesFromDOM();
+      const seeds = {};
+      const seedNamesLower = new Set();
+      GROUP_LETTERS.slice(0, groupCount).forEach((letter, idx) => {
+        const val = (nositeljValues[letter] || '').trim();
+        if (val) {
+          seeds[idx] = val;
+          seedNamesLower.add(val.toLowerCase());
+        }
+      });
+
+      const pool = names.filter(n => !seedNamesLower.has(n.toLowerCase()));
+
+      if (pool.length + Object.keys(seeds).length === 0) {
+        showToast('Unesi barem jednog igrača ili nositelja.', 'error');
+        return;
+      }
+      if (pool.length + Object.keys(seeds).length < groupCount) {
+        showToast('Nema dovoljno igrača (uključujući nositelje) za odabrani broj grupa.', 'error');
+        return;
+      }
+
+      drawOrder = shuffle(pool);
+      drawnCount = 0;
+      busy = false;
+
+      buildEmptyGroups(groupCount, seeds);
+      document.getElementById('spotlight-name').textContent = '?';
+      document.getElementById('spotlight-name').classList.remove('landed');
+      document.getElementById('spotlight-target').textContent = GROUP_LETTERS[0];
+      updateDrawUIState();
+
+      document.getElementById('setup-wrap').style.display = 'none';
+      document.getElementById('draw-wrap').style.display = 'block';
+    });
+
+    document.getElementById('btn-restart').addEventListener('click', () => {
+      drawOrder = [];
+      drawnCount = 0;
+      groupCount = 0;
+      busy = false;
+      document.getElementById('groups-grid').innerHTML = '';
+      document.getElementById('draw-wrap').style.display = 'none';
+      document.getElementById('setup-wrap').style.display = 'block';
+    });
+
+    updateEnteredCount();
+    renderNositeljiInputs(clampGroupCount());
+  </script>
+</body>
+</html>
