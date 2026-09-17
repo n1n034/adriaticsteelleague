@@ -498,6 +498,12 @@
       font-weight: 700;
     }
 
+    .player-nickname {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
     .score-center {
       display: flex;
       flex-direction: column;
@@ -942,6 +948,7 @@
     let players = [];
     let matchesMap = {}; // "kolo_mec" -> match data
     let schedule = []; // [{kolo, matches:[{mec,p1,p2}], bye}]
+    let nicknameByName = {}; // ime igrača -> nadimak (iz korijenske players/{slug} kolekcije, vidi loadGroup)
 
     // -- BRACKET CONFIG (Best of X legs) --
     // Jedan globalni dokument config/bracket-config. Za grupnu fazu (sezonske
@@ -1021,6 +1028,19 @@
       ));
       players = [];
       playersSnap.forEach(p => players.push(p.data().name));
+
+      // Nadimci - korijenska players/{slug} kolekcija (dijeli je i admin panel
+      // za slike), ne grupni roster iznad. Dohvaća se jednom i kešira - isti
+      // popis vrijedi za sve grupe pa nema smisla ponovno čitati pri svakoj
+      // promjeni grupe. Spaja se po imenu (nema slugify() u ovom fileu, a
+      // dokument već ima svoje name polje).
+      if (Object.keys(nicknameByName).length === 0) {
+        const globalPlayersSnap = await getDocs(collection(db, 'players'));
+        globalPlayersSnap.forEach(d => {
+          const data = d.data();
+          if (data.nickname) nicknameByName[data.name] = data.nickname;
+        });
+      }
 
       // Load existing matches
       const matchesSnap = await getDocs(query(
@@ -1200,10 +1220,10 @@
             st2.pts += 2;
           }
 
-          if (m.average1) { st1.avgSum += parseFloat(m.average1); st1.avgCount++; }
-          if (m.average2) { st2.avgSum += parseFloat(m.average2); st2.avgCount++; }
-          if (m.first9_1) { st1.f9Sum += parseFloat(m.first9_1); st1.f9Count++; }
-          if (m.first9_2) { st2.f9Sum += parseFloat(m.first9_2); st2.f9Count++; }
+          if (m.average1 != null) { st1.avgSum += parseFloat(m.average1) || 0; st1.avgCount++; }
+          if (m.average2 != null) { st2.avgSum += parseFloat(m.average2) || 0; st2.avgCount++; }
+          if (m.first9_1 != null) { st1.f9Sum += parseFloat(m.first9_1) || 0; st1.f9Count++; }
+          if (m.first9_2 != null) { st2.f9Sum += parseFloat(m.first9_2) || 0; st2.f9Count++; }
           if (m.bestleg1) st1.bl = st1.bl === 0 ? parseInt(m.bestleg1) : Math.min(st1.bl, parseInt(m.bestleg1) || 999);
           if (m.bestleg2) st2.bl = st2.bl === 0 ? parseInt(m.bestleg2) : Math.min(st2.bl, parseInt(m.bestleg2) || 999);
           if (m.bestcheckout1) st1.bco = Math.max(st1.bco, parseInt(m.bestcheckout1) || 0);
@@ -1335,6 +1355,7 @@
           <div class="match-top">
             <div class="player-side">
               <span class="player-name">${esc(player1)}</span>
+              ${nicknameByName[player1] ? `<span class="player-nickname">(${esc(nicknameByName[player1])})</span>` : ''}
             </div>
             <div class="score-center">
               <span class="match-num">Meč ${mec}</span>
@@ -1342,31 +1363,32 @@
             </div>
             <div class="player-side right">
               <span class="player-name">${esc(player2)}</span>
+              ${nicknameByName[player2] ? `<span class="player-nickname">(${esc(nicknameByName[player2])})</span>` : ''}
             </div>
           </div>
  
           <div class="match-stats ${hasScore ? 'visible' : ''}" id="stats-${kolo}-${mec}">
             <div class="stats-score-row">
-              <input class="score-input" type="number" min="0" max="9" id="s1-${kolo}-${mec}" value="${saved.score ? saved.score.split('-')[0] : ''}" ${disabled} placeholder="0">
+              <input class="score-input" type="number" min="0" max="9" id="s1-${kolo}-${mec}" value="${saved.score ? saved.score.split('-')[0] : ''}" ${disabled} placeholder="0" onfocus="this.select()">
               <span class="score-sep">:</span>
-              <input class="score-input" type="number" min="0" max="9" id="s2-${kolo}-${mec}" value="${saved.score ? saved.score.split('-')[1] : ''}" ${disabled} placeholder="0">
+              <input class="score-input" type="number" min="0" max="9" id="s2-${kolo}-${mec}" value="${saved.score ? saved.score.split('-')[1] : ''}" ${disabled} placeholder="0" onfocus="this.select()">
             </div>
 
             <div class="stats-grid-3col">
               <div class="stat-row-3col">
-                <input class="stat-input" type="number" step="0.01" id="avg1-${kolo}-${mec}" value="${saved.average1 || ''}" ${disabled} placeholder="0.00">
+                <input class="stat-input" type="number" step="0.01" min="0" id="avg1-${kolo}-${mec}" value="${saved.average1 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegative(this)" onfocus="this.select()">
                 <span class="stat-label-mid">AVG</span>
-                <input class="stat-input" type="number" step="0.01" id="avg2-${kolo}-${mec}" value="${saved.average2 || ''}" ${disabled} placeholder="0.00">
+                <input class="stat-input" type="number" step="0.01" min="0" id="avg2-${kolo}-${mec}" value="${saved.average2 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegative(this)" onfocus="this.select()">
               </div>
               <div class="stat-row-3col">
-                <input class="stat-input" type="number" step="0.01" id="f9_1-${kolo}-${mec}" value="${saved.first9_1 || ''}" ${disabled} placeholder="0.00">
+                <input class="stat-input" type="number" step="0.01" min="0" id="f9_1-${kolo}-${mec}" value="${saved.first9_1 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegative(this)" onfocus="this.select()">
                 <span class="stat-label-mid">First 9</span>
-                <input class="stat-input" type="number" step="0.01" id="f9_2-${kolo}-${mec}" value="${saved.first9_2 || ''}" ${disabled} placeholder="0.00">
+                <input class="stat-input" type="number" step="0.01" min="0" id="f9_2-${kolo}-${mec}" value="${saved.first9_2 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegative(this)" onfocus="this.select()">
               </div>
               <div class="stat-row-3col">
-                <input class="stat-input" type="number" step="0.01" id="corate1-${kolo}-${mec}" value="${saved.checkoutrate1 ?? ''}" ${disabled} placeholder="0.00">
+                <input class="stat-input" type="number" step="0.01" min="0" id="corate1-${kolo}-${mec}" value="${saved.checkoutrate1 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegative(this)" onfocus="this.select()">
                 <span class="stat-label-mid">CO rate %</span>
-                <input class="stat-input" type="number" step="0.01" id="corate2-${kolo}-${mec}" value="${saved.checkoutrate2 ?? ''}" ${disabled} placeholder="0.00">
+                <input class="stat-input" type="number" step="0.01" min="0" id="corate2-${kolo}-${mec}" value="${saved.checkoutrate2 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegative(this)" onfocus="this.select()">
               </div>
               <div class="stat-row-3col">
                 <input class="stat-input" type="text" id="coattempts1-${kolo}-${mec}" value="${saved.checkouts1 ?? ''}" ${disabled} placeholder="0/0">
@@ -1374,19 +1396,19 @@
                 <input class="stat-input" type="text" id="coattempts2-${kolo}-${mec}" value="${saved.checkouts2 ?? ''}" ${disabled} placeholder="0/0">
               </div>
               <div class="stat-row-3col">
-                <input class="stat-input" type="number" id="bco1-${kolo}-${mec}" value="${saved.bestcheckout1 || ''}" ${disabled} placeholder="0">
+                <input class="stat-input" type="number" min="0" id="bco1-${kolo}-${mec}" value="${saved.bestcheckout1 ?? ''}" ${disabled} placeholder="0" onblur="clampNonNegative(this)" onfocus="this.select()">
                 <span class="stat-label-mid">Best CO</span>
-                <input class="stat-input" type="number" id="bco2-${kolo}-${mec}" value="${saved.bestcheckout2 || ''}" ${disabled} placeholder="0">
+                <input class="stat-input" type="number" min="0" id="bco2-${kolo}-${mec}" value="${saved.bestcheckout2 ?? ''}" ${disabled} placeholder="0" onblur="clampNonNegative(this)" onfocus="this.select()">
               </div>
               <div class="stat-row-3col">
-                <input class="stat-input" type="number" id="bl1-${kolo}-${mec}" value="${saved.bestleg1 || ''}" ${disabled} placeholder="0">
+                <input class="stat-input" type="number" min="0" id="bl1-${kolo}-${mec}" value="${saved.bestleg1 ?? ''}" ${disabled} placeholder="0" onblur="clampNonNegative(this)" onfocus="this.select()">
                 <span class="stat-label-mid">Best Leg</span>
-                <input class="stat-input" type="number" id="bl2-${kolo}-${mec}" value="${saved.bestleg2 || ''}" ${disabled} placeholder="0">
+                <input class="stat-input" type="number" min="0" id="bl2-${kolo}-${mec}" value="${saved.bestleg2 ?? ''}" ${disabled} placeholder="0" onblur="clampNonNegative(this)" onfocus="this.select()">
               </div>
               <div class="stat-row-3col">
-                <input class="stat-input" type="number" id="180_1-${kolo}-${mec}" value="${saved['180_1'] || ''}" ${disabled} placeholder="0">
+                <input class="stat-input" type="number" min="0" id="180_1-${kolo}-${mec}" value="${saved['180_1'] ?? ''}" ${disabled} placeholder="0" onblur="clampNonNegative(this)" onfocus="this.select()">
                 <span class="stat-label-mid">180s</span>
-                <input class="stat-input" type="number" id="180_2-${kolo}-${mec}" value="${saved['180_2'] || ''}" ${disabled} placeholder="0">
+                <input class="stat-input" type="number" min="0" id="180_2-${kolo}-${mec}" value="${saved['180_2'] ?? ''}" ${disabled} placeholder="0" onblur="clampNonNegative(this)" onfocus="this.select()">
               </div>
             </div>
           </div>
@@ -1448,18 +1470,18 @@
 
       const data = {
         kolo, mec, player1, player2, score,
-        average1: parseFloatOrNull(document.getElementById(`avg1-${kolo}-${mec}`)?.value),
-        average2: parseFloatOrNull(document.getElementById(`avg2-${kolo}-${mec}`)?.value),
-        first9_1: parseFloatOrNull(document.getElementById(`f9_1-${kolo}-${mec}`)?.value),
-        first9_2: parseFloatOrNull(document.getElementById(`f9_2-${kolo}-${mec}`)?.value),
-        bestleg1: parseIntOrNull(document.getElementById(`bl1-${kolo}-${mec}`)?.value),
-        bestleg2: parseIntOrNull(document.getElementById(`bl2-${kolo}-${mec}`)?.value),
-        bestcheckout1: parseIntOrNull(document.getElementById(`bco1-${kolo}-${mec}`)?.value),
-        bestcheckout2: parseIntOrNull(document.getElementById(`bco2-${kolo}-${mec}`)?.value),
-        '180_1': parseIntOrNull(document.getElementById(`180_1-${kolo}-${mec}`)?.value),
-        '180_2': parseIntOrNull(document.getElementById(`180_2-${kolo}-${mec}`)?.value),
-        checkoutrate1: parseFloatOrNull(document.getElementById(`corate1-${kolo}-${mec}`)?.value),
-        checkoutrate2: parseFloatOrNull(document.getElementById(`corate2-${kolo}-${mec}`)?.value),
+        average1: parseFloatClamped(document.getElementById(`avg1-${kolo}-${mec}`)?.value),
+        average2: parseFloatClamped(document.getElementById(`avg2-${kolo}-${mec}`)?.value),
+        first9_1: parseFloatClamped(document.getElementById(`f9_1-${kolo}-${mec}`)?.value),
+        first9_2: parseFloatClamped(document.getElementById(`f9_2-${kolo}-${mec}`)?.value),
+        bestleg1: parseIntClamped(document.getElementById(`bl1-${kolo}-${mec}`)?.value),
+        bestleg2: parseIntClamped(document.getElementById(`bl2-${kolo}-${mec}`)?.value),
+        bestcheckout1: parseIntClamped(document.getElementById(`bco1-${kolo}-${mec}`)?.value),
+        bestcheckout2: parseIntClamped(document.getElementById(`bco2-${kolo}-${mec}`)?.value),
+        '180_1': parseIntClamped(document.getElementById(`180_1-${kolo}-${mec}`)?.value),
+        '180_2': parseIntClamped(document.getElementById(`180_2-${kolo}-${mec}`)?.value),
+        checkoutrate1: parseFloatClamped(document.getElementById(`corate1-${kolo}-${mec}`)?.value),
+        checkoutrate2: parseFloatClamped(document.getElementById(`corate2-${kolo}-${mec}`)?.value),
         checkouts1: document.getElementById(`coattempts1-${kolo}-${mec}`)?.value?.trim() || null,
         checkouts2: document.getElementById(`coattempts2-${kolo}-${mec}`)?.value?.trim() || null,
         timestamp: serverTimestamp(),
@@ -1504,9 +1526,11 @@
         btn.innerHTML = '<i class="fas fa-save"></i> Spremi';
         showToast('Greška: ' + err.message, 'error');
       }
-      if (!leagueParam) {
-        await setDoc(doc(db, 'seasons', ACTIVE_SEASON_ID), { lastUpdated: new Date() }, { merge: true });
-      }
+      // "Zadnje ažuriranje" na naslovnici čita seasons/{ACTIVE_SEASON_ID}.lastUpdated
+      // (vidi index.html loadStandings) - bumpa se za SVAKI spremljeni meč, i
+      // sezonske grupe i AVG lige (avg-leagues/{ACTIVE_SEASON_ID}/{leagueId}/...),
+      // jer je to jedini, zajednički timestamp za cijelu sezonu na stranici.
+      await setDoc(doc(db, 'seasons', ACTIVE_SEASON_ID), { lastUpdated: new Date() }, { merge: true });
     };
 
     // -- DELETE MATCH --
@@ -1551,8 +1575,22 @@
     };
 
     // -- HELPERS --
-    function parseFloatOrNull(v) { const f = parseFloat(v); return isNaN(f) ? null : f; }
-    function parseIntOrNull(v) { const i = parseInt(v); return isNaN(i) ? null : i; }
+    // Prazno/nevaljano/negativno -> 0 (ne null). Ovo je jedino mjesto koje
+    // stvarno JAMČI da statistika nikad ne ostane prazna u bazi - onblur
+    // (clampNonNegative niže) samo daje trenutnu vizualnu povratnu informaciju
+    // dok tipkaš, ali ne pomaže ako admin uopće nikad ne klikne u neko polje
+    // (npr. meč bez ijednog 180-a) jer blur onda nikad ne puca za to polje.
+    function parseFloatClamped(v) { const f = parseFloat(v); return (isNaN(f) || f < 0) ? 0 : f; }
+    function parseIntClamped(v) { const i = parseInt(v); return (isNaN(i) || i < 0) ? 0 : i; }
+    // Poziva se na blur statistike inputa (AVG/First9/CO rate/Best CO/Best Leg/180s)
+    // - prazno ili negativno postaje 0, prije nego saveMatch pročita .value.
+    // Mora biti na window (isti razlog kao window.saveMatch) - ovo je
+    // <script type="module">, inline onblur="clampNonNegative(this)" ne bi
+    // inače vidio funkciju deklariranu samo u modulnom scope-u.
+    window.clampNonNegative = function (el) {
+      const v = parseFloat(el.value);
+      el.value = (isNaN(v) || v < 0) ? 0 : v;
+    };
     function esc(v) {
       return String(v || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }

@@ -1029,6 +1029,14 @@
       line-height: 1.3;
     }
 
+    .player-photo-nickname {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--muted);
+      line-height: 1.2;
+      margin-top: -4px;
+    }
+
     .player-photo-actions {
       display: flex;
       gap: 6px;
@@ -1546,8 +1554,21 @@
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
-    function pf(v) { const f = parseFloat(v); return isNaN(f) ? null : f; }
-    function pi(v) { const i = parseInt(v); return isNaN(i) ? null : i; }
+    // Prazno/nevaljano/negativno -> 0 (ne null). Ovo je jedino mjesto koje
+    // stvarno JAMČI da statistika nikad ne ostane prazna u bazi - onblur
+    // (clampNonNegative niže) samo daje trenutnu vizualnu povratnu informaciju
+    // dok tipkaš, ali ne pomaže ako admin uopće nikad ne klikne u neko polje.
+    function pf(v) { const f = parseFloat(v); return (isNaN(f) || f < 0) ? 0 : f; }
+    function pi(v) { const i = parseInt(v); return (isNaN(i) || i < 0) ? 0 : i; }
+
+    // Poziva se na blur statistike inputa (AVG/First9/CO rate/Best CO/Best
+    // Leg/180s) u bedit popupu - prazno ili negativno postaje 0. Mora biti na
+    // window (<script type="module">, isti razlog kao ostali window.* handleri
+    // niže) da bi inline onblur="clampNonNegative(this)" uopće radio.
+    window.clampNonNegative = function (el) {
+      const v = parseFloat(el.value);
+      el.value = (isNaN(v) || v < 0) ? 0 : v;
+    };
 
     function formatMatchTimestamp(ts) {
       try {
@@ -1600,6 +1621,7 @@
           <div class="player-photo-card" data-name="${esc(p.name)}">
             <div class="player-photo-avatar" id="photo-avatar-${p.id}">${avatarInner}</div>
             <div class="player-photo-name">${esc(p.name)}</div>
+            ${p.nickname ? `<div class="player-photo-nickname">(${esc(p.nickname)})</div>` : ''}
             <input type="file" accept="image/*" id="photo-input-${p.id}" style="display:none"
               onchange="handlePlayerPhotoSelect('${p.id}', this)">
             <div class="player-photo-actions">
@@ -2064,8 +2086,8 @@
         if (m.score === '0-0') {
         } else if (m.score === '5-5') { st1.pts++; st2.pts++; }
         else if (s1 > s2) { st1.pts += 2; } else { st2.pts += 2; }
-        if (m.average1) { st1.avgSum += parseFloat(m.average1); st1.avgCount++; }
-        if (m.average2) { st2.avgSum += parseFloat(m.average2); st2.avgCount++; }
+        if (m.average1 != null) { st1.avgSum += parseFloat(m.average1) || 0; st1.avgCount++; }
+        if (m.average2 != null) { st2.avgSum += parseFloat(m.average2) || 0; st2.avgCount++; }
       });
       return players
         .map(name => { const s = stats[name]; return { name, pts: s.pts, legs: s.legs, avg: s.avgCount > 0 ? s.avgSum / s.avgCount : 0 }; })
@@ -2329,35 +2351,35 @@
         <div class="bedit-section">
           <div class="bedit-section-title">Rezultat</div>
           <div class="bedit-score-row">
-            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[0] || '' : '')}">
+            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[0] || '' : '')}" onfocus="this.select()">
             <span class="bedit-score-sep">-</span>
-            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[1] || '' : '')}">
+            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[1] || '' : '')}" onfocus="this.select()">
           </div>
         </div>
         <div class="bedit-section">
           <div class="bedit-section-title">Statistika</div>
           <div class="bedit-stats-grid">
-            <input class="bedit-stat-input" id="bedit-avg1" type="number" step="0.01" placeholder="AVG" value="${esc(saved.average1 || '')}">
+            <input class="bedit-stat-input" id="bedit-avg1" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(saved.average1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">AVG</span>
-            <input class="bedit-stat-input" id="bedit-avg2" type="number" step="0.01" placeholder="AVG" value="${esc(saved.average2 || '')}">
-            <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" placeholder="First 9" value="${esc(saved.first9_1 || '')}">
+            <input class="bedit-stat-input" id="bedit-avg2" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(saved.average2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">First 9</span>
-            <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" placeholder="First 9" value="${esc(saved.first9_2 || '')}">
-            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" placeholder="CO rate %" value="${esc(saved.checkoutrate1 ?? '')}">
+            <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(saved.checkoutrate1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">CO rate %</span>
-            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" placeholder="CO rate %" value="${esc(saved.checkoutrate2 ?? '')}">
+            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(saved.checkoutrate2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <input class="bedit-stat-input" id="bedit-coatt1" type="text" placeholder="6/30" value="${esc(saved.checkouts1 ?? '')}">
             <span class="bedit-stat-label">Checkouts</span>
             <input class="bedit-stat-input" id="bedit-coatt2" type="text" placeholder="6/30" value="${esc(saved.checkouts2 ?? '')}">
-            <input class="bedit-stat-input" id="bedit-bco1" type="number" placeholder="Best CO" value="${esc(saved.bestcheckout1 || '')}">
+            <input class="bedit-stat-input" id="bedit-bco1" type="number" min="0" placeholder="Best CO" value="${esc(saved.bestcheckout1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">Best CO</span>
-            <input class="bedit-stat-input" id="bedit-bco2" type="number" placeholder="Best CO" value="${esc(saved.bestcheckout2 || '')}">
-            <input class="bedit-stat-input" id="bedit-bl1" type="number" placeholder="Best Leg" value="${esc(saved.bestleg1 || '')}">
+            <input class="bedit-stat-input" id="bedit-bco2" type="number" min="0" placeholder="Best CO" value="${esc(saved.bestcheckout2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bl1" type="number" min="0" placeholder="Best Leg" value="${esc(saved.bestleg1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">Best Leg</span>
-            <input class="bedit-stat-input" id="bedit-bl2" type="number" placeholder="Best Leg" value="${esc(saved.bestleg2 || '')}">
-            <input class="bedit-stat-input" id="bedit-180_1" type="number" placeholder="180s" value="${esc(saved['180_1'] || '')}">
+            <input class="bedit-stat-input" id="bedit-bl2" type="number" min="0" placeholder="Best Leg" value="${esc(saved.bestleg2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-180_1" type="number" min="0" placeholder="180s" value="${esc(saved['180_1'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">180s</span>
-            <input class="bedit-stat-input" id="bedit-180_2" type="number" placeholder="180s" value="${esc(saved['180_2'] || '')}">
+            <input class="bedit-stat-input" id="bedit-180_2" type="number" min="0" placeholder="180s" value="${esc(saved['180_2'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
           </div>
         </div>
         <div class="bedit-actions">
@@ -2475,39 +2497,39 @@
         <div class="bedit-section">
           <div class="bedit-section-title">Rezultat</div>
           <div class="bedit-score-row">
-            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[0] || '' : '')}">
+            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[0] || '' : '')}" onfocus="this.select()">
             <span class="bedit-score-sep">-</span>
-            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[1] || '' : '')}">
+            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[1] || '' : '')}" onfocus="this.select()">
           </div>
         </div>
- 
+
         <div class="bedit-section">
           <div class="bedit-section-title">Statistika</div>
           <div class="bedit-stats-grid">
-            <input class="bedit-stat-input" id="bedit-avg1" type="number" step="0.01" placeholder="AVG" value="${esc(saved.average1 || '')}">
+            <input class="bedit-stat-input" id="bedit-avg1" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(saved.average1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">AVG</span>
-            <input class="bedit-stat-input" id="bedit-avg2" type="number" step="0.01" placeholder="AVG" value="${esc(saved.average2 || '')}">
-            <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" placeholder="First 9" value="${esc(saved.first9_1 || '')}">
+            <input class="bedit-stat-input" id="bedit-avg2" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(saved.average2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">First 9</span>
-            <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" placeholder="First 9" value="${esc(saved.first9_2 || '')}">
-            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" placeholder="CO rate %" value="${esc(saved.checkoutrate1 ?? '')}">
+            <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(saved.checkoutrate1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">CO rate %</span>
-            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" placeholder="CO rate %" value="${esc(saved.checkoutrate2 ?? '')}">
+            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(saved.checkoutrate2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <input class="bedit-stat-input" id="bedit-coatt1" type="text" placeholder="6/30" value="${esc(saved.checkouts1 ?? '')}">
             <span class="bedit-stat-label">Checkouts</span>
             <input class="bedit-stat-input" id="bedit-coatt2" type="text" placeholder="6/30" value="${esc(saved.checkouts2 ?? '')}">
-            <input class="bedit-stat-input" id="bedit-bco1" type="number" placeholder="Best CO" value="${esc(saved.bestcheckout1 || '')}">
+            <input class="bedit-stat-input" id="bedit-bco1" type="number" min="0" placeholder="Best CO" value="${esc(saved.bestcheckout1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">Best CO</span>
-            <input class="bedit-stat-input" id="bedit-bco2" type="number" placeholder="Best CO" value="${esc(saved.bestcheckout2 || '')}">
-            <input class="bedit-stat-input" id="bedit-bl1" type="number" placeholder="Best Leg" value="${esc(saved.bestleg1 || '')}">
+            <input class="bedit-stat-input" id="bedit-bco2" type="number" min="0" placeholder="Best CO" value="${esc(saved.bestcheckout2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bl1" type="number" min="0" placeholder="Best Leg" value="${esc(saved.bestleg1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">Best Leg</span>
-            <input class="bedit-stat-input" id="bedit-bl2" type="number" placeholder="Best Leg" value="${esc(saved.bestleg2 || '')}">
-            <input class="bedit-stat-input" id="bedit-180_1" type="number" placeholder="180s" value="${esc(saved['180_1'] || '')}">
+            <input class="bedit-stat-input" id="bedit-bl2" type="number" min="0" placeholder="Best Leg" value="${esc(saved.bestleg2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-180_1" type="number" min="0" placeholder="180s" value="${esc(saved['180_1'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">180s</span>
-            <input class="bedit-stat-input" id="bedit-180_2" type="number" placeholder="180s" value="${esc(saved['180_2'] || '')}">
+            <input class="bedit-stat-input" id="bedit-180_2" type="number" min="0" placeholder="180s" value="${esc(saved['180_2'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
           </div>
         </div>
- 
+
         <div class="bedit-actions">
           ${currentIsAdmin ? `
           <button class="bedit-btn-delete" id="bedit-delete-btn" onclick="deleteLowerBracketMatch('${matchId}')"><i class="fas fa-trash"></i> Izbriši</button>

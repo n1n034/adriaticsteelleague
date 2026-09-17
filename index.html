@@ -1119,10 +1119,10 @@
           } else if(m.score==='5-5'){st1.draw++;st2.draw++;st1.pts++;st2.pts++;st1.form.push('D');st2.form.push('D');}
           else if(s1>s2){st1.win++;st2.lost++;st1.pts+=2;st1.form.push('W');st2.form.push('L');}
           else{st2.win++;st1.lost++;st2.pts+=2;st1.form.push('L');st2.form.push('W');}
-          if(m.average1){st1.avgSum+=parseFloat(m.average1);st1.avgCount++;}
-          if(m.average2){st2.avgSum+=parseFloat(m.average2);st2.avgCount++;}
-          if(m.first9_1){st1.f9Sum+=parseFloat(m.first9_1);st1.f9Count++;}
-          if(m.first9_2){st2.f9Sum+=parseFloat(m.first9_2);st2.f9Count++;}
+          if(m.average1!=null){st1.avgSum+=parseFloat(m.average1)||0;st1.avgCount++;}
+          if(m.average2!=null){st2.avgSum+=parseFloat(m.average2)||0;st2.avgCount++;}
+          if(m.first9_1!=null){st1.f9Sum+=parseFloat(m.first9_1)||0;st1.f9Count++;}
+          if(m.first9_2!=null){st2.f9Sum+=parseFloat(m.first9_2)||0;st2.f9Count++;}
           if (m.bestleg1) st1.bl = st1.bl === 0 ? parseInt(m.bestleg1) : Math.min(st1.bl, parseInt(m.bestleg1) || 999);
           if (m.bestleg2) st2.bl = st2.bl === 0 ? parseInt(m.bestleg2) : Math.min(st2.bl, parseInt(m.bestleg2) || 999);
           if(m.bestcheckout1)st1.bco=Math.max(st1.bco,parseInt(m.bestcheckout1)||0);
@@ -1396,10 +1396,10 @@
         if (!m || !m.score || !m.player1 || !m.player2) return; // samo odigrani, oba igrača poznata
         const roundKey = `${bracketLabel}: ${(m.roundLabel||id).split('-')[0].trim()}`;
 
-        if (m.average1) { const s1 = ensurePlayer(m.player1); s1.avgSum += parseFloat(m.average1); s1.avgCount++; }
-        if (m.average2) { const s2 = ensurePlayer(m.player2); s2.avgSum += parseFloat(m.average2); s2.avgCount++; }
-        if (m.first9_1) { const s1 = ensurePlayer(m.player1); s1.f9Sum += parseFloat(m.first9_1); s1.f9Count++; }
-        if (m.first9_2) { const s2 = ensurePlayer(m.player2); s2.f9Sum += parseFloat(m.first9_2); s2.f9Count++; }
+        if (m.average1 != null) { const s1 = ensurePlayer(m.player1); s1.avgSum += parseFloat(m.average1)||0; s1.avgCount++; }
+        if (m.average2 != null) { const s2 = ensurePlayer(m.player2); s2.avgSum += parseFloat(m.average2)||0; s2.avgCount++; }
+        if (m.first9_1 != null) { const s1 = ensurePlayer(m.player1); s1.f9Sum += parseFloat(m.first9_1)||0; s1.f9Count++; }
+        if (m.first9_2 != null) { const s2 = ensurePlayer(m.player2); s2.f9Sum += parseFloat(m.first9_2)||0; s2.f9Count++; }
         if (m.bestleg1) { const s1 = ensurePlayer(m.player1); s1.bl = s1.bl === 0 ? parseInt(m.bestleg1) : Math.min(s1.bl, parseInt(m.bestleg1)||999); }
         if (m.bestleg2) { const s2 = ensurePlayer(m.player2); s2.bl = s2.bl === 0 ? parseInt(m.bestleg2) : Math.min(s2.bl, parseInt(m.bestleg2)||999); }
         if (m.bestcheckout1) { const s1 = ensurePlayer(m.player1); s1.bco = Math.max(s1.bco, parseInt(m.bestcheckout1)||0); }
