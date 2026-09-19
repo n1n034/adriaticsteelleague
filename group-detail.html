@@ -1220,10 +1220,13 @@
             st2.pts += 2;
           }
 
-          if (m.average1 != null) { st1.avgSum += parseFloat(m.average1) || 0; st1.avgCount++; }
-          if (m.average2 != null) { st2.avgSum += parseFloat(m.average2) || 0; st2.avgCount++; }
-          if (m.first9_1 != null) { st1.f9Sum += parseFloat(m.first9_1) || 0; st1.f9Count++; }
-          if (m.first9_2 != null) { st2.f9Sum += parseFloat(m.first9_2) || 0; st2.f9Count++; }
+          // 0 se namjerno tretira kao "nema podatka" (isto kao null) - stvaran
+          // AVG/First9 od točno 0.00 nije realan, pa bi ušao u prosjek samo
+          // greškom.
+          if (m.average1) { st1.avgSum += parseFloat(m.average1) || 0; st1.avgCount++; }
+          if (m.average2) { st2.avgSum += parseFloat(m.average2) || 0; st2.avgCount++; }
+          if (m.first9_1) { st1.f9Sum += parseFloat(m.first9_1) || 0; st1.f9Count++; }
+          if (m.first9_2) { st2.f9Sum += parseFloat(m.first9_2) || 0; st2.f9Count++; }
           if (m.bestleg1) st1.bl = st1.bl === 0 ? parseInt(m.bestleg1) : Math.min(st1.bl, parseInt(m.bestleg1) || 999);
           if (m.bestleg2) st2.bl = st2.bl === 0 ? parseInt(m.bestleg2) : Math.min(st2.bl, parseInt(m.bestleg2) || 999);
           if (m.bestcheckout1) st1.bco = Math.max(st1.bco, parseInt(m.bestcheckout1) || 0);
@@ -1376,14 +1379,14 @@
 
             <div class="stats-grid-3col">
               <div class="stat-row-3col">
-                <input class="stat-input" type="number" step="0.01" min="0" id="avg1-${kolo}-${mec}" value="${saved.average1 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegative(this)" onfocus="this.select()">
+                <input class="stat-input" type="number" step="0.01" min="0" id="avg1-${kolo}-${mec}" value="${saved.average1 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
                 <span class="stat-label-mid">AVG</span>
-                <input class="stat-input" type="number" step="0.01" min="0" id="avg2-${kolo}-${mec}" value="${saved.average2 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegative(this)" onfocus="this.select()">
+                <input class="stat-input" type="number" step="0.01" min="0" id="avg2-${kolo}-${mec}" value="${saved.average2 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
               </div>
               <div class="stat-row-3col">
-                <input class="stat-input" type="number" step="0.01" min="0" id="f9_1-${kolo}-${mec}" value="${saved.first9_1 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegative(this)" onfocus="this.select()">
+                <input class="stat-input" type="number" step="0.01" min="0" id="f9_1-${kolo}-${mec}" value="${saved.first9_1 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
                 <span class="stat-label-mid">First 9</span>
-                <input class="stat-input" type="number" step="0.01" min="0" id="f9_2-${kolo}-${mec}" value="${saved.first9_2 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegative(this)" onfocus="this.select()">
+                <input class="stat-input" type="number" step="0.01" min="0" id="f9_2-${kolo}-${mec}" value="${saved.first9_2 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
               </div>
               <div class="stat-row-3col">
                 <input class="stat-input" type="number" step="0.01" min="0" id="corate1-${kolo}-${mec}" value="${saved.checkoutrate1 ?? ''}" ${disabled} placeholder="0.00" onblur="clampNonNegative(this)" onfocus="this.select()">
@@ -1470,10 +1473,10 @@
 
       const data = {
         kolo, mec, player1, player2, score,
-        average1: parseFloatClamped(document.getElementById(`avg1-${kolo}-${mec}`)?.value),
-        average2: parseFloatClamped(document.getElementById(`avg2-${kolo}-${mec}`)?.value),
-        first9_1: parseFloatClamped(document.getElementById(`f9_1-${kolo}-${mec}`)?.value),
-        first9_2: parseFloatClamped(document.getElementById(`f9_2-${kolo}-${mec}`)?.value),
+        average1: parseFloatClampedOrNull(document.getElementById(`avg1-${kolo}-${mec}`)?.value),
+        average2: parseFloatClampedOrNull(document.getElementById(`avg2-${kolo}-${mec}`)?.value),
+        first9_1: parseFloatClampedOrNull(document.getElementById(`f9_1-${kolo}-${mec}`)?.value),
+        first9_2: parseFloatClampedOrNull(document.getElementById(`f9_2-${kolo}-${mec}`)?.value),
         bestleg1: parseIntClamped(document.getElementById(`bl1-${kolo}-${mec}`)?.value),
         bestleg2: parseIntClamped(document.getElementById(`bl2-${kolo}-${mec}`)?.value),
         bestcheckout1: parseIntClamped(document.getElementById(`bco1-${kolo}-${mec}`)?.value),
@@ -1582,12 +1585,26 @@
     // (npr. meč bez ijednog 180-a) jer blur onda nikad ne puca za to polje.
     function parseFloatClamped(v) { const f = parseFloat(v); return (isNaN(f) || f < 0) ? 0 : f; }
     function parseIntClamped(v) { const i = parseInt(v); return (isNaN(i) || i < 0) ? 0 : i; }
+    // AVG i First 9 su iznimka: prazno mora ostati null (ne 0). computeStandings
+    // i index.html ionako 0 tretiraju isto kao null (truthy provjera), ali null
+    // je ovdje ispravnija vrijednost za "nema podatka" (npr. ne prikazuje se
+    // kao 0.00 kad se meč ponovno otvori za uređivanje).
+    function parseFloatClampedOrNull(v) { if (v === '' || v == null) return null; const f = parseFloat(v); return isNaN(f) ? null : (f < 0 ? 0 : f); }
     // Poziva se na blur statistike inputa (AVG/First9/CO rate/Best CO/Best Leg/180s)
     // - prazno ili negativno postaje 0, prije nego saveMatch pročita .value.
     // Mora biti na window (isti razlog kao window.saveMatch) - ovo je
     // <script type="module">, inline onblur="clampNonNegative(this)" ne bi
     // inače vidio funkciju deklariranu samo u modulnom scope-u.
     window.clampNonNegative = function (el) {
+      const v = parseFloat(el.value);
+      el.value = (isNaN(v) || v < 0) ? 0 : v;
+    };
+    // Ista stvar kao clampNonNegative, ali za AVG/First9: prazno polje NE smije
+    // postati "0" na blur, jer bi ga saveMatch onda pročitao kao stvarno
+    // uneseno 0 (parseFloatClampedOrNull prazan string ispravno vraća null,
+    // ali samo ako .value ostane prazan do trenutka spremanja).
+    window.clampNonNegativeOrEmpty = function (el) {
+      if (el.value === '') return;
       const v = parseFloat(el.value);
       el.value = (isNaN(v) || v < 0) ? 0 : v;
     };

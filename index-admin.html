@@ -1560,12 +1560,25 @@
     // dok tipkaš, ali ne pomaže ako admin uopće nikad ne klikne u neko polje.
     function pf(v) { const f = parseFloat(v); return (isNaN(f) || f < 0) ? 0 : f; }
     function pi(v) { const i = parseInt(v); return (isNaN(i) || i < 0) ? 0 : i; }
+    // AVG i First 9 su iznimka: prazno mora ostati null (ne 0). Prosjeci (ovdje
+    // i na index.html) ionako 0 tretiraju isto kao null (truthy provjera), ali
+    // null je ispravnija vrijednost za "nema podatka".
+    function pfOrNull(v) { if (v === '' || v == null) return null; const f = parseFloat(v); return isNaN(f) ? null : (f < 0 ? 0 : f); }
 
     // Poziva se na blur statistike inputa (AVG/First9/CO rate/Best CO/Best
     // Leg/180s) u bedit popupu - prazno ili negativno postaje 0. Mora biti na
     // window (<script type="module">, isti razlog kao ostali window.* handleri
     // niže) da bi inline onblur="clampNonNegative(this)" uopće radio.
     window.clampNonNegative = function (el) {
+      const v = parseFloat(el.value);
+      el.value = (isNaN(v) || v < 0) ? 0 : v;
+    };
+    // Ista stvar kao clampNonNegative, ali za AVG/First9: prazno polje NE smije
+    // postati "0" na blur, jer bi ga bedit save onda pročitao kao stvarno
+    // uneseno 0 (pfOrNull prazan string ispravno vraća null, ali samo ako
+    // .value ostane prazan do trenutka spremanja).
+    window.clampNonNegativeOrEmpty = function (el) {
+      if (el.value === '') return;
       const v = parseFloat(el.value);
       el.value = (isNaN(v) || v < 0) ? 0 : v;
     };
@@ -2086,8 +2099,10 @@
         if (m.score === '0-0') {
         } else if (m.score === '5-5') { st1.pts++; st2.pts++; }
         else if (s1 > s2) { st1.pts += 2; } else { st2.pts += 2; }
-        if (m.average1 != null) { st1.avgSum += parseFloat(m.average1) || 0; st1.avgCount++; }
-        if (m.average2 != null) { st2.avgSum += parseFloat(m.average2) || 0; st2.avgCount++; }
+        // 0 se tretira kao "nema podatka" (isto kao null) - stvaran AVG od
+        // točno 0.00 nije realan, pa bi ušao u prosjek samo greškom.
+        if (m.average1) { st1.avgSum += parseFloat(m.average1) || 0; st1.avgCount++; }
+        if (m.average2) { st2.avgSum += parseFloat(m.average2) || 0; st2.avgCount++; }
       });
       return players
         .map(name => { const s = stats[name]; return { name, pts: s.pts, legs: s.legs, avg: s.avgCount > 0 ? s.avgSum / s.avgCount : 0 }; })
@@ -2359,12 +2374,12 @@
         <div class="bedit-section">
           <div class="bedit-section-title">Statistika</div>
           <div class="bedit-stats-grid">
-            <input class="bedit-stat-input" id="bedit-avg1" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(saved.average1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-avg1" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(saved.average1 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
             <span class="bedit-stat-label">AVG</span>
-            <input class="bedit-stat-input" id="bedit-avg2" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(saved.average2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
-            <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-avg2" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(saved.average2 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_1 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
             <span class="bedit-stat-label">First 9</span>
-            <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_2 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
             <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(saved.checkoutrate1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">CO rate %</span>
             <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(saved.checkoutrate2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
@@ -2418,10 +2433,10 @@
       const data = {
         player1: p1 || null, player2: p2 || null,
         score: score || null, winner: winner || null,
-        average1: pf(document.getElementById('bedit-avg1')?.value),
-        average2: pf(document.getElementById('bedit-avg2')?.value),
-        first9_1: pf(document.getElementById('bedit-f9_1')?.value),
-        first9_2: pf(document.getElementById('bedit-f9_2')?.value),
+        average1: pfOrNull(document.getElementById('bedit-avg1')?.value),
+        average2: pfOrNull(document.getElementById('bedit-avg2')?.value),
+        first9_1: pfOrNull(document.getElementById('bedit-f9_1')?.value),
+        first9_2: pfOrNull(document.getElementById('bedit-f9_2')?.value),
         bestleg1: pi(document.getElementById('bedit-bl1')?.value),
         bestleg2: pi(document.getElementById('bedit-bl2')?.value),
         bestcheckout1: pi(document.getElementById('bedit-bco1')?.value),
@@ -2506,12 +2521,12 @@
         <div class="bedit-section">
           <div class="bedit-section-title">Statistika</div>
           <div class="bedit-stats-grid">
-            <input class="bedit-stat-input" id="bedit-avg1" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(saved.average1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-avg1" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(saved.average1 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
             <span class="bedit-stat-label">AVG</span>
-            <input class="bedit-stat-input" id="bedit-avg2" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(saved.average2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
-            <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-avg2" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(saved.average2 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_1 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
             <span class="bedit-stat-label">First 9</span>
-            <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_2 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
             <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(saved.checkoutrate1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">CO rate %</span>
             <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(saved.checkoutrate2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
@@ -2554,10 +2569,10 @@
       const data = {
         player1: p1 || null, player2: p2 || null,
         score: score || null, winner: winner || null,
-        average1: pf(document.getElementById('bedit-avg1')?.value),
-        average2: pf(document.getElementById('bedit-avg2')?.value),
-        first9_1: pf(document.getElementById('bedit-f9_1')?.value),
-        first9_2: pf(document.getElementById('bedit-f9_2')?.value),
+        average1: pfOrNull(document.getElementById('bedit-avg1')?.value),
+        average2: pfOrNull(document.getElementById('bedit-avg2')?.value),
+        first9_1: pfOrNull(document.getElementById('bedit-f9_1')?.value),
+        first9_2: pfOrNull(document.getElementById('bedit-f9_2')?.value),
         bestleg1: pi(document.getElementById('bedit-bl1')?.value),
         bestleg2: pi(document.getElementById('bedit-bl2')?.value),
         bestcheckout1: pi(document.getElementById('bedit-bco1')?.value),
