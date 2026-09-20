@@ -97,7 +97,42 @@
     }
     .social a:hover { transform: translateY(-2px); background: rgba(38,74,138,0.92); }
 
-    .last-updated { text-align: left; font-size: 1rem; margin: 20px 0; text-shadow: 0 6px 6px rgba(0, 0, 0, 0.5);}
+    .last-updated { text-align: left; font-size: 1rem; font-weight: 700;  text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0; text-shadow: 0 6px 6px rgba(0, 0, 0, 0.5);}
+
+    /* -- ZADNJI MEČEVI -- */
+    .recent-matches-wrap { margin: 0 0 22px; animation: fadeInUp 0.5s ease both; }
+    .recent-matches-title {
+      font-size: 0.82rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 6px 6px rgba(0, 0, 0, 0.5);
+      margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .recent-matches-row {
+      overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent);
+    }
+    .recent-matches-track {
+      display: flex; gap: 10px; width: max-content; cursor: grab; touch-action: pan-y;
+      animation: recentMatchesSlide linear infinite; animation-duration: var(--rm-duration, 26s);
+    }
+    .recent-matches-track:active { cursor: grabbing; }
+    .recent-matches-row.no-slide .recent-matches-track { animation: none; cursor: default; touch-action: auto; }
+    .recent-matches-wrap:hover .recent-matches-track { animation-play-state: paused; }
+    @keyframes recentMatchesSlide {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+    .recent-match-chip {
+      flex: 0 0 auto; background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+      padding: 10px 16px; white-space: nowrap; box-shadow: var(--shadow);
+    }
+    .recent-match-players { font-size: 0.85rem; font-weight: 700; }
+    .recent-match-score { color: var(--table-head); background: rgba(255,255,255,0.9); border-radius: 6px; padding: 1px 7px; margin: 0 6px; font-weight: 800; }
+    .recent-match-meta { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
+
+    @keyframes recentMatchHighlightPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(126,184,255,0); }
+      25% { box-shadow: 0 0 0 4px rgba(126,184,255,0.65); }
+    }
+    .popup-match.highlight-target { animation: recentMatchHighlightPulse 1.1s ease-out 2; border-radius: 14px; }
 
     /* -- PLAYER SEARCH -- */
     .player-search-wrap {
@@ -378,6 +413,33 @@
       background: rgba(126,184,255,0.18);
       border-color: rgba(126,184,255,0.35);
       transform: scale(1.05);
+    }
+
+    /* .match-popup je max-width:680px i centriran (overlay justify-content:
+       center) - desni rub mu je uvijek na 50vw + 340px čim ima mjesta za pun
+       max-width. calc(50vw - 340px - 58px) računa poziciju gumba 16px desno
+       od tog ruba (58 = 42px širina gumba + 16px razmak). max(20px, ...) je
+       ključan: na uskim ekranima calc ide negativan (nema mjesta sa strane),
+       pa max() vrati 20px i gumb ostane u kutu ekrana - bez toga bi gumb na
+       srednjim širinama (~700-830px) izlazio izvan viewporta jer bi formula
+       gurnula desni rub gumba preko ruba ekrana. Glatko klizi između "u kutu"
+       i "sa strane popupa" bez skoka na točnoj granici, bez potrebe za
+       @media prijelomom za ovo - samo se 480px niže brine za veličinu gumba
+       na sitnim telefonima. */
+    .popup-fixed-close {
+      position: fixed; top: 24px; right: max(20px, calc(50vw - 340px - 58px)); z-index: 1010;
+      width: 42px; height: 42px; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(10,19,38,0.85); backdrop-filter: blur(4px);
+      color: #fff; font-size: 1.1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+    .popup-fixed-close:hover {
+      background: rgba(38,74,138,0.92); border-color: rgba(126,184,255,0.35); transform: scale(1.05);
+    }
+    @media (max-width: 480px) {
+      .popup-fixed-close { top: 12px; right: 12px; width: 38px; height: 38px; font-size: 1rem; }
     }
 
     .popup-match {
@@ -917,9 +979,6 @@
       .bracket-round { min-width: 140px; }
       .bracket-player { font-size: 0.72rem; padding: 6px 8px; }
       .yt {height: 200px;}
-      /* Na mobitelu (uža širina) samo malo smanji horizontalni padding/gapove
-         da se avatari+imena ne stisnu previše - fontovi/veličine ostaju iste
-         kao u baznim pravilima (već zlatna sredina, ne treba dalje mijenjati). */
       .match-popup { padding: 18px; }
       .mpc-players { padding: 22px 14px; gap: 8px; }
       .mpc-stats { padding: 14px 14px; }
@@ -954,6 +1013,8 @@
       </div>
 
       <div class="last-updated">Zadnje ažuriranje: <span id="updated-time">-</span></div>
+
+      <div class="recent-matches-wrap" id="recent-matches-wrap" style="display:none;"></div>
 
       <div class="player-search-wrap">
         <div class="player-search-box">
@@ -1020,8 +1081,10 @@
 
     </div>
   </div>
-
-  <!-- POPUP -->
+   
+  <button id="popup-fixed-close-btn" class="popup-fixed-close" style="display:none;" onclick="closePopup()" aria-label="Zatvori">
+    <i class="fas fa-times"></i>
+  </button>
   <div id="match-popup-overlay" class="match-popup-overlay" style="display:none;" onclick="closePopup(event)">
     <div class="match-popup" id="match-popup-content"></div>
   </div>
@@ -1102,6 +1165,163 @@
         rotating.unshift(rotating.pop());
       }
       return rounds;
+    }
+
+    // -- ZADNJI MEČEVI --
+    // Kratka dinamička lista odigranih mečeva (grupe, AVG lige, bracket, lower
+    // bracket) unutar zadnjih N sati - broj mečeva tjedno je velik (48+) i
+    // raspoređeno se upisuju kroz cijeli tjedan (dogovori igrača), pa ni fiksni
+    // broj zadnjih mečeva ni "trenutno kolo" ne daju kratku, uvijek-svježu
+    // listu - klizni vremenski prozor od zadnjeg upisa (m.timestamp) to rješava.
+    // RECENT_MATCHES_WINDOW_HOURS je namjerno izdvojen radi lakše promjene.
+    const RECENT_MATCHES_WINDOW_HOURS = 72;
+    const RECENT_MATCHES_MAX = 15; // sigurnosna gornja granica ako bi prozor uhvatio puno mečeva odjednom
+    let recentMatchesPool = [];
+
+    // onclickJs je gotov JS pozivni string (npr. "openKoloPopup(3,5)") - sve
+    // izvore identifikatora (groupIndex/kolo/uid/matchId) postavlja pozivatelj
+    // iz vlastitih, ne-korisničkih vrijednosti (brojevi, poznati leagueId,
+    // Firestore doc id), nikad iz imena igrača, pa je sigurno ubaciti izravno.
+    function pushRecentMatch(m, label, onclickJs) {
+      if (!m || !m.score || !m.timestamp) return;
+      const ts = typeof m.timestamp.toMillis === 'function' ? m.timestamp.toMillis() : new Date(m.timestamp).getTime();
+      if (!ts || isNaN(ts)) return;
+      recentMatchesPool.push({ player1: m.player1, player2: m.player2, score: m.score, ts, label, onclickJs });
+    }
+
+    function renderRecentMatches() {
+      const wrap = document.getElementById('recent-matches-wrap');
+      if (!wrap) return;
+      const cutoff = Date.now() - RECENT_MATCHES_WINDOW_HOURS * 60 * 60 * 1000;
+      const seen = new Set();
+      const items = recentMatchesPool
+        .filter(m => m.ts >= cutoff)
+        .sort((a, b) => b.ts - a.ts)
+        .filter(m => {
+          const key = `${m.player1}|${m.player2}|${m.score}|${m.ts}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .slice(0, RECENT_MATCHES_MAX);
+
+      if (!items.length) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+      wrap.style.display = '';
+
+      const chipHtml = m => `
+            <div class="recent-match-chip"${m.onclickJs ? ` onclick="${m.onclickJs}" style="cursor:pointer;"` : ''}>
+              <div class="recent-match-players">${escapeHtml(m.player1 || '?')}<span class="recent-match-score">${escapeHtml(m.score)}</span>${escapeHtml(m.player2 || '?')}</div>
+              <div class="recent-match-meta">${escapeHtml(m.label || '')}</div>
+            </div>`;
+
+      // Infinite slider (traka duplicirana - kod translateX(-50%) izgleda
+      // besprijekorno, jer je druga polovica identična prvoj). Ispod praga od
+      // 4 kartice duplo/animacija izgleda čudno (prekratko/skače), pa se onda
+      // prikaže statično bez animacije (klasa no-slide gasi @keyframes).
+      const SLIDE_MIN_ITEMS = 4;
+      const slide = items.length >= SLIDE_MIN_ITEMS;
+      const chipsHtml = items.map(chipHtml).join('');
+      const trackHtml = slide ? chipsHtml + chipsHtml : chipsHtml;
+      const duration = Math.max(items.length * 4, 18);
+
+      wrap.innerHTML = `
+        <div class="recent-matches-title"><i class="fas fa-bolt"></i> Zadnji mečevi:</div>
+        <div class="recent-matches-row${slide ? '' : ' no-slide'}">
+          <div class="recent-matches-track" data-duration="${duration}" style="--rm-duration:${duration}s;">${trackHtml}</div>
+        </div>`;
+    }
+
+    // -- ZADNJI MEČEVI: DRAG ZA SLIDER --
+    // Klasičan "draggable marquee" trik: dok se vuče, @keyframes animacija se
+    // posve isključi (animation:none) i transform se ručno postavlja po
+    // pokazivaču; na otpuštanje, animacija se vrati ali s negativnim
+    // animation-delay koji odgovara točnoj poziciji gdje je korisnik pustio -
+    // pa nastavlja glatko dalje umjesto da skoči na početak. Prag pomaka
+    // (RM_DRAG_THRESHOLD) razlikuje "klik na meč" od "vuci slider" - dok se
+    // taj prag ne pređe, klik i dalje normalno otvara meč.
+    const RM_DRAG_THRESHOLD = 6;
+    let rmDrag = null;
+
+    function rmCurrentTranslateX(el) {
+      const t = getComputedStyle(el).transform;
+      if (!t || t === 'none') return 0;
+      const m = t.match(/^matrix\(([^)]+)\)$/);
+      if (!m) return 0;
+      return parseFloat(m[1].split(',')[4]) || 0;
+    }
+
+    // Bitno: dok se prag pomaka (RM_DRAG_THRESHOLD) ne pređe, ne smije se
+    // dirnuti ni transform ni animation - inače i običan klik (pointerdown pa
+    // odmah pointerup, bez pomaka) resetira animaciju usred klika, što zna
+    // spriječiti da se onclick na kartici uopće okine (baš ovo je bio bug:
+    // svaki klik je samo "resetirao" slider umjesto da otvori meč).
+    function rmDragStart(e) {
+      const track = e.target.closest('.recent-matches-track');
+      if (!track || track.closest('.no-slide')) return;
+      const halfWidth = track.scrollWidth / 2;
+      if (!halfWidth) return;
+      rmDrag = {
+        track, halfWidth,
+        startX: e.clientX,
+        pointerId: e.pointerId,
+        baseX: null, // postavlja se tek u rmDragMove, kad prag stvarno bude pređen
+        duration: parseFloat(track.dataset.duration) || 26,
+        moved: false
+      };
+    }
+
+    function rmDragMove(e) {
+      if (!rmDrag) return;
+      const dx = e.clientX - rmDrag.startX;
+      if (!rmDrag.moved) {
+        if (Math.abs(dx) <= RM_DRAG_THRESHOLD) return;
+        rmDrag.moved = true;
+        rmDrag.baseX = rmCurrentTranslateX(rmDrag.track);
+        rmDrag.track.style.animation = 'none';
+        try { rmDrag.track.setPointerCapture(rmDrag.pointerId); } catch (err) { /* ignoriraj */ }
+      }
+      let x = (rmDrag.baseX + dx) % rmDrag.halfWidth;
+      if (x > 0) x -= rmDrag.halfWidth; // drži unutar [-halfWidth, 0] - beskonačno u oba smjera
+      rmDrag.track.style.transform = `translateX(${x}px)`;
+    }
+
+    function rmDragEnd() {
+      if (!rmDrag) return;
+      const { track, halfWidth, duration, moved } = rmDrag;
+      if (moved) {
+        const x = rmCurrentTranslateX(track);
+        const fraction = Math.abs(x) / halfWidth;
+        track.style.transform = '';
+        track.style.animation = '';
+        track.style.animationDelay = `-${(fraction * duration).toFixed(3)}s`;
+        // Spriječi da se ova vuka protumači kao klik na karticu ispod prsta/miša.
+        const suppressClick = ev => { ev.stopPropagation(); ev.preventDefault(); };
+        track.addEventListener('click', suppressClick, { capture: true, once: true });
+      }
+      // nije moved -> ništa nije ni dirnuto (animation/transform), klik prolazi normalno
+      rmDrag = null;
+    }
+
+    document.getElementById('recent-matches-wrap')?.addEventListener('pointerdown', rmDragStart);
+    window.addEventListener('pointermove', rmDragMove);
+    window.addEventListener('pointerup', rmDragEnd);
+    window.addEventListener('pointercancel', rmDragEnd);
+
+    // Bracket/lower-bracket match dokumenti nemaju spremljen roundLabel (samo
+    // player1/player2/score/timestamp, id oblika "QF_2") - ROUND_IDS/
+    // ROUND_LABELS/LROUND_IDS/LROUND_LABELS su definirani niže u ovom fileu,
+    // ali su const na top-level scope-u pa su dostupni do trenutka kad se ova
+    // funkcija stvarno pozove (asinkroni bootstrap, nakon punog parsea filea).
+    function bracketRoundLabelFromId(id, lower) {
+      if (id === 'THIRD_1') return 'Utakmica za 3. mjesto';
+      const cut = id.lastIndexOf('_');
+      const prefix = cut === -1 ? id : id.slice(0, cut);
+      const num = cut === -1 ? '' : id.slice(cut + 1);
+      const ids = lower ? LROUND_IDS : ROUND_IDS;
+      const labels = lower ? LROUND_LABELS : ROUND_LABELS;
+      const i = ids.indexOf(prefix);
+      const base = i !== -1 ? labels[i] : prefix;
+      return num ? `${base} - Meč ${num}` : base;
     }
 
     function computeStandings(players, schedule, matchesMap) {
@@ -2201,7 +2421,11 @@
       showPopup('', body, '');
     }
 
-    function openKoloPopup(groupIndex, kolo) {
+    // highlightMec - opcionalno, kad se popup otvara izravno na jedan meč (npr.
+    // klik na "Zadnji mečevi" karticu) - nakon rendera se skrola/istakne baš
+    // taj meč unutar liste svih mečeva tog kola, umjesto da se ostavi da ga
+    // korisnik sam traži.
+    function openKoloPopup(groupIndex, kolo, highlightMec) {
       const data = koloDataMap[`${groupIndex}_${kolo}`];
       if (!data) return;
       const {matches, matchesMap, bye} = data;
@@ -2213,10 +2437,12 @@
           titleLabel: `Meč ${mec}`,
           legs,
           matchTimestamp: saved.timestamp || null,
-          p1: player1, p2: player2, d: saved, seasonId: window.ACTIVE_SEASON_ID
+          p1: player1, p2: player2, d: saved, seasonId: window.ACTIVE_SEASON_ID,
+          domId: `popup-match-${groupIndex}-${kolo}-${mec}`
         });
       }).join('');
       showPopup(`Kolo ${kolo}`, matchesHtml, byeHtml);
+      if (highlightMec != null) scrollToPopupMatch(`popup-match-${groupIndex}-${kolo}-${highlightMec}`);
     }
 
     // -- PAIR OFFSET (za connector linije) --
@@ -2335,7 +2561,9 @@
     //   p1, p2       - imena igrača
     //   d            - objekt s podatcima meča (score, average1/2, itd.)
     //   seasonId     - sezona kojoj meč pripada (za +/- diff vs sezonski prosjek u statDiffHtml)
-    function renderMatchPopupCard({ titleLabel, legs, matchTimestamp, p1, p2, d, seasonId }) {
+    //   domId        - opcionalni id na wrapper divu, za scrollIntoView/highlight kad se
+    //                  na ovaj meč dolazi izravno (npr. iz "Zadnji mečevi" na naslovnici)
+    function renderMatchPopupCard({ titleLabel, legs, matchTimestamp, p1, p2, d, seasonId, domId }) {
       const score = d?.score || '';
       const hasScore = !!score;
       const scoreParts = hasScore ? score.split('-') : ['', ''];
@@ -2468,17 +2696,39 @@
     function showPopup(title, bodyHtml, extraHtml) {
       document.getElementById('match-popup-content').innerHTML = `${extraHtml}${bodyHtml}`;
       document.getElementById('match-popup-overlay').style.display = 'flex';
+      document.getElementById('popup-fixed-close-btn').style.display = 'flex';
       document.body.style.overflow = 'hidden';
+    }
+
+    // Skrola na konkretan .popup-match unutar upravo otvorenog popupa (koji
+    // može sadržavati više mečeva jednog kola) i kratko ga istakne pulsom -
+    // koristi ga openKoloPopup/openArchiveKoloPopup kad se stiže izravno na
+    // jedan meč (npr. "Zadnji mečevi" na naslovnici), a taj meč nije nužno
+    // prvi/vidljiv u popupu.
+    function scrollToPopupMatch(domId) {
+      if (!domId) return;
+      requestAnimationFrame(() => {
+        const el = document.getElementById(domId);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('highlight-target');
+        setTimeout(() => el.classList.remove('highlight-target'), 2400);
+      });
     }
 
     function closePopup(e) {
       if (e && e.target !== document.getElementById('match-popup-overlay')) return;
       document.getElementById('match-popup-overlay').style.display = 'none';
+      document.getElementById('popup-fixed-close-btn').style.display = 'none';
       document.body.style.overflow = '';
     }
 
     document.addEventListener('keydown', e => {
-      if (e.key==='Escape') { document.getElementById('match-popup-overlay').style.display='none'; document.body.style.overflow=''; }
+      if (e.key==='Escape') {
+        document.getElementById('match-popup-overlay').style.display='none';
+        document.getElementById('popup-fixed-close-btn').style.display='none';
+        document.body.style.overflow='';
+      }
     });
 
     // Mapa groupIndex -> funkcija koja gradi (standingsHtml, rasporedHtml) na zahtjev.
@@ -2727,7 +2977,8 @@
       toggleAccordion(item, !item.classList.contains('open'));
     }
 
-    function openArchiveKoloPopup(uid, kolo) {
+    // highlightMec - vidi komentar na openKoloPopup (isti obrazac).
+    function openArchiveKoloPopup(uid, kolo, highlightMec) {
       const data = archiveKoloDataMap[`${uid}_${kolo}`];
       if (!data) return;
       const {matches, matchesMap, bye} = data;
@@ -2739,17 +2990,23 @@
       const seasonMatch = uid.match(/^arch-(.+)-\d+$/);
       const avgMatch = uid.match(/^avg-(.+)-\d+$/);
       const seasonId = seasonMatch ? seasonMatch[1] : (avgMatch ? `avg:${window.ACTIVE_SEASON_ID}:${avgMatch[1]}` : null);
+      // AVG lige se igraju po istom "Best of X legs" konceptu kao sezonske grupe
+      // (samo drugo polje u bracketConfig, vidi getGroupPhaseLegs) - arhivske
+      // prošle sezone nemaju taj koncept pa ostaju bez legs bloka.
+      const legs = avgMatch ? getGroupPhaseLegs(true) : null;
       const byeHtml = bye ? `<div style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">BYE: ${escapeHtml(bye)}</div>` : '';
       const matchesHtml = matches.map(({mec,player1,player2}) => {
         const saved = matchesMap[`${kolo}_${mec}`] || {};
         return renderMatchPopupCard({
           titleLabel: `Meč ${mec}`,
-          legs: null,
+          legs,
           matchTimestamp: saved.timestamp || null,
-          p1: player1, p2: player2, d: saved, seasonId
+          p1: player1, p2: player2, d: saved, seasonId,
+          domId: `popup-match-${uid}-${kolo}-${mec}`
         });
       }).join('');
       showPopup(`Kolo ${kolo}`, matchesHtml, byeHtml);
+      if (highlightMec != null) scrollToPopupMatch(`popup-match-${uid}-${kolo}-${highlightMec}`);
     }
     window.handleArchiveAccordionClick = handleArchiveAccordionClick;
     window.openArchiveKoloPopup = openArchiveKoloPopup;
@@ -2797,6 +3054,11 @@
       const grp  = m[2];
       const standings = gsm[grp];
       if (!standings || !standings[rank]) return null;
+      // Dok igrač nije odigrao nijedan meč, computeStandings sortira sve
+      // izjednačene na 0 stabilnim sortom - vrati ih u redoslijedu upisa u
+      // grupu (nositelj prvi), što IZGLEDA kao razriješen plasman iako nije.
+      // Zato se ime prikazuje tek kad taj rang stvarno ima odigranu partiju.
+      if (!standings[rank].total) return null;
       return standings[rank].name;
     }
 
@@ -3199,12 +3461,18 @@
       if (!file || !name) return;
       const slug = slugify(name);
       try {
-        // Stari neregledan zahtjev (ako postoji) - obrisati mu Storage fajl prije novog uploada
-        const existingReq = await getDoc(doc(db, 'photoRequests', slug));
-        if (existingReq.exists()) {
-          const oldPath = storagePathFromDownloadURL(existingReq.data().photoURL || '');
-          if (oldPath) { try { await deleteObject(ref(storage, oldPath)); } catch (e) { /* ignoriraj */ } }
-        }
+        // Stari nepregledan zahtjev (ako postoji) - obrisati mu Storage fajl prije novog
+        // uploada. Best-effort: photoRequests/{slug} čitanje je po pravilima admin-only
+        // (javna stranica nema prijavu), pa ovo za anonimnog posjetitelja UVIJEK baci
+        // permission-denied - ne smije srušiti stvarni upload ispod, samo se stari fajl
+        // tad neće očistiti (ostane siroče u Storageu dok ga admin ne odobri/odbije).
+        try {
+          const existingReq = await getDoc(doc(db, 'photoRequests', slug));
+          if (existingReq.exists()) {
+            const oldPath = storagePathFromDownloadURL(existingReq.data().photoURL || '');
+            if (oldPath) { try { await deleteObject(ref(storage, oldPath)); } catch (e) { /* ignoriraj */ } }
+          }
+        } catch (e) { /* ignoriraj - vidi komentar iznad */ }
 
         const blob = await compressImageForUpload(file, 500, 0.85);
         const storageRef = ref(storage, `player-photos-pending/${slug}-${Date.now()}.jpg`);
@@ -3239,12 +3507,12 @@
           const players = []; playersSnap.forEach(p => players.push(p.data().name));
 
           const matchesSnap = await getDocs(collection(db,'seasons',seasonId,'groups',group.id,'matches'));
-          const matchesMap  = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; });
+          const matchesMap  = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; pushRecentMatch(d, group.name, `openKoloPopup(${i+1},${d.kolo},${d.mec})`); });
 
           const schedule        = generateSchedule(players);
           const visibleSchedule = schedule.filter(r => r.kolo <= maxKolo);
           const standings       = computeStandings(players, schedule, matchesMap);
-          
+
           schedule.forEach(({ kolo, matches }) => {
             matches.forEach(({ mec }) => {
               const m = matchesMap[`${kolo}_${mec}`];
@@ -3277,6 +3545,7 @@
         latestBestMatchByKolo = bestMatchByKolo;
         latestMvpByKolo = mvpByKolo;
         refreshNajboljiWithPlayoffs();
+        renderRecentMatches();
 
         if (seasonDoc.exists() && seasonDoc.data().lastUpdated) {
           document.getElementById('updated-time').textContent = seasonDoc.data().lastUpdated.toDate().toLocaleString('hr-HR');
@@ -3323,10 +3592,11 @@
       try {
         const bracketSnap = await getDocs(collection(db,'seasons',seasonId,'bracket'));
         const matchesByRound = {};
-        bracketSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
+        bracketSnap.forEach(d => { const data = d.data(); matchesByRound[d.id] = data; pushRecentMatch(data, bracketRoundLabelFromId(d.id, false), `openBracketMatchPopup('${d.id}')`); });
         renderBracket(matchesByRound, groupStandingsMap);
         upperBracketReady = true;
         refreshNajboljiWithPlayoffs();
+        renderRecentMatches();
       } catch(err) {
         document.getElementById('gornji-zdrijeb-content').innerHTML =
           '<div class="error-state">Greška pri učitavanju ždrijeba: ' + escapeHtml(err.message) + '</div>';
@@ -3337,10 +3607,11 @@
       try {
         const lowerBracketSnap = await getDocs(collection(db,'seasons',seasonId,'lower-bracket'));
         const matchesByRound = {};
-        lowerBracketSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
+        lowerBracketSnap.forEach(d => { const data = d.data(); matchesByRound[d.id] = data; pushRecentMatch(data, bracketRoundLabelFromId(d.id, true), `openLowerBracketMatchPopup('${d.id}')`); });
         renderLowerBracket(matchesByRound, groupStandingsMap || {});
         lowerBracketReady = true;
         refreshNajboljiWithPlayoffs();
+        renderRecentMatches();
       } catch(err) {
         document.getElementById('donji-zdrijeb-content').innerHTML =
           '<div class="error-state">Greška pri učitavanju ždrijeba: ' + escapeHtml(err.message) + '</div>';
@@ -3553,7 +3824,7 @@
         const players = []; playersSnap.forEach(p => players.push(p.data().name));
 
         const matchesSnap = await getDocs(collection(db,'avg-leagues',seasonId,leagueId,group.id,'matches'));
-        const matchesMap = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; });
+        const matchesMap = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; pushRecentMatch(d, `${AVG_LEAGUE_LABELS[leagueId] || leagueId} - ${group.name}`, `openArchiveKoloPopup('avg-${leagueId}-${i+1}',${d.kolo},${d.mec})`); });
 
         const schedule        = generateAvgSchedule(players);
         const visibleSchedule = schedule.filter(r => r.kolo <= maxAvgKolo);
@@ -3578,6 +3849,7 @@
       window.playerSeasonAvgMap = window.playerSeasonAvgMap || {};
       window.playerSeasonAvgMap[avgKey] = {};
       groupsData.forEach(g => g.standings.forEach(p => { window.playerSeasonAvgMap[avgKey][p.name] = { avg: p.avg, f9: p.f9 }; }));
+      renderRecentMatches();
     }
 
     async function loadAvgLige(leagueId) {
