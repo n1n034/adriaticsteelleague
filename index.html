@@ -415,6 +415,28 @@
       transform: scale(1.05);
     }
 
+    .popup-back-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      height: 42px;
+      padding: 0 16px;
+      border-radius: 21px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+
+    .popup-back-btn:hover {
+      background: rgba(126,184,255,0.18);
+      border-color: rgba(126,184,255,0.35);
+      transform: scale(1.05);
+    }
+
     /* .match-popup je max-width:680px i centriran (overlay justify-content:
        center) - desni rub mu je uvijek na 50vw + 340px čim ima mjesta za pun
        max-width. calc(50vw - 340px - 58px) računa poziciju gumba 16px desno
@@ -427,7 +449,7 @@
        @media prijelomom za ovo - samo se 480px niže brine za veličinu gumba
        na sitnim telefonima. */
     .popup-fixed-close {
-      position: fixed; top: 24px; right: max(20px, calc(50vw - 340px - 58px)); z-index: 1010;
+      position: fixed; top: 55px; right: max(20px, calc(50vw - 252px - 58px)); z-index: 1010;
       width: 42px; height: 42px; border-radius: 50%;
       border: 1px solid rgba(255,255,255,0.15);
       background: rgba(10,19,38,0.85); backdrop-filter: blur(4px);
@@ -439,7 +461,7 @@
       background: rgba(38,74,138,0.92); border-color: rgba(126,184,255,0.35); transform: scale(1.05);
     }
     @media (max-width: 480px) {
-      .popup-fixed-close { top: 12px; right: 12px; width: 38px; height: 38px; font-size: 1rem; }
+      .popup-fixed-close { top: 46px; right: 38px; width: 38px; height: 38px; font-size: 1rem; }
     }
 
     .popup-match {
@@ -1174,13 +1196,19 @@
     // broj zadnjih mečeva ni "trenutno kolo" ne daju kratku, uvijek-svježu
     // listu - klizni vremenski prozor od zadnjeg upisa (m.timestamp) to rješava.
     //
-    // sliderConfig je jedino mjesto za podešavanje slidera:
-    //   rangeDays - koliko dana unatrag ulazi u listu (klizni prozor, vidi gore)
-    //   maxItems  - sigurnosna gornja granica broja kartica ako rangeDays uhvati puno mečeva odjednom
-    const sliderConfig = {
-      rangeDays: 3,
-      maxItems: 15,
-    };
+    // Raspon i broj kartica su podesivi bez deploya kroz isti config/active-season
+    // Firestore dokument koji već nosi seasonId/trenutnoKolo/trenutnoKoloAvg (vidi
+    // resolveActiveSeasonId niže u fileu) - polje sliderConfig, mapa s tri broja:
+    //   rangeDays    - koliko dana unatrag ulazi u listu (klizni prozor, vidi gore) -
+    //                  primjenjuje se bez obzira na broj mečeva u tom rasponu
+    //   maxItems     - gornja granica broja mečeva dostupnih u "Zadnji mečevi" popupu
+    //                  (klik na karticu - vidi openRecentMatchesPopup niže)
+    //   sliderItems  - koliko od tih (maxItems) mečeva se stvarno prikazuje kao
+    //                  kartice u sliderru na naslovnici (uvijek najnovijih N, jer
+    //                  je currentRecentItems već sortiran po vremenu)
+    // SLIDER_CONFIG_DEFAULTS je fallback kad polje/dokument ne postoji ili je
+    // neispravno - isti obrazac kao parseInt(activeSeasonConfig.trenutnoKolo) || 1.
+    const SLIDER_CONFIG_DEFAULTS = { rangeDays: 3, maxItems: 15, sliderItems: 6 };
     let recentMatchesPool = [];
     // Snapshot točno onih kartica koje su trenutno prikazane u sliderru - puni ga
     // renderRecentMatches, čita openRecentMatchesPopup (klik na karticu otvara
@@ -1201,7 +1229,11 @@
     function renderRecentMatches() {
       const wrap = document.getElementById('recent-matches-wrap');
       if (!wrap) return;
-      const cutoff = Date.now() - sliderConfig.rangeDays * 24 * 60 * 60 * 1000;
+      const cfg = window.activeSeasonConfig?.sliderConfig || {};
+      const rangeDays = parseInt(cfg.rangeDays) || SLIDER_CONFIG_DEFAULTS.rangeDays;
+      const maxItems = parseInt(cfg.maxItems) || SLIDER_CONFIG_DEFAULTS.maxItems;
+      const sliderItems = parseInt(cfg.sliderItems) || SLIDER_CONFIG_DEFAULTS.sliderItems;
+      const cutoff = Date.now() - rangeDays * 24 * 60 * 60 * 1000;
       const seen = new Set();
       const items = recentMatchesPool
         .filter(m => m.ts >= cutoff)
@@ -1212,12 +1244,17 @@
           seen.add(key);
           return true;
         })
-        .slice(0, sliderConfig.maxItems);
+        .slice(0, maxItems);
 
       currentRecentItems = items;
 
       if (!items.length) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
       wrap.style.display = '';
+
+      // Slider prikazuje samo prvih sliderItems (najnoviji, items je već sortiran
+      // po vremenu) - ostatak do maxItems ostaje dostupan samo unutar popupa
+      // (openRecentMatchesPopup ispod čita cijeli currentRecentItems, ne visibleItems).
+      const visibleItems = items.slice(0, sliderItems);
 
       // index je pozicija u currentRecentItems (isti niz koji koristi
       // openRecentMatchesPopup) - klik na BILO koju karticu (uklj. drugu,
@@ -1233,10 +1270,10 @@
       // 4 kartice duplo/animacija izgleda čudno (prekratko/skače), pa se onda
       // prikaže statično bez animacije (klasa no-slide gasi @keyframes).
       const SLIDE_MIN_ITEMS = 4;
-      const slide = items.length >= SLIDE_MIN_ITEMS;
-      const chipsHtml = items.map(chipHtml).join('');
-      const trackHtml = slide ? chipsHtml + items.map(chipHtml).join('') : chipsHtml;
-      const duration = Math.max(items.length * 7, 26);
+      const slide = visibleItems.length >= SLIDE_MIN_ITEMS;
+      const chipsHtml = visibleItems.map(chipHtml).join('');
+      const trackHtml = slide ? chipsHtml + visibleItems.map(chipHtml).join('') : chipsHtml;
+      const duration = Math.max(visibleItems.length * 7, 26);
 
       wrap.innerHTML = `
         <div class="recent-matches-title"><i class="fas fa-bolt"></i> Zadnji mečevi:</div>
@@ -1257,7 +1294,8 @@
         legs: m.legs,
         matchTimestamp: m.d.timestamp || null,
         p1: m.player1, p2: m.player2, d: m.d, seasonId: m.seasonId,
-        domId: `recent-match-${i}`
+        domId: `recent-match-${i}`,
+        fromRecentMatchIndex: i
       })).join('');
       showPopup('Zadnji mečevi', matchesHtml, '');
       scrollToPopupMatch(`recent-match-${index}`);
@@ -1970,12 +2008,26 @@
     let currentProfilePlayer = null;
     let currentProfileSeason = 'overall';
 
-    function openPlayerProfile(playerName) {
+    // Postavlja se JEDINO kad profil otvara playerColHtml unutar kartice iz
+    // openRecentMatchesPopup (vidi fromRecentMatchIndex u renderMatchPopupCard) -
+    // svi ostali pozivi openPlayerProfile (pretraga, tablice, ždrijeb, deep-link)
+    // šalju samo jedan argument, pa se ovo uvijek iznova postavi na null i profil
+    // dobiva normalan X (fixed close gumb), ne "Natrag".
+    let recentMatchesBackIndex = null;
+
+    function openPlayerProfile(playerName, backToRecentMatchIndex) {
       currentProfilePlayer = playerName;
       currentProfileSeason = 'overall';
+      recentMatchesBackIndex = backToRecentMatchIndex != null ? backToRecentMatchIndex : null;
       document.getElementById('player-search-results').style.display = 'none';
       document.getElementById('player-search-input').value = '';
       renderPlayerProfile();
+    }
+
+    // "Natrag" gumb na profilu (vidi renderPlayerProfile) - vraća na "Zadnji
+    // mečevi" popup, skrolan/highlightan na isti meč s kojeg se otišlo na profil.
+    function backToRecentMatchesFromProfile() {
+      openRecentMatchesPopup(recentMatchesBackIndex);
     }
 
     function switchProfileSeason(seasonId) {
@@ -2425,6 +2477,17 @@
         contentHtml = buildProfileSectionHtml(stats, matches, playoffMatches, playoffNote, idxRef);
       }
 
+      // Fixed close X (popup-fixed-close-btn) već pokriva "zatvori sve" za svaki
+      // popup, uklj. ovaj - drugi X ovdje bi bio duplikat. Jedina iznimka je
+      // dolazak s "Zadnji mečevi" (recentMatchesBackIndex postavljen), gdje ovaj
+      // gumb postaje "Natrag" umjesto X, i vraća na taj popup umjesto da zatvara sve.
+      const backOrCloseHtml = recentMatchesBackIndex != null ? `
+          <div>
+            <button class="popup-back-btn" onclick="backToRecentMatchesFromProfile()">
+              <i class="fas fa-arrow-left"></i> Natrag
+            </button>
+          </div>` : '';
+
       const body = `
         <div class="player-profile-header">
           <div class="player-profile-user">
@@ -2441,11 +2504,7 @@
               <div class="player-profile-group">${escapeHtml(groupLabel)}</div>
             </div>
           </div>
-          <div>
-            <button class="popup-close" onclick="closePopup()">
-              <i class="fas fa-times"></i>
-            </button>
-          </div>
+          ${backOrCloseHtml}
         </div>
         ${tabsHtml}
         ${contentHtml}`;
@@ -2595,7 +2654,11 @@
     //   seasonId     - sezona kojoj meč pripada (za +/- diff vs sezonski prosjek u statDiffHtml)
     //   domId        - opcionalni id na wrapper divu, za scrollIntoView/highlight kad se
     //                  na ovaj meč dolazi izravno (npr. iz "Zadnji mečevi" na naslovnici)
-    function renderMatchPopupCard({ titleLabel, legs, matchTimestamp, p1, p2, d, seasonId, domId }) {
+    //   fromRecentMatchIndex - opcionalno, samo kad kartu gradi openRecentMatchesPopup:
+    //                  index tog meča u currentRecentItems. Prosljeđuje se u klik na
+    //                  igrača (openPlayerProfile) da profil zna prikazati "Natrag" umjesto
+    //                  X i vratiti se baš na ovaj meč u "Zadnji mečevi" popupu.
+    function renderMatchPopupCard({ titleLabel, legs, matchTimestamp, p1, p2, d, seasonId, domId, fromRecentMatchIndex }) {
       const score = d?.score || '';
       const hasScore = !!score;
       const scoreParts = hasScore ? score.split('-') : ['', ''];
@@ -2626,8 +2689,11 @@
       const playerColHtml = (name, isLoser, isWinner) => {
         const clickable = name && name !== 'TBD' && playerDatabase[name];
         const nameJs = escapeHtml(name || '').replace(/'/g, "\\'");
+        const profileCallJs = fromRecentMatchIndex != null
+          ? `openPlayerProfile('${nameJs}', ${fromRecentMatchIndex})`
+          : `openPlayerProfile('${nameJs}')`;
         return `
-          <div class="mpc-player-col ${isLoser ? 'loser' : ''} ${clickable ? 'clickable' : ''}" ${clickable ? `onclick="openPlayerProfile('${nameJs}')"` : ''}>
+          <div class="mpc-player-col ${isLoser ? 'loser' : ''} ${clickable ? 'clickable' : ''}" ${clickable ? `onclick="${profileCallJs}"` : ''}>
             <div class="mpc-avatar">${avatarHtml(name)}</div>
             <div class="mpc-player-name">${escapeHtml(name)}</div>
             <div class="mpc-winner-tag">${isWinner ? '<i class="fas fa-trophy"></i> pobjeda' : ''}</div>
