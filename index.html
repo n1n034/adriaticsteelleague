@@ -111,7 +111,7 @@
     }
     .recent-matches-track {
       display: flex; gap: 10px; width: max-content; cursor: grab; touch-action: pan-y;
-      animation: recentMatchesSlide linear infinite; animation-duration: var(--rm-duration, 26s);
+      animation: recentMatchesSlide linear infinite; animation-duration: var(--rm-duration, 34s);
     }
     .recent-matches-track:active { cursor: grabbing; }
     .recent-matches-row.no-slide .recent-matches-track { animation: none; cursor: default; touch-action: auto; }
@@ -559,7 +559,7 @@
     .mpc-titlebar {
       background: var(--header);
       padding: 18px 22px;
-      text-align: left;
+      text-align: center;
     }
 
     .mpc-titlebar-text {
@@ -1169,30 +1169,39 @@
 
     // -- ZADNJI MEČEVI --
     // Kratka dinamička lista odigranih mečeva (grupe, AVG lige, bracket, lower
-    // bracket) unutar zadnjih N sati - broj mečeva tjedno je velik (48+) i
+    // bracket) unutar zadnjih N dana - broj mečeva tjedno je velik (48+) i
     // raspoređeno se upisuju kroz cijeli tjedan (dogovori igrača), pa ni fiksni
     // broj zadnjih mečeva ni "trenutno kolo" ne daju kratku, uvijek-svježu
     // listu - klizni vremenski prozor od zadnjeg upisa (m.timestamp) to rješava.
-    // RECENT_MATCHES_WINDOW_HOURS je namjerno izdvojen radi lakše promjene.
-    const RECENT_MATCHES_WINDOW_HOURS = 72;
-    const RECENT_MATCHES_MAX = 15; // sigurnosna gornja granica ako bi prozor uhvatio puno mečeva odjednom
+    //
+    // sliderConfig je jedino mjesto za podešavanje slidera:
+    //   rangeDays - koliko dana unatrag ulazi u listu (klizni prozor, vidi gore)
+    //   maxItems  - sigurnosna gornja granica broja kartica ako rangeDays uhvati puno mečeva odjednom
+    const sliderConfig = {
+      rangeDays: 3,
+      maxItems: 15,
+    };
     let recentMatchesPool = [];
+    // Snapshot točno onih kartica koje su trenutno prikazane u sliderru - puni ga
+    // renderRecentMatches, čita openRecentMatchesPopup (klik na karticu otvara
+    // popup sa SVIM ovim mečevima, skrolan/highlightan na baš onaj kliknuti).
+    let currentRecentItems = [];
 
-    // onclickJs je gotov JS pozivni string (npr. "openKoloPopup(3,5)") - sve
-    // izvore identifikatora (groupIndex/kolo/uid/matchId) postavlja pozivatelj
-    // iz vlastitih, ne-korisničkih vrijednosti (brojevi, poznati leagueId,
-    // Firestore doc id), nikad iz imena igrača, pa je sigurno ubaciti izravno.
-    function pushRecentMatch(m, label, onclickJs) {
+    // legs/seasonId su isti podaci koje već računaju openKoloPopup/openArchiveKoloPopup/
+    // openBracketMatchPopup/openLowerBracketMatchPopup za svoj tip meča - pozivatelj ih
+    // izračuna jednom ovdje da renderMatchPopupCard može ispravno prikazati "Best of X
+    // legs" i AVG/First9 +/- diff i za mečeve u "Zadnji mečevi" popupu.
+    function pushRecentMatch(m, label, { legs, seasonId } = {}) {
       if (!m || !m.score || !m.timestamp) return;
       const ts = typeof m.timestamp.toMillis === 'function' ? m.timestamp.toMillis() : new Date(m.timestamp).getTime();
       if (!ts || isNaN(ts)) return;
-      recentMatchesPool.push({ player1: m.player1, player2: m.player2, score: m.score, ts, label, onclickJs });
+      recentMatchesPool.push({ player1: m.player1, player2: m.player2, score: m.score, ts, label, d: m, legs, seasonId });
     }
 
     function renderRecentMatches() {
       const wrap = document.getElementById('recent-matches-wrap');
       if (!wrap) return;
-      const cutoff = Date.now() - RECENT_MATCHES_WINDOW_HOURS * 60 * 60 * 1000;
+      const cutoff = Date.now() - sliderConfig.rangeDays * 24 * 60 * 60 * 1000;
       const seen = new Set();
       const items = recentMatchesPool
         .filter(m => m.ts >= cutoff)
@@ -1203,13 +1212,18 @@
           seen.add(key);
           return true;
         })
-        .slice(0, RECENT_MATCHES_MAX);
+        .slice(0, sliderConfig.maxItems);
+
+      currentRecentItems = items;
 
       if (!items.length) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
       wrap.style.display = '';
 
-      const chipHtml = m => `
-            <div class="recent-match-chip"${m.onclickJs ? ` onclick="${m.onclickJs}" style="cursor:pointer;"` : ''}>
+      // index je pozicija u currentRecentItems (isti niz koji koristi
+      // openRecentMatchesPopup) - klik na BILO koju karticu (uklj. drugu,
+      // dupliciranu polovicu trake) otvara isti popup skrolan na taj meč.
+      const chipHtml = (m, i) => `
+            <div class="recent-match-chip" onclick="openRecentMatchesPopup(${i})" style="cursor:pointer;">
               <div class="recent-match-players">${escapeHtml(m.player1 || '?')}<span class="recent-match-score">${escapeHtml(m.score)}</span>${escapeHtml(m.player2 || '?')}</div>
               <div class="recent-match-meta">${escapeHtml(m.label || '')}</div>
             </div>`;
@@ -1221,14 +1235,32 @@
       const SLIDE_MIN_ITEMS = 4;
       const slide = items.length >= SLIDE_MIN_ITEMS;
       const chipsHtml = items.map(chipHtml).join('');
-      const trackHtml = slide ? chipsHtml + chipsHtml : chipsHtml;
-      const duration = Math.max(items.length * 4, 18);
+      const trackHtml = slide ? chipsHtml + items.map(chipHtml).join('') : chipsHtml;
+      const duration = Math.max(items.length * 7, 26);
 
       wrap.innerHTML = `
         <div class="recent-matches-title"><i class="fas fa-bolt"></i> Zadnji mečevi:</div>
         <div class="recent-matches-row${slide ? '' : ' no-slide'}">
           <div class="recent-matches-track" data-duration="${duration}" style="--rm-duration:${duration}s;">${trackHtml}</div>
         </div>`;
+    }
+
+    // Klik na bilo koju karticu u "Zadnji mečevi" sliderru - otvara JEDAN popup sa
+    // SVIM mečevima trenutno prikazanim u sliderru (currentRecentItems, isti snapshot),
+    // skrolan/highlightan na baš onaj na koji je kliknuto (isti obrazac kao
+    // openKoloPopup/openArchiveKoloPopup, vidi scrollToPopupMatch niže u fileu -
+    // dostupna je do trenutka poziva jer je bootstrap asinkron).
+    function openRecentMatchesPopup(index) {
+      if (!currentRecentItems.length) return;
+      const matchesHtml = currentRecentItems.map((m, i) => renderMatchPopupCard({
+        titleLabel: m.label,
+        legs: m.legs,
+        matchTimestamp: m.d.timestamp || null,
+        p1: m.player1, p2: m.player2, d: m.d, seasonId: m.seasonId,
+        domId: `recent-match-${i}`
+      })).join('');
+      showPopup('Zadnji mečevi', matchesHtml, '');
+      scrollToPopupMatch(`recent-match-${index}`);
     }
 
     // -- ZADNJI MEČEVI: DRAG ZA SLIDER --
@@ -2598,7 +2630,7 @@
           <div class="mpc-player-col ${isLoser ? 'loser' : ''} ${clickable ? 'clickable' : ''}" ${clickable ? `onclick="openPlayerProfile('${nameJs}')"` : ''}>
             <div class="mpc-avatar">${avatarHtml(name)}</div>
             <div class="mpc-player-name">${escapeHtml(name)}</div>
-            <div class="mpc-winner-tag">${isWinner ? 'pobjeda' : ''}</div>
+            <div class="mpc-winner-tag">${isWinner ? '<i class="fas fa-trophy"></i> pobjeda' : ''}</div>
           </div>`;
       };
 
@@ -2609,14 +2641,16 @@
           ${playerColHtml(p2, hasScore && p1Winner, p2Winner)}
         </div>`;
 
+      const domIdAttr = domId ? ` id="${domId}"` : '';
+
       if (!hasScore) {
-        return `<div class="popup-match">${titlebarHtml}${legsHtml}${playersHtml}<div class="popup-no-score">Meč još nije odigran</div></div>`;
+        return `<div class="popup-match"${domIdAttr}>${titlebarHtml}${legsHtml}${playersHtml}<div class="popup-no-score">Meč još nije odigran</div></div>`;
       }
 
       // Osnovni statovi (uvijek prikazani ako postoji rezultat)
       const statsHtml = renderMpcStatsHtml(d, p1Winner, p2Winner, p1, p2, seasonId);
 
-      return `<div class="popup-match">${titlebarHtml}${legsHtml}${playersHtml}${statsHtml}</div>`;
+      return `<div class="popup-match"${domIdAttr}>${titlebarHtml}${legsHtml}${playersHtml}${statsHtml}</div>`;
     }
 
     // Vraća "+2.34" (zeleno) ili "-1.10" (crveno) usporedbom meč-statistike
@@ -3507,7 +3541,7 @@
           const players = []; playersSnap.forEach(p => players.push(p.data().name));
 
           const matchesSnap = await getDocs(collection(db,'seasons',seasonId,'groups',group.id,'matches'));
-          const matchesMap  = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; pushRecentMatch(d, group.name, `openKoloPopup(${i+1},${d.kolo},${d.mec})`); });
+          const matchesMap  = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; pushRecentMatch(d, group.name, { legs: getGroupPhaseLegs(false), seasonId }); });
 
           const schedule        = generateSchedule(players);
           const visibleSchedule = schedule.filter(r => r.kolo <= maxKolo);
@@ -3592,7 +3626,7 @@
       try {
         const bracketSnap = await getDocs(collection(db,'seasons',seasonId,'bracket'));
         const matchesByRound = {};
-        bracketSnap.forEach(d => { const data = d.data(); matchesByRound[d.id] = data; pushRecentMatch(data, bracketRoundLabelFromId(d.id, false), `openBracketMatchPopup('${d.id}')`); });
+        bracketSnap.forEach(d => { const data = d.data(); matchesByRound[d.id] = data; pushRecentMatch(data, bracketRoundLabelFromId(d.id, false), { legs: getPlayoffLegs(d.id, false), seasonId }); });
         renderBracket(matchesByRound, groupStandingsMap);
         upperBracketReady = true;
         refreshNajboljiWithPlayoffs();
@@ -3607,7 +3641,7 @@
       try {
         const lowerBracketSnap = await getDocs(collection(db,'seasons',seasonId,'lower-bracket'));
         const matchesByRound = {};
-        lowerBracketSnap.forEach(d => { const data = d.data(); matchesByRound[d.id] = data; pushRecentMatch(data, bracketRoundLabelFromId(d.id, true), `openLowerBracketMatchPopup('${d.id}')`); });
+        lowerBracketSnap.forEach(d => { const data = d.data(); matchesByRound[d.id] = data; pushRecentMatch(data, bracketRoundLabelFromId(d.id, true), { legs: getPlayoffLegs(d.id, false), seasonId }); });
         renderLowerBracket(matchesByRound, groupStandingsMap || {});
         lowerBracketReady = true;
         refreshNajboljiWithPlayoffs();
@@ -3824,7 +3858,7 @@
         const players = []; playersSnap.forEach(p => players.push(p.data().name));
 
         const matchesSnap = await getDocs(collection(db,'avg-leagues',seasonId,leagueId,group.id,'matches'));
-        const matchesMap = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; pushRecentMatch(d, `${AVG_LEAGUE_LABELS[leagueId] || leagueId} - ${group.name}`, `openArchiveKoloPopup('avg-${leagueId}-${i+1}',${d.kolo},${d.mec})`); });
+        const matchesMap = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; pushRecentMatch(d, `${AVG_LEAGUE_LABELS[leagueId] || leagueId} - ${group.name}`, { legs: getGroupPhaseLegs(true), seasonId: `avg:${seasonId}:${leagueId}` }); });
 
         const schedule        = generateAvgSchedule(players);
         const visibleSchedule = schedule.filter(r => r.kolo <= maxAvgKolo);
