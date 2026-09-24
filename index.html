@@ -1273,7 +1273,7 @@
       const slide = visibleItems.length >= SLIDE_MIN_ITEMS;
       const chipsHtml = visibleItems.map(chipHtml).join('');
       const trackHtml = slide ? chipsHtml + visibleItems.map(chipHtml).join('') : chipsHtml;
-      const duration = Math.max(visibleItems.length * 7, 26);
+      const duration = Math.max(visibleItems.length * 5, 20);
 
       wrap.innerHTML = `
         <div class="recent-matches-title"><i class="fas fa-bolt"></i> Zadnji mečevi:</div>
@@ -2682,10 +2682,6 @@
           ${matchTimestamp ? `<div class="mpc-legs-timestamp">${formatMatchTimestamp(matchTimestamp)}</div>` : ''}
         </div>` : '';
 
-      // Klik na igrača otvara njegov profil (isti popup overlay, showPopup se
-      // samo pozove ponovno s novim sadržajem) - samo ako igrač stvarno postoji
-      // u playerDatabase (npr. "TBD" u ždrijebu prije nego je poznat protivnik
-      // se ne smije moći kliknuti).
       const playerColHtml = (name, isLoser, isWinner) => {
         const clickable = name && name !== 'TBD' && playerDatabase[name];
         const nameJs = escapeHtml(name || '').replace(/'/g, "\\'");
@@ -3167,7 +3163,11 @@
     // živu sezonu i za arhivske sezone (svaka sa svojom namespace-anom mapom),
     // bez kolizije. popupCallBuilder(matchId) vraća onclick JS string, pa live i
     // arhivski prikaz mogu pozivati različite popup handlere.
-    function buildBracketHtml(matchesByRound, groupStandingsMap, matchDataStore, popupCallBuilder, wrapId) {
+    // hideNames - opcionalno (samo javni prikaz žive sezone, vidi
+    // liveBracketNamesHidden): imena igrača se u kartici zamijene s "TBD" a klik
+    // na karticu je isključen (popup bi otkrio imena). matchDataStore i dalje
+    // dobiva prava imena - iz njega čitaju profili igrača.
+    function buildBracketHtml(matchesByRound, groupStandingsMap, matchDataStore, popupCallBuilder, wrapId, hideNames = false) {
       // Build R64 matches with names
       const r64Matches = R64_DRAW.map((draw, i) => {
         const id = `R64_${i + 1}`;
@@ -3223,13 +3223,16 @@
         const parts = hasScore ? score.split('-') : [];
         const s1 = parts[0]||'', s2 = parts[1]||'';
         const w = saved.winner||null;
-        return `<div class="bracket-match ${pairClass||''}" onclick="${popupCallBuilder(match.id)}">
-          <div class="bracket-player ${w==='player1'?'winner':w==='player2'?'loser':(!match.player1?'tbd':'')}">
-            <span class="bracket-player-name">${escapeHtml(match.player1||'TBD')}</span>
+        const n1 = hideNames ? null : match.player1;
+        const n2 = hideNames ? null : match.player2;
+        const clickAttr = hideNames ? 'style="cursor:default;"' : `onclick="${popupCallBuilder(match.id)}"`;
+        return `<div class="bracket-match ${pairClass||''}" ${clickAttr}>
+          <div class="bracket-player ${w==='player1'?'winner':w==='player2'?'loser':(!n1?'tbd':'')}">
+            <span class="bracket-player-name">${escapeHtml(n1||'TBD')}</span>
             ${hasScore?`<span class="bracket-player-score">${s1}</span>`:''}
           </div>
-          <div class="bracket-player ${w==='player2'?'winner':w==='player1'?'loser':(!match.player2?'tbd':'')}">
-            <span class="bracket-player-name">${escapeHtml(match.player2||'TBD')}</span>
+          <div class="bracket-player ${w==='player2'?'winner':w==='player1'?'loser':(!n2?'tbd':'')}">
+            <span class="bracket-player-name">${escapeHtml(n2||'TBD')}</span>
             ${hasScore?`<span class="bracket-player-score">${s2}</span>`:''}
           </div>
         </div>`;
@@ -3259,9 +3262,18 @@
         </div>`;
     }
 
+    // Javni prikaz ŽIVE sezone: imena igrača u gornjem/donjem ždrijebu su
+    // placeholder ("TBD") dok se u Firestoreu (config/active-season, isti
+    // dokument kao seasonId/trenutnoKolo/sliderConfig) ne postavi
+    // bracketNamesVisible: true. Puni prikaz s imenima uvijek vidi admin u
+    // index-admin.html. Arhivske sezone ne prolaze ovuda i uvijek su vidljive.
+    function liveBracketNamesHidden() {
+      return window.activeSeasonConfig?.bracketNamesVisible !== true;
+    }
+
     function renderBracket(matchesByRound, groupStandingsMap) {
       const container = document.getElementById('gornji-zdrijeb-content');
-      container.innerHTML = buildBracketHtml(matchesByRound, groupStandingsMap, bracketMatchData, id => `openBracketMatchPopup('${id}')`, 'bracket-wrap-upper');
+      container.innerHTML = buildBracketHtml(matchesByRound, groupStandingsMap, bracketMatchData, id => `openBracketMatchPopup('${id}')`, 'bracket-wrap-upper', liveBracketNamesHidden());
       requestAnimationFrame(() => scheduleAllPairOffsets());
       window.__observeBracketWrap('bracket-wrap-upper');
     }
@@ -3271,38 +3283,61 @@
     const LROUND_LABELS = ['Donji Last of 64','Donji Last of 32','Donja Osmina finala','Donje Četvrtfinale','Donje Polufinale','Donje Finale'];
     const lowerBracketMatchData = {};
 
-    function buildLowerBracketHtml(matchesByRound, groupStandingsMap, matchDataStore, popupCallBuilder, wrapId) {
-      // Build LR64 - isti obrazac kao gornji R64 (R64_DRAW + resolveName), samo
-      // s LR64_DRAW (mjesta 5.-8. umjesto 1.-4.). Prikaz koda (npr. "5A") dok
-      // meč nije odigran, ime igrača čim se standings mogu razriješiti.
-      const lr64Matches = LR64_DRAW.map((draw, i) => {
-        const id = `LR64_${i + 1}`;
+    // Donji ždrijeb ima dva rasporeda:
+    //  - main32 (od 3. sezone): 32 igrača, samo 5. i 6. mjesto iz svake grupe,
+    //    prvi krug je LR32 (16 parova). Isti obrazac kao gornji: parovi "1. vs 4."
+    //    iz R64_DRAW postaju "5. vs 6." (ista grupa/redoslijed, pa nitko ne igra
+    //    protiv igrača iz svoje grupe, a 5. i 6. iz iste grupe se sastaju tek u finalu).
+    //  - legacy64 (2. sezona i starije): 64 igrača, mjesta 5.-8., prvi krug LR64.
+    // Raspored se bira po podacima, ne po sezoni: ako u lower-bracket postoji ijedan
+    // LR64_* dokument, sezona je igrana po starom pa arhiva ostaje ispravna.
+    const LR32_DRAW = R64_DRAW.filter((_, i) => i % 2 === 0).map(({p1, p2}) => ({
+      p1: String(parseInt(p1) + 4) + p1.slice(-1),
+      p2: String(parseInt(p2) + 2) + p2.slice(-1)
+    }));
+    const LOWER_LAYOUTS = {
+      legacy64: { draw: LR64_DRAW, ids: LROUND_IDS,          labels: LROUND_LABELS },
+      main32:   { draw: LR32_DRAW, ids: LROUND_IDS.slice(1), labels: LROUND_LABELS.slice(1) }
+    };
+    function getLowerLayout(matchesByRound) {
+      return Object.keys(matchesByRound || {}).some(id => id.startsWith('LR64_')) ? LOWER_LAYOUTS.legacy64 : LOWER_LAYOUTS.main32;
+    }
+
+    // hideNames - vidi komentar na buildBracketHtml.
+    function buildLowerBracketHtml(matchesByRound, groupStandingsMap, matchDataStore, popupCallBuilder, wrapId, hideNames = false) {
+      // Prvi krug - isti obrazac kao gornji R64 (R64_DRAW + resolveName), samo s
+      // rasporedom donjeg ždrijeba (vidi getLowerLayout: 32 igrača 5.-6. mjesto,
+      // ili legacy 64 igrača 5.-8. mjesto). Prikaz koda (npr. "5A") dok meč nije
+      // odigran, ime igrača čim se standings mogu razriješiti.
+      const layout = getLowerLayout(matchesByRound);
+      const firstMatches = layout.draw.map((draw, i) => {
+        const id = `${layout.ids[0]}_${i + 1}`;
         const saved = matchesByRound[id] || {};
         const p1name = saved.player1 || resolveName(draw.p1, groupStandingsMap);
         const p2name = saved.player2 || resolveName(draw.p2, groupStandingsMap);
-        matchDataStore[id] = { ...saved, player1: p1name, player2: p2name, roundLabel: `Donji Last of 64 - Meč ${i + 1}` };
+        matchDataStore[id] = { ...saved, player1: p1name, player2: p2name, roundLabel: `${layout.labels[0]} - Meč ${i + 1}` };
         return { id, player1: p1name, player2: p2name, score: saved.score || '', winner: saved.winner || null };
       });
 
       // Build subsequent rounds
-      const rounds = [lr64Matches];
-      for (let r = 1; r < LROUND_IDS.length; r++) {
+      const rounds = [firstMatches];
+      for (let r = 1; r < layout.ids.length; r++) {
         const prev = rounds[r-1];
         const count = prev.length / 2;
         const cur = [];
         for (let i = 0; i < count; i++) {
-          const id    = `${LROUND_IDS[r]}_${i+1}`;
+          const id    = `${layout.ids[r]}_${i+1}`;
           const saved = matchesByRound[id] || {};
           const p1 = saved.player1 || (prev[i*2]?.winner   ? (prev[i*2].winner==='player1'   ? prev[i*2].player1   : prev[i*2].player2)   : null);
           const p2 = saved.player2 || (prev[i*2+1]?.winner ? (prev[i*2+1].winner==='player1' ? prev[i*2+1].player1 : prev[i*2+1].player2) : null);
-          matchDataStore[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${LROUND_LABELS[r]} - Meč ${i+1}` };
+          matchDataStore[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${layout.labels[r]} - Meč ${i+1}` };
           cur.push({ id, player1: p1, player2: p2, score: saved.score||'', winner: saved.winner||null });
         }
         rounds.push(cur);
       }
 
       // 3rd place match
-      const sfMatches = rounds[4]; // LSF
+      const sfMatches = rounds[rounds.length - 2]; // LSF (predzadnji krug)
       const thirdId   = 'LTHIRD_1';
       const savedThird = matchesByRound[thirdId] || {};
       let third_p1 = savedThird.player1 || null;
@@ -3324,13 +3359,16 @@
         const parts = hasScore ? score.split('-') : [];
         const s1 = parts[0]||'', s2 = parts[1]||'';
         const w = saved.winner||null;
-        return `<div class="bracket-match ${pairClass||''}" onclick="${popupCallBuilder(match.id)}">
-          <div class="bracket-player ${w==='player1'?'winner':w==='player2'?'loser':(!match.player1?'tbd':'')}">
-            <span class="bracket-player-name">${escapeHtml(match.player1||'TBD')}</span>
+        const n1 = hideNames ? null : match.player1;
+        const n2 = hideNames ? null : match.player2;
+        const clickAttr = hideNames ? 'style="cursor:default;"' : `onclick="${popupCallBuilder(match.id)}"`;
+        return `<div class="bracket-match ${pairClass||''}" ${clickAttr}>
+          <div class="bracket-player ${w==='player1'?'winner':w==='player2'?'loser':(!n1?'tbd':'')}">
+            <span class="bracket-player-name">${escapeHtml(n1||'TBD')}</span>
             ${hasScore?`<span class="bracket-player-score">${s1}</span>`:''}
           </div>
-          <div class="bracket-player ${w==='player2'?'winner':w==='player1'?'loser':(!match.player2?'tbd':'')}">
-            <span class="bracket-player-name">${escapeHtml(match.player2||'TBD')}</span>
+          <div class="bracket-player ${w==='player2'?'winner':w==='player1'?'loser':(!n2?'tbd':'')}">
+            <span class="bracket-player-name">${escapeHtml(n2||'TBD')}</span>
             ${hasScore?`<span class="bracket-player-score">${s2}</span>`:''}
           </div>
         </div>`;
@@ -3340,7 +3378,7 @@
 
       const roundsHtml = rounds.map((matches, ri) => `
         <div class="bracket-round">
-          <div class="bracket-round-title">${LROUND_LABELS[ri]}</div>
+          <div class="bracket-round-title">${layout.labels[ri]}</div>
           <div class="bracket-matches">
             ${ri === rounds.length - 1 ? `<div class="bracket-final-title">🏆 DONJE FINALE</div>` : ''}
             ${matches.map((m,i) => matchHtml(m, i%2===0?'pair-top':'pair-bottom')).join('')}
@@ -3362,7 +3400,7 @@
 
     function renderLowerBracket(matchesByRound, groupStandingsMap) {
       const container = document.getElementById('donji-zdrijeb-content');
-      container.innerHTML = buildLowerBracketHtml(matchesByRound, groupStandingsMap, lowerBracketMatchData, id => `openLowerBracketMatchPopup('${id}')`, 'bracket-wrap-lower');
+      container.innerHTML = buildLowerBracketHtml(matchesByRound, groupStandingsMap, lowerBracketMatchData, id => `openLowerBracketMatchPopup('${id}')`, 'bracket-wrap-lower', liveBracketNamesHidden());
       requestAnimationFrame(() => scheduleAllPairOffsets());
       window.__observeBracketWrap('bracket-wrap-lower');
     }

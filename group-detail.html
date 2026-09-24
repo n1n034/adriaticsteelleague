@@ -163,6 +163,12 @@
       color: #FFD700;
     }
 
+    .admin-badge.operator {
+      background: rgba(74, 144, 226, 0.15);
+      border: 1px solid rgba(74, 144, 226, 0.35);
+      color: #4a90e2;
+    }
+
     .group-title-bar img {
       width: 48px;
       height: 48px;
@@ -992,11 +998,11 @@
       // i samo u onoj grupi koja mu je dodijeljena (users/{uid}.groups sadrži slovo grupe).
       canEditGroup = isAdmin || (!leagueParam && !!groupId && (userData.groups || []).includes(groupIdToLetter(groupId)));
 
+      // Isto kao u index-admin.html: "Admin" (zlatna) ili "Operater" (plava).
       const badge = document.getElementById('role-badge');
-      if (isAdmin) {
-        badge.style.display = 'inline-flex';
-        badge.textContent = 'Admin';
-      }
+      badge.style.display = 'inline-flex';
+      badge.textContent = isAdmin ? 'Admin' : 'Operater';
+      badge.classList.toggle('operator', !isAdmin);
 
       // I sezonske grupe I AVG lige prate istu aktivnu sezonu iz configa.
       ACTIVE_SEASON_ID = await resolveActiveSeasonId();

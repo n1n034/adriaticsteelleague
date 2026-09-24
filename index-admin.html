@@ -1512,6 +1512,26 @@
       p2: String(parseInt(p2) + 4) + p2.slice(-1)
     }));
 
+    // Donji ždrijeb ima dva rasporeda:
+    //  - main32 (od 3. sezone): 32 igrača, samo 5. i 6. mjesto iz svake grupe,
+    //    prvi krug je LR32 (16 parova). Isti obrazac kao gornji: parovi "1. vs 4."
+    //    iz R64_DRAW postaju "5. vs 6." (ista grupa/redoslijed, pa nitko ne igra
+    //    protiv igrača iz svoje grupe, a 5. i 6. iz iste grupe se sastaju tek u finalu).
+    //  - legacy64 (2. sezona i starije): 64 igrača, mjesta 5.-8., prvi krug LR64.
+    // Raspored se bira po podacima, ne po sezoni: ako u lower-bracket postoji ijedan
+    // LR64_* dokument, sezona je igrana po starom. (Mora ostati isti kao u index.html.)
+    const LR32_DRAW = R64_DRAW.filter((_, i) => i % 2 === 0).map(({ p1, p2 }) => ({
+      p1: String(parseInt(p1) + 4) + p1.slice(-1),
+      p2: String(parseInt(p2) + 2) + p2.slice(-1)
+    }));
+    const LOWER_LAYOUTS = {
+      legacy64: { draw: LR64_DRAW, ids: LROUND_IDS,          labels: LROUND_LABELS },
+      main32:   { draw: LR32_DRAW, ids: LROUND_IDS.slice(1), labels: LROUND_LABELS.slice(1) }
+    };
+    function getLowerLayout(matchesByRound) {
+      return Object.keys(matchesByRound || {}).some(id => id.startsWith('LR64_')) ? LOWER_LAYOUTS.legacy64 : LOWER_LAYOUTS.main32;
+    }
+
     // -- BRACKET CONFIG (Best of X legs) --
     // Jedan globalni dokument config/bracket-config, ručno uređivan u
     // Firestore konzoli. playoff.rounds.{round}.legs vrijedi za gornji I
@@ -2263,31 +2283,33 @@
     function renderLowerBracketAdmin(matchesByRound, groupStandingsMap) {
       const container = document.getElementById('lower-bracket-admin-container');
 
-      // Build LR64 - isti obrazac kao gornji R64 (R64_DRAW + resolveName), samo
-      // s LR64_DRAW (mjesta 5.-8. umjesto 1.-4.).
-      const lr64 = LR64_DRAW.map((draw, i) => {
-        const id = 'LR64_' + (i + 1); const saved = matchesByRound[id] || {};
+      // Prvi krug - isti obrazac kao gornji R64 (R64_DRAW + resolveName), samo s
+      // rasporedom donjeg ždrijeba (vidi getLowerLayout: 32 igrača 5.-6. mjesto,
+      // ili legacy 64 igrača 5.-8. mjesto).
+      const layout = getLowerLayout(matchesByRound);
+      const firstRound = layout.draw.map((draw, i) => {
+        const id = `${layout.ids[0]}_${i + 1}`; const saved = matchesByRound[id] || {};
         const p1 = saved.player1 || resolveName(draw.p1, groupStandingsMap) || draw.p1;
         const p2 = saved.player2 || resolveName(draw.p2, groupStandingsMap) || draw.p2;
-        allLowerMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `Donji Last of 64 - Meč ${i + 1}` };
+        allLowerMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${layout.labels[0]} - Meč ${i + 1}` };
         return { id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null };
       });
 
-      const rounds = [lr64];
-      for (let r = 1; r < LROUND_IDS.length; r++) {
+      const rounds = [firstRound];
+      for (let r = 1; r < layout.ids.length; r++) {
         const prev = rounds[r - 1]; const count = prev.length / 2; const cur = [];
         for (let i = 0; i < count; i++) {
-          const id = `${LROUND_IDS[r]}_${i + 1}`; const saved = matchesByRound[id] || {};
+          const id = `${layout.ids[r]}_${i + 1}`; const saved = matchesByRound[id] || {};
           const p1 = saved.player1 || (prev[i * 2]?.winner ? (prev[i * 2].winner === 'player1' ? prev[i * 2].player1 : prev[i * 2].player2) : null);
           const p2 = saved.player2 || (prev[i * 2 + 1]?.winner ? (prev[i * 2 + 1].winner === 'player1' ? prev[i * 2 + 1].player1 : prev[i * 2 + 1].player2) : null);
-          allLowerMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${LROUND_LABELS[r]} - Meč ${i + 1}` };
+          allLowerMatchData[id] = { ...saved, player1: p1, player2: p2, roundLabel: `${layout.labels[r]} - Meč ${i + 1}` };
           cur.push({ id, player1: p1, player2: p2, score: saved.score || '', winner: saved.winner || null });
         }
         rounds.push(cur);
       }
 
       // 3rd place
-      const sfMatches = rounds[4];
+      const sfMatches = rounds[rounds.length - 2]; // LSF (predzadnji krug)
       const thirdId = 'LTHIRD_1'; const savedThird = matchesByRound[thirdId] || {};
       const third_p1 = savedThird.player1 || (sfMatches[0]?.winner ? (sfMatches[0].winner === 'player1' ? sfMatches[0].player2 : sfMatches[0].player1) : null);
       const third_p2 = savedThird.player2 || (sfMatches[1]?.winner ? (sfMatches[1].winner === 'player1' ? sfMatches[1].player2 : sfMatches[1].player1) : null);
@@ -2313,7 +2335,7 @@
 
       const roundsHtml = rounds.map((matches, ri) => `
     <div class="bracket-admin-round">
-      <div class="bracket-admin-round-title">${LROUND_LABELS[ri]}</div>
+      <div class="bracket-admin-round-title">${layout.labels[ri]}</div>
       <div class="bracket-admin-matches">
         ${ri === rounds.length - 1 ? `<div class="bracket-admin-final-title">🏆 DONJE FINALE</div>` : ''}
         ${matches.map((m, i) => matchHtml(m, i % 2 === 0 ? 'pair-top' : 'pair-bottom')).join('')}
