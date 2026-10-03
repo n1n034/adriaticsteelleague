@@ -2540,7 +2540,12 @@
       if (!entry) return;
 
       const availableSeasons = SEASON_ORDER.filter(s => entry.seasons[s]);
-      const availableAvgSeasons = SEASON_ORDER.filter(s => entry.avgLeagues?.[s]);
+      // Ženska liga ima vlastiti tab ('zenska'), ostale AVG lige su u tabu 'avg' - oba
+      // taba čitaju isti entry.avgLeagues, samo filtriraju po ligi.
+      const leaguesIn = (seasonId, zenska) =>
+        Object.keys(entry.avgLeagues?.[seasonId] || {}).filter(l => (l === 'zenska') === zenska);
+      const availableAvgSeasons = SEASON_ORDER.filter(s => leaguesIn(s, false).length);
+      const availableZenskaSeasons = SEASON_ORDER.filter(s => leaguesIn(s, true).length);
       const latestSeason = availableSeasons[availableSeasons.length-1];
       const groupLabel = latestSeason ? entry.seasons[latestSeason].groupName : '';
 
@@ -2548,20 +2553,23 @@
         <div class="player-season-tabs">
           <button class="player-season-tab ${currentProfileSeason==='overall'?'active':''}" onclick="switchProfileSeason('overall')">Sveukupno</button>
           ${availableSeasons.map(s => `<button class="player-season-tab ${currentProfileSeason===s?'active':''}" onclick="switchProfileSeason('${s}')">${SEASON_LABELS[s]||s}</button>`).join('')}
+          ${availableZenskaSeasons.length ? `<button class="player-season-tab ${currentProfileSeason==='zenska'?'active':''}" onclick="switchProfileSeason('zenska')">Ženska liga</button>` : ''}
           ${availableAvgSeasons.length ? `<button class="player-season-tab ${currentProfileSeason==='avg'?'active':''}" onclick="switchProfileSeason('avg')">AVG</button>` : ''}
         </div>`;
 
       const idxRef = { value: 0 };
       let contentHtml;
 
-      if (currentProfileSeason === 'avg') {
-        // Svaka AVG liga/sezona u kojoj igrač igra dobiva vlastitu sekciju
+      if (currentProfileSeason === 'avg' || currentProfileSeason === 'zenska') {
+        // Svaka liga/sezona u kojoj igrač igra dobiva vlastitu sekciju
         // (naslov liga+sezona, pa 'kind' grana prikaz - live: puni stat/graf/
         // mečevi/playoff blok kao sezonski tab; history: kompaktna kartica bez
         // mečeva, vidi avgHistoryCardHtml). Sortirano po SEASON_ORDER.
-        contentHtml = availableAvgSeasons.map(seasonId => {
+        // Tab 'zenska' prikazuje samo Žensku ligu, tab 'avg' sve ostale AVG lige.
+        const wantZenska = currentProfileSeason === 'zenska';
+        contentHtml = (wantZenska ? availableZenskaSeasons : availableAvgSeasons).map(seasonId => {
           const byLeague = entry.avgLeagues[seasonId];
-          return Object.keys(byLeague).map(leagueId => {
+          return leaguesIn(seasonId, wantZenska).map(leagueId => {
             const ad = byLeague[leagueId];
             if (ad.kind === 'history') {
               const resultText = isFemalePlayer(currentProfilePlayer) ? feminizeResult(ad.result) : ad.result;
