@@ -910,6 +910,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, collection, getDocs, setDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+    import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app-check.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDyG6WN60VOhp-iHq_18vOLDcHP6zHNoRk",
@@ -922,6 +923,17 @@
     };
 
     const app = initializeApp(firebaseConfig);
+    // App Check (reCAPTCHA Enterprise) - isti site key i isti blok kao u index.html i
+    // index-admin.html. Ova stranica upisuje rezultate, pa bi uključivanje App Check
+    // enforcementa za Firestore bez ovoga prekinulo unos rezultata. Debug token samo
+    // za localhost (vidi komentar u index.html).
+    if (['localhost', '127.0.0.1'].includes(location.hostname)) {
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = '12743B0F-CD2A-4254-8324-84AE9E2DF80A';
+    }
+    initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider('6LdfcbktAAAAAGWaLVaJXHIBI8ST_nISw-DSFKuT'),
+      isTokenAutoRefreshEnabled: true
+    });
     const auth = getAuth(app);
     const db = getFirestore(app);
     const params = new URLSearchParams(window.location.search);
@@ -935,10 +947,17 @@
     // dokument izravno u {leagueId} kolekciji, nema posrednog "groups" naziva)
     // - DB_PATH se zato postavlja tek nakon što se ACTIVE_SEASON_ID razriješi
     // (vidi onAuthStateChanged), za oba slučaja.
+    // Ženska liga (league=zenska) je odvojena kolekcija
+    // women-leagues/{ACTIVE_SEASON_ID}/groups/{groupId} - leagueGroupsPath je jedino
+    // mjesto koje to zna (ista funkcija je i u index.html i index-admin.html -
+    // mijenjati na sva tri mjesta).
+    function leagueGroupsPath(seasonId, leagueId) {
+      return leagueId === 'zenska' ? ['women-leagues', seasonId, 'groups'] : ['avg-leagues', seasonId, leagueId];
+    }
     const DEFAULT_ACTIVE_SEASON_ID = 'sezona-2';
     let ACTIVE_SEASON_ID = DEFAULT_ACTIVE_SEASON_ID;
     let DB_PATH = leagueParam
-      ? ['avg-leagues', DEFAULT_ACTIVE_SEASON_ID, leagueParam, groupId]
+      ? [...leagueGroupsPath(DEFAULT_ACTIVE_SEASON_ID, leagueParam), groupId]
       : ['seasons', DEFAULT_ACTIVE_SEASON_ID, 'groups', groupId]; // privremeni fallback dok se ACTIVE_SEASON_ID ne razriješi
 
     async function resolveActiveSeasonId() {
@@ -1007,7 +1026,7 @@
       // I sezonske grupe I AVG lige prate istu aktivnu sezonu iz configa.
       ACTIVE_SEASON_ID = await resolveActiveSeasonId();
       DB_PATH = leagueParam
-        ? ['avg-leagues', ACTIVE_SEASON_ID, leagueParam, groupId]
+        ? [...leagueGroupsPath(ACTIVE_SEASON_ID, leagueParam), groupId]
         : ['seasons', ACTIVE_SEASON_ID, 'groups', groupId];
 
       await loadBracketConfig();
@@ -1072,7 +1091,8 @@
       renderRaspored();
     }
 
-    // avg-leagues/{sezona}/{liga} kolekcija sadrži i rezervirane dokumente
+    // Kolekcija grupa lige (avg-leagues/{sezona}/{liga} ili women-leagues/{sezona}/groups)
+    // sadrži i rezervirane dokumente
     // "rezultati" (povijesni rezultati) i "bracket" (ždrijeb) kao susjede
     // stvarnih grupa - filtrirati ih iz dropdowna.
     const AVG_RESERVED_DOC_IDS = ['rezultati', 'bracket'];
@@ -1085,7 +1105,7 @@
     async function populateGroupSelector(admin, allowedGroups) {
       try {
         const basePath = leagueParam
-          ? ['avg-leagues', ACTIVE_SEASON_ID, leagueParam]
+          ? leagueGroupsPath(ACTIVE_SEASON_ID, leagueParam)
           : ['seasons', ACTIVE_SEASON_ID, 'groups'];
         const groupsSnap = await getDocs(collection(db, ...basePath));
 

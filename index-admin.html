@@ -1272,14 +1272,17 @@
         <button class="admin-tab-btn active" id="tab-btn-grupe" onclick="switchAdminTab('grupe', this)">
           <i class="fas fa-layer-group" style="margin-right:6px;"></i>Grupe
         </button>
+        <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('zenska', this)">
+          <i class="fas fa-crown" style="margin-right:6px;"></i>Ženska liga
+        </button>
+        <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('avg-lige', this)">
+          <i class="fas fa-chart-bar" style="margin-right:6px;"></i>AVG Lige
+        </button>
         <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('bracket', this)">
           <i class="fas fa-trophy" style="margin-right:6px;"></i>Gornji ždrijeb
         </button>
         <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('lower-bracket', this)">
           <i class="fas fa-trophy" style="margin-right:6px;"></i>Donji ždrijeb
-        </button>
-        <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('avg-lige', this)">
-          <i class="fas fa-chart-bar" style="margin-right:6px;"></i>AVG Lige
         </button>
         <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('igraci', this)">
           <i class="fas fa-image" style="margin-right:6px;"></i>Igrači
@@ -1312,11 +1315,8 @@
       </div>
 
       <div id="admin-tab-avg-lige" class="admin-tab-panel">
-        <div id="trenutno-kolo-avg-container"></div>
         <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
-          <button class="avg-league-tab-btn active" id="avg-tab-btn-zenska" onclick="switchAvgLeagueTab('zenska', this)">👑
-            Ženska liga</button>
-          <button class="avg-league-tab-btn" id="avg-tab-btn-diamond"
+          <button class="avg-league-tab-btn active" id="avg-tab-btn-diamond"
             onclick="switchAvgLeagueTab('diamond', this)">💎 Diamond</button>
           <button class="avg-league-tab-btn" id="avg-tab-btn-gold" onclick="switchAvgLeagueTab('gold', this)">🥇
             Gold</button>
@@ -1326,10 +1326,7 @@
             Bronze</button>
           
         </div>
-        <div id="avg-league-zenska" class="avg-league-panel" style="display: block;">
-          <div id="avg-container-zenska"></div>
-        </div>
-        <div id="avg-league-diamond" class="avg-league-panel" style="display:none;">
+        <div id="avg-league-diamond" class="avg-league-panel" style="display: block;">
           <div id="avg-container-diamond"></div>
         </div>
         <div id="avg-league-gold" class="avg-league-panel" style="display:none;">
@@ -1341,6 +1338,12 @@
         <div id="avg-league-bronze" class="avg-league-panel" style="display:none;">
           <div id="avg-container-bronze"></div>
         </div>
+      </div>
+
+      <!-- Ženska liga: zasebna kolekcija women-leagues (ne avg-leagues), isti
+           loadAvgLeague tok - samo se putanja bira u leagueGroupsPath. -->
+      <div id="admin-tab-zenska" class="admin-tab-panel">
+        <div id="avg-container-zenska"></div>
       </div>
 
       <div id="admin-tab-igraci" class="admin-tab-panel">
@@ -1429,9 +1432,10 @@
     // -- TRENUTNO KOLO (raspored vidljiv do tog kola, uključivo) --
     // Zapisuje se u config/active-season (isti dokument koji određuje aktivnu
     // sezonu), dva odvojena polja: trenutnoKolo (sezonske grupe, Grupe tab) i
-    // trenutnoKoloAvg (AVG lige, primjenjuje se na SVE lige/grupe pod AVG
-    // tabom zajedno - jedan zajednički broj, ne po ligi). Zamjenjuje stari
-    // ručni unos u seasons/{sezona}.trenutnoKolo (obrisano iz Firestore).
+    // trenutnoKoloAvgLige (AVG lige - mapa {leagueId: kolo}, jedan broj PO
+    // LIGI, jer lige ne kreću/ne napreduju istovremeno). Za ligu bez vlastitog
+    // broja vrijedi stari zajednički trenutnoKoloAvg (pa 1) - vidi getAvgKolo.
+    // Zamjenjuje stari ručni unos u seasons/{sezona}.trenutnoKolo (obrisano iz Firestore).
     // Index.html filtrira raspored po istim poljima (kolo <= trenutnoKolo).
     const KOLO_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1);
     const KOLO_SELECT_STYLE = 'background:rgba(10,19,38,0.9);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;font-size:1rem;font-weight:600;padding:8px 14px;cursor:pointer;';
@@ -1452,17 +1456,26 @@
           </div>`;
       }
 
-      const avgEl = document.getElementById('trenutno-kolo-avg-container');
-      if (avgEl) {
-        const currentAvg = parseInt(activeSeasonConfig.trenutnoKoloAvg) || 1;
-        avgEl.innerHTML = `
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-            <span style="font-size:1rem;color:var(--muted);">Trenutno kolo:</span>
-            <select id="trenutno-kolo-avg-select" style="${KOLO_SELECT_STYLE}" onchange="updateTrenutnoKoloAvg(this.value)">
-              ${koloOptionsHtml(currentAvg)}
-            </select>
-          </div>`;
-      }
+    }
+
+    // Trenutno AVG kolo jedne lige - vlastiti broj lige, inače stari zajednički
+    // trenutnoKoloAvg, inače 1. Ista logika kao getAvgKolo u index.html.
+    function getAvgKolo(leagueId) {
+      return parseInt(activeSeasonConfig.trenutnoKoloAvgLige?.[leagueId])
+        || parseInt(activeSeasonConfig.trenutnoKoloAvg)
+        || 1;
+    }
+
+    // Select "Trenutno kolo" za jednu AVG ligu - renderira ga loadAvgLeague na
+    // vrhu panela te lige (samo admin).
+    function renderAvgKoloControl(leagueId) {
+      return `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+          <span style="font-size:1rem;color:var(--muted);">Trenutno kolo:</span>
+          <select id="trenutno-kolo-avg-select-${leagueId}" style="${KOLO_SELECT_STYLE}" onchange="updateTrenutnoKoloAvg('${leagueId}', this.value)">
+            ${koloOptionsHtml(getAvgKolo(leagueId))}
+          </select>
+        </div>`;
     }
 
     window.updateTrenutnoKolo = async function (value) {
@@ -1476,12 +1489,13 @@
       }
     };
 
-    window.updateTrenutnoKoloAvg = async function (value) {
+    window.updateTrenutnoKoloAvg = async function (leagueId, value) {
       const n = parseInt(value);
       try {
-        await setDoc(doc(db, 'config', 'active-season'), { trenutnoKoloAvg: n }, { merge: true });
-        activeSeasonConfig.trenutnoKoloAvg = n;
-        showToast(`Trenutno AVG kolo postavljeno na ${n}.`, 'success');
+        // merge:true spaja i ugniježđenu mapu - mijenja se samo ova liga, ostale ostaju.
+        await setDoc(doc(db, 'config', 'active-season'), { trenutnoKoloAvgLige: { [leagueId]: n } }, { merge: true });
+        activeSeasonConfig.trenutnoKoloAvgLige = { ...(activeSeasonConfig.trenutnoKoloAvgLige || {}), [leagueId]: n };
+        showToast(`${AVG_LEAGUE_LABELS[leagueId] || leagueId}: trenutno kolo postavljeno na ${n}.`, 'success');
       } catch (err) {
         showToast('Greška: ' + err.message, 'error');
       }
@@ -1626,6 +1640,7 @@
       document.getElementById('admin-tab-' + name).classList.add('active');
       btn.classList.add('active');
       if (name === 'avg-lige') loadAvgLeague(currentAvgLeague);
+      if (name === 'zenska') loadAvgLeague('zenska');
       if (name === 'igraci') { loadPlayersPhotoGrid(); loadPhotoRequests(); }
     };
 
@@ -1760,12 +1775,50 @@
 
     // -- ZAHTJEVI ZA SLIKE (javni upload s Index.html, čeka admin odobrenje) --
     // photoRequests/{slug}: { playerName, photoURL (privremena slika, u
-    // player-photos-pending/), submittedAt }. Piše ga bilo tko s javne stranice -
-    // ovdje admin odobrava (prebaci photoURL u players/{slug}) ili odbija
-    // (obriše zahtjev + pripadajući Storage fajl).
+    // player-photos-pending/{slug}.jpg), submittedAt }. Piše ga bilo tko s javne
+    // stranice - ovdje admin odobrava (slika se PREMJEŠTA u player-photos/{slug}.jpg,
+    // a players/{slug}.photoURL dobiva novi URL; pending fajl se briše) ili odbija
+    // (premjesti se u player-photos-denied/ pod jedinstvenim imenom, zahtjev se briše).
+    // Pending je tako uvijek samo privremeni folder zahtjeva na čekanju.
+    const DENIED_PHOTO_DIR = 'player-photos-denied';
+
     function storagePathFromDownloadURL(url) {
       const m = url.match(/\/o\/([^?]+)/);
       return m ? decodeURIComponent(m[1]) : null;
+    }
+
+    // Web SDK nema "kopiraj/premjesti" na serveru - slika se preuzme i ponovno uploada
+    // na novi put. Preuzimanje iz preglednika traži CORS (GET) na Storage bucketu
+    // (jednokratna postavka, bez nje fetch ispod pada). Ako izvorni fajl ne postoji,
+    // getDownloadURL baca 'storage/object-not-found' - namjerno se propušta nepromijenjeno
+    // da pozivatelj može razlikovati "nema fajla" od "preuzimanje nije uspjelo".
+    async function copyStorageObject(srcPath, destPath) {
+      const srcUrl = await getDownloadURL(ref(storage, srcPath));
+      let blob;
+      try {
+        const resp = await fetch(srcUrl);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        blob = await resp.blob();
+      } catch (e) {
+        throw new Error(`Preuzimanje slike nije uspjelo (${e.message}). Provjeri je li CORS postavljen na Storage bucket.`);
+      }
+      const destRef = ref(storage, destPath);
+      await uploadBytes(destRef, blob, { contentType: 'image/jpeg' });
+      return destRef;
+    }
+
+    // Pending -> službena slika (ime-prezime = slug, jedinstveno po igraču).
+    // Redoslijed je siguran za ponavljanje: pending se briše tek kad su službena
+    // slika i players dokument uspješno spremljeni.
+    async function movePendingPhotoToOfficial(slug, pendingPath) {
+      const officialRef = await copyStorageObject(pendingPath, `player-photos/${slug}.jpg`);
+      // &v=… : isti Storage put se prepisuje pri svakoj promjeni slike, pa novi URL
+      // mora biti drugačiji od prethodnog da preglednik ne prikaže staru iz cachea.
+      const url = `${await getDownloadURL(officialRef)}&v=${Date.now()}`;
+      await setDoc(doc(db, 'players', slug), { photoURL: url, updatedAt: serverTimestamp() }, { merge: true });
+      try { await deleteObject(ref(storage, pendingPath)); }
+      catch (e) { console.error('Brisanje pending slike nije uspjelo:', e); }
+      return url;
     }
 
     async function loadPhotoRequests() {
@@ -1775,6 +1828,14 @@
         const requests = []; snap.forEach(d => requests.push({ id: d.id, ...d.data() }));
         if (!requests.length) { container.innerHTML = ''; return; }
         requests.sort((a, b) => (a.playerName || '').localeCompare(b.playerName || '', 'hr'));
+        // Svježi download URL iz putanje: novi zahtjev za istog igrača prepisuje pending
+        // fajl pa spremljeni URL u zahtjevu ne mora više vrijediti.
+        await Promise.all(requests.map(async r => {
+          const path = storagePathFromDownloadURL(r.photoURL || '');
+          if (!path) return;
+          try { r.photoURL = await getDownloadURL(ref(storage, path)); }
+          catch (e) { /* ostavi spremljeni URL */ }
+        }));
         container.innerHTML = `
           <div class="photo-requests-section">
             <div class="photo-requests-title">Zahtjevi za slike (${requests.length})</div>
@@ -1796,11 +1857,15 @@
     }
 
     window.approvePhotoRequest = async function (slug) {
+      const buttons = document.querySelectorAll(`#photo-request-${slug} button`);
+      buttons.forEach(b => b.disabled = true);
       try {
         const reqDoc = await getDoc(doc(db, 'photoRequests', slug));
-        if (!reqDoc.exists()) { showToast('Zahtjev više ne postoji.', 'error'); return; }
-        const { photoURL } = reqDoc.data();
-        await setDoc(doc(db, 'players', slug), { photoURL, updatedAt: serverTimestamp() }, { merge: true });
+        if (!reqDoc.exists()) { showToast('Zahtjev više ne postoji.', 'error'); loadPhotoRequests(); return; }
+        const pendingPath = storagePathFromDownloadURL(reqDoc.data().photoURL || '');
+        if (!pendingPath) throw new Error('Zahtjev nema valjanu putanju slike.');
+
+        const photoURL = await movePendingPhotoToOfficial(slug, pendingPath);
         await deleteDoc(doc(db, 'photoRequests', slug));
 
         const cached = playersPhotoCache.find(p => p.id === slug);
@@ -1810,25 +1875,40 @@
         loadPhotoRequests();
       } catch (err) {
         showToast('Greška: ' + err.message, 'error');
+        buttons.forEach(b => b.disabled = false);
       }
     };
 
+    // Odbijena slika se ne briše nego premješta u DENIED_PHOTO_DIR pod jedinstvenim
+    // imenom (slug + vrijeme), pa se više odbijanja istog igrača ne prepisuju.
+    // Ako se premještanje ne uspije (npr. CORS), zahtjev ostaje netaknut.
+    // Namjerno bez potvrde (confirm) - odbijanje je odmah; korisniku se prikazuje
+    // samo kratka poruka bez putanje.
     window.declinePhotoRequest = async function (slug) {
-      if (!confirm('Odbiti ovaj zahtjev za sliku?')) return;
+      const buttons = document.querySelectorAll(`#photo-request-${slug} button`);
+      buttons.forEach(b => b.disabled = true);
       try {
         const reqDoc = await getDoc(doc(db, 'photoRequests', slug));
         if (reqDoc.exists()) {
-          const path = storagePathFromDownloadURL(reqDoc.data().photoURL);
-          if (path) {
-            try { await deleteObject(ref(storage, path)); }
-            catch (e) { console.error('Brisanje pending slike nije uspjelo:', e); }
+          const pendingPath = storagePathFromDownloadURL(reqDoc.data().photoURL || '');
+          if (pendingPath) {
+            try {
+              await copyStorageObject(pendingPath, `${DENIED_PHOTO_DIR}/${slug}-${Date.now()}.jpg`);
+            } catch (e) {
+              // Pending fajla više nema (npr. ručno obrisan) - nema što premjestiti,
+              // zahtjev se svejedno briše. Sve ostale greške prekidaju odbijanje.
+              if (e.code !== 'storage/object-not-found') throw e;
+            }
+            try { await deleteObject(ref(storage, pendingPath)); }
+            catch (e) { if (e.code !== 'storage/object-not-found') console.error('Brisanje pending slike nije uspjelo:', e); }
           }
         }
         await deleteDoc(doc(db, 'photoRequests', slug));
-        showToast('Zahtjev odbijen.', 'success');
+        showToast('Slika je odbijena!', 'success');
         loadPhotoRequests();
       } catch (err) {
         showToast('Greška: ' + err.message, 'error');
+        buttons.forEach(b => b.disabled = false);
       }
     };
 
@@ -1867,7 +1947,8 @@
         if (!currentIsAdmin) switchAdminTab('grupe', document.getElementById('tab-btn-grupe'));
 
         ACTIVE_SEASON_ID = await resolveActiveSeasonId();
-        const seasonLabel = SEASON_LABELS[ACTIVE_SEASON_ID] || ACTIVE_SEASON_ID;
+        // Nova sezona ne traži izmjenu koda: bez unosa u SEASON_LABELS oznaka se izvede iz ID-ja.
+        const seasonLabel = SEASON_LABELS[ACTIVE_SEASON_ID] || ACTIVE_SEASON_ID.replace(/^sezona-(\d+)$/, 'Sezona $1');
         document.getElementById('welcome-msg').textContent = `Dobrodošli u ${seasonLabel}, ${user.email.split('@')[0]}!`;
         if (currentIsAdmin) renderTrenutnoKoloControls();
 
@@ -2643,18 +2724,25 @@
         showToast('Greška: ' + err.message, 'error');
       }
     };
-    //  AVG LIGE
-    // Putanja avg-leagues/{ACTIVE_SEASON_ID}/{leagueId}/{groupId} - grupa je
-    // dokument izravno u {leagueId} kolekciji (nema posrednog "groups" naziva),
-    // pa "rezultati" (povijesni rezultati) i "bracket" (ždrijeb) žive kao
-    // rezervirani susjedi grupa u istoj kolekciji - filtrirati ih pri listanju.
+    //  AVG LIGE + ŽENSKA LIGA
+    // AVG lige: avg-leagues/{ACTIVE_SEASON_ID}/{leagueId}/{groupId} - grupa je
+    // dokument izravno u {leagueId} kolekciji (nema posrednog "groups" naziva).
+    // Ženska liga je odvojena kolekcija women-leagues/{ACTIVE_SEASON_ID}/groups/{groupId}.
+    // U oba slučaja "rezultati" (povijesni rezultati) i "bracket" (ždrijeb) žive
+    // kao rezervirani susjedi grupa u istoj kolekciji - filtrirati ih pri listanju.
+    // leagueId 'zenska' ostaje logički ključ svugdje (labele, kolo po ligi...);
+    // leagueGroupsPath je jedino mjesto koje zna gdje u bazi liga stvarno živi (ista
+    // funkcija je i u index.html i group-detail.html - mijenjati na sva tri mjesta).
+    function leagueGroupsPath(seasonId, leagueId) {
+      return leagueId === 'zenska' ? ['women-leagues', seasonId, 'groups'] : ['avg-leagues', seasonId, leagueId];
+    }
     const AVG_LEAGUE_LABELS = {
       diamond: '💎 Diamond', gold: '🥇 Gold',
       silver: '🥈 Silver', bronze: '🥉 Bronze', zenska: '👑 Ženska liga'
     };
     const AVG_RESERVED_DOC_IDS = ['rezultati', 'bracket'];
 
-    let currentAvgLeague = 'zenska';
+    let currentAvgLeague = 'diamond';
 
     window.switchAvgLeagueTab = function (leagueId, btn) {
       document.querySelectorAll('.avg-league-panel').forEach(p => p.style.display = 'none');
@@ -2672,23 +2760,27 @@
       try {
         await loadAllPlayers();
 
-        const groupsSnap = await getDocs(collection(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId));
+        const basePath = leagueGroupsPath(ACTIVE_SEASON_ID, leagueId);
+        const groupsSnap = await getDocs(collection(db, ...basePath));
         const groups = [];
         groupsSnap.forEach(d => { if (!AVG_RESERVED_DOC_IDS.includes(d.id)) groups.push({ id: d.id, ...d.data() }); });
         groups.sort((a, b) => a.id.localeCompare(b.id));
 
         const withPlayers = await Promise.all(groups.map(async g => {
-          const ps = await getDocs(collection(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, g.id, 'players'));
+          const ps = await getDocs(collection(db, ...basePath, g.id, 'players'));
           const players = []; ps.forEach(p => players.push(p.data().name));
           return { ...g, players };
         }));
 
         const groupsHtml = withPlayers.length > 0
           ? '<div class="groups-grid">' + withPlayers.map(g => renderAvgGroupCard(g, leagueId)).join('') + '</div>'
-          : '<div style="text-align:center;color:var(--muted);padding:20px 0 28px;">Nema grupa. Kreiraj prvu grupu ispod.</div>';
+          : `<div style="text-align:center;color:var(--muted);padding:20px 0 28px;">Nema grupa.${leagueId !== 'zenska' ? ' Kreiraj prvu grupu ispod.' : ''}</div>`;
 
         const assignedNames = new Set(withPlayers.flatMap(g => g.players));
-        container.innerHTML = groupsHtml + renderAvgCreateForm(leagueId, groups, assignedNames);
+        // Ženska liga je već postavljena - nema forme za novu grupu (AVG lige je imaju).
+        // Za novu sezonu Ženske lige vrati formu: makni uvjet leagueId !== 'zenska'.
+        const createFormHtml = leagueId !== 'zenska' ? renderAvgCreateForm(leagueId, groups, assignedNames) : '';
+        container.innerHTML = (currentIsAdmin ? renderAvgKoloControl(leagueId) : '') + groupsHtml + createFormHtml;
 
       } catch (err) {
         container.innerHTML = `<div style="color:#ffaaaa;padding:20px;">Greška: ${esc(err.message)}</div>`;
@@ -2777,14 +2869,15 @@
 
       const groupId = slugify(groupName);
 
+      const basePath = leagueGroupsPath(ACTIVE_SEASON_ID, leagueId);
       try {
         // 1. Spremi group doc
-        await setDoc(doc(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, groupId), { name: groupName });
+        await setDoc(doc(db, ...basePath, groupId), { name: groupName });
 
         // 2. Spremi igrače s position
         await Promise.all(selectedPlayers.map((name, i) =>
           setDoc(
-            doc(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, groupId, 'players', slugify(name)),
+            doc(db, ...basePath, groupId, 'players', slugify(name)),
             { name, position: i + 1 }
           )
         ));
@@ -2797,7 +2890,7 @@
             const matchId = `k${kolo}_m${mec}`;
             matchWrites.push(
               setDoc(
-                doc(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, groupId, 'matches', matchId),
+                doc(db, ...basePath, groupId, 'matches', matchId),
                 { kolo, mec, player1, player2 }
               )
             );
@@ -2874,12 +2967,13 @@
 
     window.deleteAvgGroup = async function (leagueId, groupId) {
       if (!confirm(`Izbrisati grupu "${groupId}" i sve njene mečeve?`)) return;
+      const basePath = leagueGroupsPath(ACTIVE_SEASON_ID, leagueId);
       try {
-        const matchesSnap = await getDocs(collection(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, groupId, 'matches'));
+        const matchesSnap = await getDocs(collection(db, ...basePath, groupId, 'matches'));
         await Promise.all(matchesSnap.docs.map(d => deleteDoc(d.ref)));
-        const playersSnap = await getDocs(collection(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, groupId, 'players'));
+        const playersSnap = await getDocs(collection(db, ...basePath, groupId, 'players'));
         await Promise.all(playersSnap.docs.map(d => deleteDoc(d.ref)));
-        await deleteDoc(doc(db, 'avg-leagues', ACTIVE_SEASON_ID, leagueId, groupId));
+        await deleteDoc(doc(db, ...basePath, groupId));
         showToast('Grupa izbrisana!', 'success');
         loadAvgLeague(leagueId);
       } catch (err) {

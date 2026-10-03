@@ -925,10 +925,15 @@
 
     .player-matches-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.06); }
 
+    /* Red + njegov (otvoreni) detalj čine jednu cjelinu; razmak ispod nosi
+       wrapper, pa zadnji u listi nema razmak koji bi samo povećao dno popupa. */
+    .player-match-item { margin-bottom: 14px; }
+    .player-match-item:last-child { margin-bottom: 0; }
+
     .player-match-row {
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
       padding: 14px; background: linear-gradient(135deg, rgba(24, 39, 72, 0.95), rgba(9, 15, 28, 0.95));; border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 10px; cursor: pointer; transition: 0.15s ease; margin-bottom: 10px; 
+      border-radius: 10px; cursor: pointer; transition: 0.15s ease;
     }
     .player-match-row.expanded { border-radius: 10px 10px 0 0}
     .player-match-row:hover { border-color: rgba(120,170,255,0.3); }
@@ -956,7 +961,7 @@
       padding: 14px;
       background:rgb(52 71 115 / 50%);
     }
-    .player-match-detail-stats.open { display: block; margin-bottom: 10px; margin-top: -10px; border-radius: 0 0 10px 10px;}
+    .player-match-detail-stats.open { display: block; border-radius: 0 0 10px 10px;}
     .player-match-row.expanded .player-match-detail-stats { padding-bottom: 10px; }
     .player-match-detail-stats .mpc-stats { padding: 0; }
 
@@ -1050,10 +1055,12 @@
       <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('tablice')">TABLICE</button>
         <button class="tab-btn" onclick="switchTab('najbolji')">NAJBOLJI U LIGI</button>
+        <button class="tab-btn" onclick="switchTab('zenska-liga')">ŽENSKA LIGA</button>
+        <button class="tab-btn" onclick="switchTab('avg-lige')">AVG LIGE</button>
         <button class="tab-btn" onclick="switchTab('gornji-zdrijeb')">GORNJI ŽDRIJEB</button>
         <button class="tab-btn" onclick="switchTab('donji-zdrijeb')">DONJI ŽDRIJEB</button>
-        <button class="tab-btn" onclick="switchTab('avg-lige')">AVG LIGE</button>        
-        <button class="tab-btn" onclick="switchTab('yt-live')">YT-LIVE</button>        
+        <!-- YT-LIVE privremeno isključen (tab + panel s iframeom ispod su zakomentirani) -->
+        <!-- <button class="tab-btn" onclick="switchTab('yt-live')">YT-LIVE</button> -->
       </div>
 
       <div id="tab-tablice" class="tab-panel active">
@@ -1080,6 +1087,7 @@
         <div id="donji-zdrijeb-archive-content" style="display:none;"></div>
       </div>
 
+      <!-- YT-LIVE privremeno isključen - za povratak odkomentiraj ovaj panel i gumb u .tabs gore.
       <div id="tab-yt-live" class="tab-panel">
         <div id="yt-frame">
           <iframe class="yt" width="100%" height="731px" src="https://www.youtube.com/embed/ULQK_BW6uqY?si=bk6mvLSMDF3zxyEu"
@@ -1089,16 +1097,20 @@
           </iframe>
         </div>
       </div>
+      -->
 
       <div id="tab-avg-lige" class="tab-panel">
         <div id="avg-lige-tabs" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-          <button class="player-season-tab active" onclick="switchAvgLigeTab('zenska', this)">👑 Ženska liga</button>
-          <button class="player-season-tab" onclick="switchAvgLigeTab('diamond', this)">💎 Diamond</button>
+          <button class="player-season-tab active" onclick="switchAvgLigeTab('diamond', this)">💎 Diamond</button>
           <button class="player-season-tab" onclick="switchAvgLigeTab('gold', this)">🥇 Gold</button>
           <button class="player-season-tab" onclick="switchAvgLigeTab('silver', this)">🥈 Silver</button>
           <button class="player-season-tab" onclick="switchAvgLigeTab('bronze', this)">🥉 Bronze</button>
         </div>
         <div id="avg-lige-content"></div>
+      </div>
+
+      <div id="tab-zenska-liga" class="tab-panel">
+        <div id="zenska-liga-content"></div>
       </div>
 
     </div>
@@ -1130,6 +1142,9 @@
 
       if (name === 'avg-lige') {
         window.loadAvgLige(activeAvgLigeTab);
+      }
+      if (name === 'zenska-liga') {
+        window.loadAvgLige('zenska');
       }
     }
 
@@ -1197,7 +1212,7 @@
     // listu - klizni vremenski prozor od zadnjeg upisa (m.timestamp) to rješava.
     //
     // Raspon i broj kartica su podesivi bez deploya kroz isti config/active-season
-    // Firestore dokument koji već nosi seasonId/trenutnoKolo/trenutnoKoloAvg (vidi
+    // Firestore dokument koji već nosi seasonId/trenutnoKolo/trenutnoKoloAvgLige (vidi
     // resolveActiveSeasonId niže u fileu) - polje sliderConfig, mapa s tri broja:
     //   rangeDays    - koliko dana unatrag ulazi u listu (klizni prozor, vidi gore) -
     //                  primjenjuje se bez obzira na broj mečeva u tom rasponu
@@ -1219,10 +1234,19 @@
     // openBracketMatchPopup/openLowerBracketMatchPopup za svoj tip meča - pozivatelj ih
     // izračuna jednom ovdje da renderMatchPopupCard može ispravno prikazati "Best of X
     // legs" i AVG/First9 +/- diff i za mečeve u "Zadnji mečevi" popupu.
+    // Firestore Timestamp / Date / ISO string -> millisekunde, ili null ako meč
+    // nema (valjan) timestamp. Dijele ga slider "Zadnji mečevi" i player profile
+    // (m.ts u buildPlayerMatches/collectMatchesFromBracketData).
+    function timestampToMillis(t) {
+      if (!t) return null;
+      const ms = typeof t.toMillis === 'function' ? t.toMillis() : new Date(t).getTime();
+      return ms && !isNaN(ms) ? ms : null;
+    }
+
     function pushRecentMatch(m, label, { legs, seasonId } = {}) {
-      if (!m || !m.score || !m.timestamp) return;
-      const ts = typeof m.timestamp.toMillis === 'function' ? m.timestamp.toMillis() : new Date(m.timestamp).getTime();
-      if (!ts || isNaN(ts)) return;
+      if (!m || !m.score) return;
+      const ts = timestampToMillis(m.timestamp);
+      if (!ts) return;
       recentMatchesPool.push({ player1: m.player1, player2: m.player2, score: m.score, ts, label, d: m, legs, seasonId });
     }
 
@@ -1435,7 +1459,7 @@
     // -- AVG LIGE --
     const AVG_LEAGUE_LABELS = { diamond: '💎 Diamond', gold: '🥇 Gold', silver: '🥈 Silver', bronze: '🥉 Bronze', zenska: '👑 Ženska liga' };
     const avgLigeDataCache = {}; // leagueId -> html string (izgrađeno jednom, keširano)
-    let activeAvgLigeTab = 'zenska';
+    let activeAvgLigeTab = 'diamond'; // Ženska liga ima vlastiti glavni tab (ŽENSKA LIGA), ne ide u AVG LIGE
 
     function generateAvgSchedule(players) {
       const n = players.length;
@@ -1741,8 +1765,17 @@
     // -- PLAYER DATABASE (multi-season ready) --
     // playerDatabase[playerName] = { seasons: { 'sezona-2': { seasonLabel, group, groupName, standings, matches:[...] } } }
     const playerDatabase = {};
-    const SEASON_ORDER = ['sezona-1', 'sezona-2', 'sezona-3']; // proširiti kad dođe sezona-4...
+    const SEASON_ORDER = ['sezona-1', 'sezona-2', 'sezona-3'];
     const SEASON_LABELS = { 'sezona-1': 'Sezona 1', 'sezona-2': 'Sezona 2', 'sezona-3': 'Sezona 3' };
+
+    // Nova sezona ne traži izmjenu koda: bootstrap (nakon čitanja config/active-season)
+    // zove ovo s aktivnom sezonom - ako je još nema, dodaje se na kraj SEASON_ORDER
+    // (najnovija) i dobiva oznaku "Sezona N" iz ID-ja. Prošle sezone i dalje
+    // moraju biti navedene gore (da bi se učitale kao arhiva).
+    function ensureSeasonRegistered(seasonId) {
+      if (!SEASON_ORDER.includes(seasonId)) SEASON_ORDER.push(seasonId);
+      if (!SEASON_LABELS[seasonId]) SEASON_LABELS[seasonId] = seasonId.replace(/^sezona-(\d+)$/, 'Sezona $1');
+    }
 
     function registerPlayerSeasonData(playerName, seasonId, seasonLabel, group, groupName, standingsRow, matches, playoff = null) {
       if (!playerDatabase[playerName]) playerDatabase[playerName] = { seasons: {} };
@@ -1799,6 +1832,7 @@
 
           matches.push({
             kolo, opponent, score, hasScore: true, result,
+            ts: timestampToMillis(m.timestamp),
             avgSelf: isP1 ? m.average1 : m.average2,
             avgOpp:  isP1 ? m.average2 : m.average1,
             f9Self:  isP1 ? m.first9_1 : m.first9_2,
@@ -2095,16 +2129,16 @@
             checkouts1: m.coattSelf, checkouts2: m.coattOpp
           }, m.result === 'win', m.result === 'loss', currentProfilePlayer, m.opponent, m._season)}
         </div>` : '';
-      return `<div class="player-match-row" onclick="toggleMatchDetail(this, ${idx})">
+      return `<div class="player-match-item"><div class="player-match-row" onclick="toggleMatchDetail(this, ${idx})">
         <div class="player-match-row-left">
-          <span class="player-match-kolo">Kolo ${m.kolo}</span>
+          <span class="player-match-kolo">${m._context ? escapeHtml(m._context) + ' · ' : ''}Kolo ${m.kolo}</span>
           <span class="player-match-opp">vs ${escapeHtml(m.opponent)}</span>
         </div>
         <div class="player-match-result">
           ${iconHtml}
           ${scoreHtml}
         </div>
-      </div>${detailHtml}`;
+      </div>${detailHtml}</div>`;
     }
 
     // -- AVG GRAF KROZ KOLA --
@@ -2227,6 +2261,7 @@
         result.push({
           id, bracketLabel, roundLabel: d.roundLabel || '',
           opponent, score, hasScore: true, result: result_,
+          ts: timestampToMillis(d.timestamp),
           avgSelf: isP1 ? d.average1 : d.average2,
           avgOpp:  isP1 ? d.average2 : d.average1,
           f9Self:  isP1 ? d.first9_1 : d.first9_2,
@@ -2270,6 +2305,50 @@
       return collectMatchesFromBracketData((avgBracketDataMap[seasonId]||{})[leagueId], 'Playoff', playerName);
     }
 
+    // "Sveukupno" tab - svi odigrani mečevi igrača iz SVIH liga pod tim imenom:
+    // sezonske grupe + sezonski playoff (gornji/donji ždrijeb) + live AVG lige +
+    // AVG playoff. Kronološki, najstariji prvi (po m.ts, tj. vremenu upisa).
+    // Svaki meč nosi _season (ključ za +/- diff u match popupu, isti kao u
+    // sezonskim/AVG tabovima), _kind ('group'|'playoff' - bira koji row renderer),
+    // _context (oznaka lige/sezone za red u listi) i _seasonIdx (samo za sortiranje).
+    //
+    // Mečevi bez timestampa (stariji upisi) idu na početak, među sobom po
+    // sezoni pa po kolu (grupna faza prije playoffa) - sort je stabilan pa
+    // playoff mečevi iste sezone zadržavaju redoslijed iz ždrijeba.
+    function collectOverallMatches(playerName) {
+      const entry = playerDatabase[playerName];
+      if (!entry) return [];
+      const all = [];
+      const add = (matches, seasonId, kind, context, seasonKey) => matches.forEach(m => all.push({
+        ...m, _season: seasonKey, _kind: kind, _context: context, _seasonIdx: SEASON_ORDER.indexOf(seasonId)
+      }));
+
+      SEASON_ORDER.forEach(seasonId => {
+        const sd = entry.seasons[seasonId];
+        if (!sd) return;
+        const context = SEASON_LABELS[seasonId] || seasonId;
+        add(sd.matches, seasonId, 'group', context, seasonId);
+        add(getPlayoffMatchesForPlayer(playerName, seasonId), seasonId, 'playoff', context, seasonId);
+      });
+
+      // 'history' AVG zapisi nemaju mečeve (vidi registerAvgHistoryData) - samo 'live'.
+      Object.entries(entry.avgLeagues || {}).forEach(([seasonId, byLeague]) => {
+        Object.entries(byLeague).forEach(([leagueId, ad]) => {
+          if (ad.kind !== 'live') return;
+          const context = `${ad.leagueLabel} · ${SEASON_LABELS[seasonId] || seasonId}`;
+          const seasonKey = `avg:${seasonId}:${leagueId}`;
+          add(ad.matches, seasonId, 'group', context, seasonKey);
+          add(getAvgPlayoffMatchesForPlayer(playerName, seasonId, leagueId), seasonId, 'playoff', context, seasonKey);
+        });
+      });
+
+      return all.sort((a, b) =>
+        (a.ts || 0) - (b.ts || 0)
+        || a._seasonIdx - b._seasonIdx
+        || (a._kind === b._kind ? 0 : a._kind === 'playoff' ? 1 : -1)
+        || (a.kolo || 0) - (b.kolo || 0));
+    }
+
     function playoffMatchRow(m, idx) {
       const resultIcons = {
         win:  '<span class="result-icon win"><i class="fas fa-check"></i></span>',
@@ -2290,16 +2369,16 @@
             checkouts1: m.coattSelf, checkouts2: m.coattOpp
           }, m.result === 'win', m.result === 'loss', currentProfilePlayer, m.opponent, m._season)}
         </div>`;
-      return `<div class="player-match-row" onclick="togglePlayoffMatchDetail(this, ${idx})">
+      return `<div class="player-match-item"><div class="player-match-row" onclick="togglePlayoffMatchDetail(this, ${idx})">
         <div class="player-match-row-left">
-          <span class="player-match-kolo">${escapeHtml(m.bracketLabel)}${m.roundLabel ? ' · ' + escapeHtml(m.roundLabel.split('-')[0].trim()) : ''}</span>
+          <span class="player-match-kolo">${m._context ? escapeHtml(m._context) + ' · ' : ''}${escapeHtml(m.bracketLabel)}${m.roundLabel ? ' · ' + escapeHtml(m.roundLabel.split('-')[0].trim()) : ''}</span>
           <span class="player-match-opp">vs ${escapeHtml(m.opponent)}</span>
         </div>
         <div class="player-match-result">
           ${iconHtml}
           ${scoreHtml}
         </div>
-      </div>${detailHtml}`;
+      </div>${detailHtml}</div>`;
     }
 
     function togglePlayoffMatchDetail(rowEl, idx) {
@@ -2349,6 +2428,27 @@
       document.getElementById('avatar-upload-input').click();
     }
 
+    // Nema polja za spol igrača, pa se igračicom smatra svaka koja ima zapis u
+    // Ženskoj ligi (živu ili povijesnu, bilo koja sezona). Igračica koja nikad
+    // nije igrala Žensku ligu ostaje u muškom rodu - za nju treba ručno upisati
+    // ženski oblik u `result` (feminizeResult ga neće pokvariti).
+    function isFemalePlayer(playerName) {
+      const avgLeagues = playerDatabase[playerName]?.avgLeagues;
+      return !!avgLeagues && Object.values(avgLeagues).some(byLeague => byLeague.zenska);
+    }
+
+    // `result` povijesnog AVG zapisa je slobodan tekst u muškom rodu; u bazi su
+    // danas samo "Završio je na N. mjestu", "Osvojio je N. mjesto",
+    // "Diskvalificiran" i "Diskvalificiran (NP)". Mijenjaju se samo te tri riječi
+    // (uz zadržano veliko/malo početno slovo); već ženski oblik ostaje netaknut.
+    const RESULT_FEMININE = { 'završio': 'završila', 'osvojio': 'osvojila', 'diskvalificiran': 'diskvalificirana' };
+    function feminizeResult(text) {
+      return String(text).replace(/\b(završio|osvojio|diskvalificiran)\b/gi, w => {
+        const f = RESULT_FEMININE[w.toLowerCase()];
+        return w[0] === w[0].toUpperCase() ? f[0].toUpperCase() + f.slice(1) : f;
+      });
+    }
+
     // Kompaktna kartica za povijesni AVG rezultat (samo avg+result, bez mečeva) -
     // vidi registerAvgHistoryData. Namjerno ne koristi statBoxes (koji očekuje
     // punu standings strukturu koju za ove podatke nemamo).
@@ -2364,13 +2464,22 @@
         </div>`;
     }
 
+    // Koliko zadnjih mečeva "Sveukupno" tab prikazuje u listi "Mečevi".
+    const OVERALL_MATCHES_LIMIT = 8;
+
     // Zajednička "stat-boxevi + graf + forma + lista mečeva + playoff" sekcija -
     // koristi je i sezonski/Sveukupno prikaz i AVG tab. AVG tab je može pozvati
     // više puta (jednom po ligi, ako igrač igra više AVG liga odjednom), zato
     // idxRef (dijeljeni brojač {value:N}) umjesto lokalnog indeksa - drži
     // player-match-detail-N/playoff-match-detail-N id-jeve jedinstvenima kad se
     // više sekcija renderira u istom popupu.
-    function buildProfileSectionHtml(stats, matches, playoffMatches, playoffNote, idxRef) {
+    //
+    // overallMatches - samo za "Sveukupno" tab (vidi collectOverallMatches): svi
+    // mečevi iz svih liga, kronološki. Kad je zadan, zamjenjuje matches/playoffMatches:
+    // "Mečevi" lista prikazuje samo zadnjih OVERALL_MATCHES_LIMIT (najnoviji prvi),
+    // a graf i forma idu iz istog kronološkog niza (bez zasebne Playoff sekcije -
+    // playoff mečevi su već u listi).
+    function buildProfileSectionHtml(stats, matches, playoffMatches, playoffNote, idxRef, overallMatches) {
       const roundShortLabel = (roundLabel) => {
         const base = (roundLabel || '').split('-')[0].trim();
         const map = {
@@ -2399,16 +2508,29 @@
 
       // Za graf: regularni mečevi (kronološki) + playoff mečevi nakon njih (grupna faza pa ždrijeb),
       // uvijek prikazuje zadnjih 7 - avgChartHtml sam reže na zadnjih MAX_POINTS.
-      const matchesForChart = [
-        ...matches.map(m => ({ ...m, chartLabel: `K${m.kolo}` })),
-        ...playoffMatches.map(m => ({ ...m, chartLabel: roundShortLabel(m.roundLabel) }))
-      ];
+      const isOverall = Array.isArray(overallMatches);
+      const matchesForChart = isOverall
+        ? overallMatches.map(m => ({ ...m, chartLabel: m._kind === 'playoff' ? roundShortLabel(m.roundLabel) : `K${m.kolo}` }))
+        : [
+            ...matches.map(m => ({ ...m, chartLabel: `K${m.kolo}` })),
+            ...playoffMatches.map(m => ({ ...m, chartLabel: roundShortLabel(m.roundLabel) }))
+          ];
       const form = formFromMatches(matchesForChart);
       const chartHtml = avgChartHtml(matchesForChart, stats.avg, form);
 
-      const matchesHtml = matches.length
-        ? `<div class="player-matches-title">Mečevi</div>${matches.map(m => matchRow(m, idxRef.value++)).join('')}`
-        : '';
+      let matchesHtml;
+      if (isOverall) {
+        const recent = overallMatches.slice(-OVERALL_MATCHES_LIMIT).reverse();
+        matchesHtml = recent.length
+          ? `<div class="player-matches-title">Zadnji mečevi</div>${recent.map(m =>
+              m._kind === 'playoff' ? playoffMatchRow(m, idxRef.value++) : matchRow(m, idxRef.value++)
+            ).join('')}`
+          : '';
+      } else {
+        matchesHtml = matches.length
+          ? `<div class="player-matches-title">Mečevi</div>${matches.map(m => matchRow(m, idxRef.value++)).join('')}`
+          : '';
+      }
 
       return `${statBoxes(stats)}${chartHtml}${matchesHtml}${playoffHtml}`;
     }
@@ -2442,7 +2564,8 @@
           return Object.keys(byLeague).map(leagueId => {
             const ad = byLeague[leagueId];
             if (ad.kind === 'history') {
-              return avgHistoryCardHtml(ad.leagueLabel, SEASON_LABELS[seasonId] || seasonId, ad.avg, ad.result);
+              const resultText = isFemalePlayer(currentProfilePlayer) ? feminizeResult(ad.result) : ad.result;
+              return avgHistoryCardHtml(ad.leagueLabel, SEASON_LABELS[seasonId] || seasonId, ad.avg, resultText);
             }
             const stats = computeAvgStatsWithPlayoffs(currentProfilePlayer, seasonId, leagueId, ad.standings);
             const matches = ad.matches.map(m => ({...m, _season: `avg:${seasonId}:${leagueId}`}));
@@ -2452,29 +2575,31 @@
           }).join('');
         }).join('');
       } else {
+        const isOverall = currentProfileSeason === 'overall';
         let stats, matches;
-        if (currentProfileSeason === 'overall') {
+        if (isOverall) {
           stats = computeOverallStats(currentProfilePlayer);
           matches = [];
-          availableSeasons.forEach(s => matches.push(...entry.seasons[s].matches.map(m => ({...m, _season: s}))));
-          matches.sort((a,b) => SEASON_ORDER.indexOf(a._season) - SEASON_ORDER.indexOf(b._season) || a.kolo - b.kolo);
         } else {
           const sd = entry.seasons[currentProfileSeason];
           stats = computeSeasonStatsWithPlayoffs(currentProfilePlayer, currentProfileSeason, sd.standings);
           matches = sd.matches.map(m => ({...m, _season: currentProfileSeason}));
         }
 
-        const sd = currentProfileSeason !== 'overall' ? entry.seasons[currentProfileSeason] : null;
+        const sd = !isOverall ? entry.seasons[currentProfileSeason] : null;
         const playoffNote = sd?.playoff || null;
 
-        // Playoff mečevi iz ždrijeba - za "Sveukupno" spoji playoff iz SVIH
-        // sezona koje ih imaju, za pojedinačni sezonski tab samo te sezone
+        // "Sveukupno" - mečevi (grupe, playoff, sezone + AVG lige) se skupljaju
+        // u jedan kronološki niz (collectOverallMatches), a buildProfileSectionHtml
+        // iz njega prikazuje samo zadnjih OVERALL_MATCHES_LIMIT. Pojedinačni
+        // sezonski tab: samo mečevi te sezone + njen playoff iz ždrijeba
         // (getPlayoffMatchesForPlayer sam bira live vs. arhivsku bracket mapu).
-        const playoffMatches = currentProfileSeason === 'overall'
-          ? availableSeasons.flatMap(s => getPlayoffMatchesForPlayer(currentProfilePlayer, s).map(m => ({...m, _season: s})))
+        const overallMatches = isOverall ? collectOverallMatches(currentProfilePlayer) : null;
+        const playoffMatches = isOverall
+          ? []
           : getPlayoffMatchesForPlayer(currentProfilePlayer, currentProfileSeason).map(m => ({...m, _season: currentProfileSeason}));
 
-        contentHtml = buildProfileSectionHtml(stats, matches, playoffMatches, playoffNote, idxRef);
+        contentHtml = buildProfileSectionHtml(stats, matches, playoffMatches, playoffNote, idxRef, overallMatches);
       }
 
       // Fixed close X (popup-fixed-close-btn) već pokriva "zatvori sve" za svaki
@@ -3459,7 +3584,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAnalytics }  from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
     import { getFirestore, collection, getDocs, query, orderBy, getDoc, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-storage.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-storage.js";
     import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app-check.js";
 
     const firebaseConfig = {
@@ -3507,9 +3632,9 @@
     const DEFAULT_ACTIVE_SEASON_ID = 'sezona-2';
     let ACTIVE_SEASON_ID = DEFAULT_ACTIVE_SEASON_ID;
 
-    // Isti dokument nosi i trenutnoKolo/trenutnoKoloAvg (vidi niže) - broj
-    // kola do kojeg (uključivo) je raspored javno vidljiv, po admin panelu
-    // (Grupe tab / AVG tab). Zamjenjuje stari seasons/{sezona}.trenutnoKolo.
+    // Isti dokument nosi i trenutnoKolo/trenutnoKoloAvgLige (po ligi, vidi
+    // getAvgKolo) - broj kola do kojeg (uključivo) je raspored javno vidljiv, po
+    // admin panelu (Grupe tab / AVG tab). Zamjenjuje stari seasons/{sezona}.trenutnoKolo.
     window.activeSeasonConfig = {};
 
     async function resolveActiveSeasonId() {
@@ -3561,8 +3686,9 @@
     // <script> bloku) postavi window.pendingAvatarUploadTarget i otvori skriveni
     // #avatar-upload-input. Nema logina/identiteta na javnoj stranici, pa slika
     // NE postaje odmah javna - upisuje se u photoRequests/{slug} (privremena
-    // slika u player-photos-pending/), a admin je u index-admin.html odobrava
-    // (prebacuje u players/{slug}.photoURL) ili odbija. Ista kompresija na
+    // slika u player-photos-pending/{slug}.jpg), a admin je u index-admin.html
+    // odobrava (slika se premješta u player-photos/{slug}.jpg, a players/{slug}.photoURL
+    // dobiva novi URL) ili odbija (briše se). Ista kompresija na
     // klijentu kao admin-upload flow (canvas, max 500px, JPEG q0.85).
     function compressImageForUpload(file, maxSize, quality) {
       return new Promise((resolve, reject) => {
@@ -3587,11 +3713,6 @@
       });
     }
 
-    function storagePathFromDownloadURL(url) {
-      const m = url.match(/\/o\/([^?]+)/);
-      return m ? decodeURIComponent(m[1]) : null;
-    }
-
     window.handleAvatarUploadSelect = async function (inputEl) {
       const file = inputEl.files?.[0];
       const name = window.pendingAvatarUploadTarget;
@@ -3599,21 +3720,13 @@
       if (!file || !name) return;
       const slug = slugify(name);
       try {
-        // Stari nepregledan zahtjev (ako postoji) - obrisati mu Storage fajl prije novog
-        // uploada. Best-effort: photoRequests/{slug} čitanje je po pravilima admin-only
-        // (javna stranica nema prijavu), pa ovo za anonimnog posjetitelja UVIJEK baci
-        // permission-denied - ne smije srušiti stvarni upload ispod, samo se stari fajl
-        // tad neće očistiti (ostane siroče u Storageu dok ga admin ne odobri/odbije).
-        try {
-          const existingReq = await getDoc(doc(db, 'photoRequests', slug));
-          if (existingReq.exists()) {
-            const oldPath = storagePathFromDownloadURL(existingReq.data().photoURL || '');
-            if (oldPath) { try { await deleteObject(ref(storage, oldPath)); } catch (e) { /* ignoriraj */ } }
-          }
-        } catch (e) { /* ignoriraj - vidi komentar iznad */ }
-
         const blob = await compressImageForUpload(file, 500, 0.85);
-        const storageRef = ref(storage, `player-photos-pending/${slug}-${Date.now()}.jpg`);
+        // Fiksno ime po igraču (ime-prezime): novi zahtjev za istog igrača PREPISUJE
+        // prethodni pending fajl umjesto da stvara novi - nema duplikata ni siročadi
+        // (anonimni posjetitelj ionako ne smije čitati/brisati stare zahtjeve).
+        // Pending je samo privremeni folder: admin pri odobrenju sliku premješta u
+        // player-photos/{slug}.jpg i briše pending (vidi approvePhotoRequest u adminu).
+        const storageRef = ref(storage, `player-photos-pending/${slug}.jpg`);
         await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
         const url = await getDownloadURL(storageRef);
         await setDoc(doc(db, 'photoRequests', slug), { playerName: name, photoURL: url, submittedAt: serverTimestamp() });
@@ -3946,22 +4059,40 @@
     // Razdvojeno od DOM-a (fetchAvgLeagueData) da se isti fetch+registracija
     // mogu pozvati eager kod bootstrapa (za player profile AVG tab, bez obzira
     // je li korisnik uopće otvorio AVG LIGE tab) bez pisanja u #avg-lige-content.
+    // Rezervirani dokumenti uz grupe u istoj kolekciji - nisu grupe, preskaču se pri listanju.
     const AVG_RESERVED_DOC_IDS = ['rezultati', 'bracket'];
+
+    // Gdje u bazi živi kolekcija grupa neke lige: AVG lige avg-leagues/{sezona}/{liga},
+    // Ženska liga women-leagues/{sezona}/groups. Ista funkcija je i u index-admin.html
+    // i group-detail.html - kad se mijenja, mijenjati na sva tri mjesta.
+    function leagueGroupsPath(seasonId, leagueId) {
+      return leagueId === 'zenska' ? ['women-leagues', seasonId, 'groups'] : ['avg-leagues', seasonId, leagueId];
+    }
+
+    // Do kojeg kola (uključivo) je raspored jedne AVG lige javno vidljiv.
+    // Svaka liga ima vlastiti broj (config/active-season.trenutnoKoloAvgLige[liga]),
+    // jer lige ne kreću/ne napreduju istovremeno; liga bez vlastitog broja koristi
+    // stari zajednički trenutnoKoloAvg, pa 1. Ista logika kao getAvgKolo u admin panelu.
+    function getAvgKolo(leagueId) {
+      const cfg = window.activeSeasonConfig || {};
+      return parseInt(cfg.trenutnoKoloAvgLige?.[leagueId]) || parseInt(cfg.trenutnoKoloAvg) || 1;
+    }
 
     async function fetchAvgLeagueData(leagueId) {
       if (avgLigeDataCache[leagueId]) return; // već učitano
       const seasonId = ACTIVE_SEASON_ID;
-      const maxAvgKolo = parseInt(window.activeSeasonConfig?.trenutnoKoloAvg) || 1;
-      const groupsSnap = await getDocs(collection(db, 'avg-leagues', seasonId, leagueId));
+      const maxAvgKolo = getAvgKolo(leagueId);
+      const basePath = leagueGroupsPath(seasonId, leagueId);
+      const groupsSnap = await getDocs(collection(db, ...basePath));
       const groups = [];
       groupsSnap.forEach(d => { if (!AVG_RESERVED_DOC_IDS.includes(d.id)) groups.push({id:d.id,...d.data()}); });
       groups.sort((a,b) => a.id.localeCompare(b.id));
 
       const groupsData = await Promise.all(groups.map(async (group, i) => {
-        const playersSnap = await getDocs(query(collection(db,'avg-leagues',seasonId,leagueId,group.id,'players'), orderBy('position')));
+        const playersSnap = await getDocs(query(collection(db, ...basePath, group.id, 'players'), orderBy('position')));
         const players = []; playersSnap.forEach(p => players.push(p.data().name));
 
-        const matchesSnap = await getDocs(collection(db,'avg-leagues',seasonId,leagueId,group.id,'matches'));
+        const matchesSnap = await getDocs(collection(db, ...basePath, group.id, 'matches'));
         const matchesMap = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; pushRecentMatch(d, `${AVG_LEAGUE_LABELS[leagueId] || leagueId} - ${group.name}`, { legs: getGroupPhaseLegs(true), seasonId: `avg:${seasonId}:${leagueId}` }); });
 
         const schedule        = generateAvgSchedule(players);
@@ -3991,7 +4122,8 @@
     }
 
     async function loadAvgLige(leagueId) {
-      const contentEl = document.getElementById('avg-lige-content');
+      // Ženska liga ima vlastiti glavni tab i kontejner, ostale lige dijele AVG LIGE tab.
+      const contentEl = document.getElementById(leagueId === 'zenska' ? 'zenska-liga-content' : 'avg-lige-content');
       if (avgLigeDataCache[leagueId]) { contentEl.innerHTML = avgLigeDataCache[leagueId]; return; }
       contentEl.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje podataka...</span></div>`;
       try {
@@ -4012,7 +4144,7 @@
     async function loadAvgBracket(leagueId) {
       const seasonId = ACTIVE_SEASON_ID;
       try {
-        const snap = await getDoc(doc(db, 'avg-leagues', seasonId, leagueId, 'bracket'));
+        const snap = await getDoc(doc(db, ...leagueGroupsPath(seasonId, leagueId), 'bracket'));
         avgBracketDataMap[seasonId] = avgBracketDataMap[seasonId] || {};
         avgBracketDataMap[seasonId][leagueId] = snap.exists() ? (snap.data().matches || {}) : {};
       } catch (err) {
@@ -4029,7 +4161,7 @@
     // rade same od sebe, bez novog koda.
     async function loadAvgHistoryForSeason(seasonId, leagueId) {
       try {
-        const snap = await getDoc(doc(db, 'avg-leagues', seasonId, leagueId, 'rezultati'));
+        const snap = await getDoc(doc(db, ...leagueGroupsPath(seasonId, leagueId), 'rezultati'));
         if (!snap.exists()) return;
         Object.values(snap.data() || {}).forEach(data => {
           if (!data?.name) return;
@@ -4249,6 +4381,7 @@
     async function bootstrap() {
       ACTIVE_SEASON_ID = await resolveActiveSeasonId();
       window.ACTIVE_SEASON_ID = ACTIVE_SEASON_ID;
+      ensureSeasonRegistered(ACTIVE_SEASON_ID);
       activeNajboljiSeason = ACTIVE_SEASON_ID;
 
       await loadBracketConfig();
