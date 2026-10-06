@@ -1212,7 +1212,7 @@
     // listu - klizni vremenski prozor od zadnjeg upisa (m.timestamp) to rješava.
     //
     // Raspon i broj kartica su podesivi bez deploya kroz isti config/active-season
-    // Firestore dokument koji već nosi seasonId/trenutnoKolo/trenutnoKoloAvgLige (vidi
+    // Firestore dokument koji već nosi seasonId/trenutnoKolo/trenutnoKoloAvg/trenutnoKoloZenska (vidi
     // resolveActiveSeasonId niže u fileu) - polje sliderConfig, mapa s tri broja:
     //   rangeDays    - koliko dana unatrag ulazi u listu (klizni prozor, vidi gore) -
     //                  primjenjuje se bez obzira na broj mečeva u tom rasponu
@@ -1222,7 +1222,7 @@
     //                  kartice u sliderru na naslovnici (uvijek najnovijih N, jer
     //                  je currentRecentItems već sortiran po vremenu)
     // SLIDER_CONFIG_DEFAULTS je fallback kad polje/dokument ne postoji ili je
-    // neispravno - isti obrazac kao parseInt(activeSeasonConfig.trenutnoKolo) || 1.
+    // neispravno - isti obrazac kao getVisibleRounds (prazno/neispravno = 1. kolo).
     const SLIDER_CONFIG_DEFAULTS = { rangeDays: 3, maxItems: 15, sliderItems: 6 };
     let recentMatchesPool = [];
     // Snapshot točno onih kartica koje su trenutno prikazane u sliderru - puni ga
@@ -3640,10 +3640,21 @@
     const DEFAULT_ACTIVE_SEASON_ID = 'sezona-2';
     let ACTIVE_SEASON_ID = DEFAULT_ACTIVE_SEASON_ID;
 
-    // Isti dokument nosi i trenutnoKolo/trenutnoKoloAvgLige (po ligi, vidi
-    // getAvgKolo) - broj kola do kojeg (uključivo) je raspored javno vidljiv, po
-    // admin panelu (Grupe tab / AVG tab). Zamjenjuje stari seasons/{sezona}.trenutnoKolo.
+    // Isti dokument nosi i trenutnoKolo (sezonske grupe), trenutnoKoloAvg (AVG lige)
+    // i trenutnoKoloZenska (Ženska liga) - svako je NIZ kola čiji je raspored javno
+    // vidljiv (npr. [1,2,3,4,5,8]), po admin panelu. Zamjenjuje stari
+    // seasons/{sezona}.trenutnoKolo.
     window.activeSeasonConfig = {};
+
+    // Niz vidljivih kola iz configa. Stari oblik (jedan broj n) znači kola 1..n, a
+    // prazno/neispravno znači samo 1. kolo (kao i dosad), da stranica ne puca dok se
+    // deploy i upis configa ne poklope.
+    function getVisibleRounds(value) {
+      const list = Array.isArray(value)
+        ? value.map(Number).filter(n => Number.isInteger(n) && n > 0)
+        : Array.from({ length: Math.max(parseInt(value) || 0, 0) }, (_, i) => i + 1);
+      return list.length ? list : [1];
+    }
 
     async function resolveActiveSeasonId() {
       try {
@@ -3749,7 +3760,7 @@
       const content = document.getElementById('content');
       content.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje podataka...</span></div>`;
       try {
-        const maxKolo = parseInt(window.activeSeasonConfig?.trenutnoKolo) || 1;
+        const visibleRounds = getVisibleRounds(window.activeSeasonConfig?.trenutnoKolo);
         const seasonDoc = await getDoc(doc(db, 'seasons', seasonId));
 
         const groupsSnap = await getDocs(collection(db, 'seasons', seasonId, 'groups'));
@@ -3769,7 +3780,7 @@
           const matchesMap  = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; pushRecentMatch(d, group.name, { legs: getGroupPhaseLegs(false), seasonId }); });
 
           const schedule        = generateSchedule(players);
-          const visibleSchedule = schedule.filter(r => r.kolo <= maxKolo);
+          const visibleSchedule = schedule.filter(r => visibleRounds.includes(r.kolo));
           const standings       = computeStandings(players, schedule, matchesMap);
 
           schedule.forEach(({ kolo, matches }) => {
@@ -4071,25 +4082,24 @@
     const AVG_RESERVED_DOC_IDS = ['rezultati', 'bracket'];
 
     // Gdje u bazi živi kolekcija grupa neke lige: AVG lige avg-leagues/{sezona}/{liga},
-    // Ženska liga women-leagues/{sezona}/groups. Ista funkcija je i u index-admin.html
+    // Ženska liga women-league/{sezona}/groups. Ista funkcija je i u index-admin.html
     // i group-detail.html - kad se mijenja, mijenjati na sva tri mjesta.
     function leagueGroupsPath(seasonId, leagueId) {
-      return leagueId === 'zenska' ? ['women-leagues', seasonId, 'groups'] : ['avg-leagues', seasonId, leagueId];
+      return leagueId === 'zenska' ? ['women-league', seasonId, 'groups'] : ['avg-leagues', seasonId, leagueId];
     }
 
-    // Do kojeg kola (uključivo) je raspored jedne AVG lige javno vidljiv.
-    // Svaka liga ima vlastiti broj (config/active-season.trenutnoKoloAvgLige[liga]),
-    // jer lige ne kreću/ne napreduju istovremeno; liga bez vlastitog broja koristi
-    // stari zajednički trenutnoKoloAvg, pa 1. Ista logika kao getAvgKolo u admin panelu.
+    // Kola čiji je raspored jedne lige javno vidljiv: Ženska liga ima vlastiti niz
+    // (config/active-season.trenutnoKoloZenska), sve ostale AVG lige zajednički
+    // trenutnoKoloAvg. Ista logika kao getAvgKolo u admin panelu.
     function getAvgKolo(leagueId) {
       const cfg = window.activeSeasonConfig || {};
-      return parseInt(cfg.trenutnoKoloAvgLige?.[leagueId]) || parseInt(cfg.trenutnoKoloAvg) || 1;
+      return getVisibleRounds(leagueId === 'zenska' ? cfg.trenutnoKoloZenska : cfg.trenutnoKoloAvg);
     }
 
     async function fetchAvgLeagueData(leagueId) {
       if (avgLigeDataCache[leagueId]) return; // već učitano
       const seasonId = ACTIVE_SEASON_ID;
-      const maxAvgKolo = getAvgKolo(leagueId);
+      const visibleAvgRounds = getAvgKolo(leagueId);
       const basePath = leagueGroupsPath(seasonId, leagueId);
       const groupsSnap = await getDocs(collection(db, ...basePath));
       const groups = [];
@@ -4104,7 +4114,7 @@
         const matchesMap = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; pushRecentMatch(d, `${AVG_LEAGUE_LABELS[leagueId] || leagueId} - ${group.name}`, { legs: getGroupPhaseLegs(true), seasonId: `avg:${seasonId}:${leagueId}` }); });
 
         const schedule        = generateAvgSchedule(players);
-        const visibleSchedule = schedule.filter(r => r.kolo <= maxAvgKolo);
+        const visibleSchedule = schedule.filter(r => visibleAvgRounds.includes(r.kolo));
         const standings       = computeStandings(players, schedule, matchesMap);
         const uid = `avg-${leagueId}-${i+1}`;
 

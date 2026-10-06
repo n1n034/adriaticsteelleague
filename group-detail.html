@@ -948,11 +948,11 @@
     // - DB_PATH se zato postavlja tek nakon što se ACTIVE_SEASON_ID razriješi
     // (vidi onAuthStateChanged), za oba slučaja.
     // Ženska liga (league=zenska) je odvojena kolekcija
-    // women-leagues/{ACTIVE_SEASON_ID}/groups/{groupId} - leagueGroupsPath je jedino
+    // women-league/{ACTIVE_SEASON_ID}/groups/{groupId} - leagueGroupsPath je jedino
     // mjesto koje to zna (ista funkcija je i u index.html i index-admin.html -
     // mijenjati na sva tri mjesta).
     function leagueGroupsPath(seasonId, leagueId) {
-      return leagueId === 'zenska' ? ['women-leagues', seasonId, 'groups'] : ['avg-leagues', seasonId, leagueId];
+      return leagueId === 'zenska' ? ['women-league', seasonId, 'groups'] : ['avg-leagues', seasonId, leagueId];
     }
     const DEFAULT_ACTIVE_SEASON_ID = 'sezona-2';
     let ACTIVE_SEASON_ID = DEFAULT_ACTIVE_SEASON_ID;
@@ -1091,7 +1091,7 @@
       renderRaspored();
     }
 
-    // Kolekcija grupa lige (avg-leagues/{sezona}/{liga} ili women-leagues/{sezona}/groups)
+    // Kolekcija grupa lige (avg-leagues/{sezona}/{liga} ili women-league/{sezona}/groups)
     // sadrži i rezervirane dokumente
     // "rezultati" (povijesni rezultati) i "bracket" (ždrijeb) kao susjede
     // stvarnih grupa - filtrirati ih iz dropdowna.
