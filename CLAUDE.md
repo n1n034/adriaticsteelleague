@@ -15,7 +15,7 @@ Firebase Hosting služi **cijeli korijen** (`"public": "."`), pa sve u korijenu 
 
 ## Podaci (Firestore, bez emulatora; stranice uvijek koriste živi projekt)
 
-- `config/active-season`, `config/bracket-config`
+- `config/active-season`, `config/bracket-config`. Polja `trenutnoKolo`, `trenutnoKoloAvg` i `trenutnoKoloZenska` (koja kola su javno vidljiva, nizovi npr. `[1,2,3]`) uređuju se **samo ručno u Firebase konzoli** (superadmin); admin panel nema kontrole za njih.
 - `seasons/{sezona}/groups/{slovo}/players|matches`, `seasons/{sezona}/bracket|lower-bracket/{matchId}`
 - AVG lige: `avg-leagues/{sezona}/{leagueId}/{groupId}`; ženska liga: `women-league/{sezona}/groups/{groupId}` (logički ključ lige je `'zenska'`)
 - `players/{slug}` (registar, `photoURL`), `photoRequests/{slug}`, `users/{uid}` (`role`: `admin` ili operater s popisom dodijeljenih grupa)
@@ -30,7 +30,7 @@ Namjerno nema zajedničke datoteke. Ako mijenjaš nešto od ovoga, provjeri osta
 
 - sve tri: `leagueGroupsPath`, `loadBracketConfig`, `resolveActiveSeasonId`, `showToast`, `DEFAULT_ACTIVE_SEASON_ID`, `AVG_RESERVED_DOC_IDS`
 - index + admin: `R64_DRAW`, `ROUND_IDS`, `LROUND_IDS`, `LOWER_LAYOUTS`, `getLowerLayout`, `AVG_LEAGUE_LABELS`, `SEASON_LABELS`, `generateAvgSchedule`, `getPlayoffLegs`, `roundKeyFromMatchId`, `getVisibleRounds`, `resolveName`, `slugify`, `formatMatchTimestamp`, `compressImageForUpload`
-- index + group: `computeStandings`, `formHtml`, `generateSchedule` (Berger), `getGroupPhaseLegs`, CSS tablice grupe (`table`, `.table-wrap`, `.form-badge`; podnožje `.table-footer-brand` ima samo index)
+- index + group: `computeStandings`, `formHtml`, `generateSchedule` (Berger), `getGroupPhaseLegs`, CSS tablice grupe (`table`, `.table-wrap`, `.form-badge`; podnožje `.table-footer-brand` / `.schedule-footer` ima samo index; raspored nema vlastiti okvir, a njegovo podnožje ide do rubova akordeona)
 - admin + group: `esc`, `groupIdToLetter`
 - sve tri: CSS blok `-- INTERAKCIJE --` na kraju `<style>` (isti prijelazi, pritisak `scale`, fokus i onemogućeno stanje na svakom `button`, `[onclick]` i `a[href]`), `--ease-glide`, traka `.sub-tabs` + `.sub-tabs-line` i `placeIndicator()` (index, group i admin; admin dodaje vlastitu `.admin-tabs` s istom crtom)
 

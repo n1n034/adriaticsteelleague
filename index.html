@@ -338,7 +338,10 @@
     tbody td { padding: 12px 14px; font-size: 1rem; color: #edf3ff; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.07); white-space: nowrap; }
     tbody tr:nth-child(even) { background: rgba(255,255,255,0.035); }
     tbody tr:nth-child(4) td { border-bottom: 2px solid rgba(255,255,255,0.75); }
-    tfoot td.table-footer-brand { text-align: center; padding: 10px 12px; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.3px; color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.10); }
+    tfoot td.table-footer-brand, .schedule-footer { text-align: center; padding: 10px 12px; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.3px; color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.03); border-top: 1px solid rgba(255,255,255,0.10); }
+    /* Podnožje rasporeda: isti izgled kao podnožje tablice, ali bez vlastitog okvira - proteže se do rubova akordeona
+       (negativne margine = padding .accordion-inner), pa je cijeli raspored u jednom okviru */
+    .schedule-footer { margin: 16px -16px -16px; user-select: none; }
     #tab-najbolji tbody tr td { text-align: left; border-bottom: none; }
     tbody tr:hover { background: var(--table-row-hover); }
 
@@ -895,8 +898,8 @@
     }
 
     .player-avatar {
-      width: 108px;
-      height: 108px;
+      width: 90px;
+      height: 90px;
       border-radius: 999px;
       background: #2d5fb6;
       border: 3px solid rgb(138 187 229 / 50%);
@@ -1074,7 +1077,7 @@
       h1 { font-size: 1.9rem; }
       .league-logo { max-width: 170px; }
       .social a { width: 45px; height: 45px; font-size: 1.15rem; }
-      .last-updated { text-align: center; }
+      .last-updated { text-align: center; font-size: 0.9rem;}
       .accordion-header { font-size: 0.9rem; padding: 10px; gap: 10px; }
       .accordion-title { gap: 10px; }
       .accordion-badge { font-size: 0.95rem; min-width: 34px; height: 34px; padding: 0 8px; }
@@ -1084,7 +1087,7 @@
       table { min-width: 560px; }
       thead th { font-size: 0.9rem; padding: 10px 8px; }
       tbody td  { font-size: 0.9rem; padding: 10px 8px; }
-      tfoot td.table-footer-brand { font-size: 0.60rem; }
+      tfoot td.table-footer-brand, .schedule-footer { font-size: 0.60rem; margin: 10px -10px -10px; }
       .bracket-round { min-width: 160px; }
     }
 
@@ -1103,7 +1106,7 @@
       table { min-width: 500px; }
       thead th { font-size: 0.78rem; padding: 8px 6px; }
       tbody td  { font-size: 0.78rem; padding: 8px 6px; }
-      tfoot td.table-footer-brand { font-size: 0.50rem; }
+      tfoot td.table-footer-brand, .schedule-footer { font-size: 0.50rem; }
       .bracket-round { min-width: 140px; }
       .bracket-player { font-size: 0.72rem; padding: 6px 8px; }
       .yt {height: 200px;}
@@ -3369,9 +3372,7 @@
           </div>
         </div>
         
-        <div style="text-align:center; padding:10px 12px; font-size:0.82rem; font-weight:600; letter-spacing:0.3px; color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.03); border-top:1px solid rgba(255,255,255,0.10); border-radius:0 0 14px 14px; user-select:none;">
-          Adriatic steel league ™ ®
-        </div>
+        <div class="schedule-footer">Adriatic steel league ™ ®</div>
       `;
 
       return { standingsHtml, rasporedHtml };
@@ -3506,9 +3507,7 @@
           </div>
         </div>
 
-        <div style="text-align:center; padding:10px 12px; font-size:0.82rem; font-weight:600; letter-spacing:0.3px; color:rgba(255,255,255,0.7); background:rgba(255,255,255,0.03); border-top:1px solid rgba(255,255,255,0.10); border-radius:0 0 14px 14px; user-select:none;">
-          Adriatic steel league ™ ®
-        </div>
+        <div class="schedule-footer">Adriatic steel league ™ ®</div>
       `;
 
       return { standingsHtml, rasporedHtml };
@@ -4440,7 +4439,7 @@
 
     // Kola čiji je raspored jedne lige javno vidljiv: Ženska liga ima vlastiti niz
     // (config/active-season.trenutnoKoloZenska), sve ostale AVG lige zajednički
-    // trenutnoKoloAvg. Ista logika kao getAvgKolo u admin panelu.
+    // trenutnoKoloAvg (polja se uređuju samo u Firebase konzoli).
     function getAvgKolo(leagueId) {
       const cfg = window.activeSeasonConfig || {};
       return getVisibleRounds(leagueId === 'zenska' ? cfg.trenutnoKoloZenska : cfg.trenutnoKoloAvg);

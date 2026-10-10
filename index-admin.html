@@ -319,29 +319,6 @@
       color: #4a90e2;
     }
 
-    .kolo-chip {
-      min-width: 38px;
-      padding: 7px 10px;
-      background: rgba(10, 19, 38, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
-      color: var(--muted);
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s ease;
-    }
-
-    .kolo-chip:hover {
-      border-color: rgba(74, 144, 226, 0.5);
-    }
-
-    .kolo-chip.on {
-      background: rgba(74, 144, 226, 0.3);
-      border-color: rgba(74, 144, 226, 0.7);
-      color: #fff;
-    }
-
     .btn-logout {
       padding: 8px 18px;
       background: rgba(255, 255, 255, 0.05);
@@ -1327,8 +1304,7 @@
     /* -- KLIKABILNI ELEMENTI: podizanje na hover za gumbe-akcije -- */
     @media (hover: hover) {
       .btn-login:not(:disabled):hover, .btn-logout:hover, .bedit-btn-save:not(:disabled):hover, .bedit-btn-delete:hover,
-      .player-photo-btn:not(:disabled):hover, .photo-request-btn:hover, .btn-chip-delete:hover,
-      .kolo-chip:hover { translate: 0 -1px; }
+      .player-photo-btn:not(:disabled):hover, .photo-request-btn:hover, .btn-chip-delete:hover { translate: 0 -1px; }
     }
 
     /* -- INTERAKCIJE: isti prijelazi i povratna informacija na svakom gumbu i klikabilnom elementu --
@@ -1428,7 +1404,6 @@
       </div>
 
       <div id="admin-tab-grupe" class="admin-tab-panel active">
-        <div id="trenutno-kolo-container"></div>
         <div id="groups-container">
           <div class="loading-state">
             <div class="loading-spinner"></div><span class="loading-text">Učitavanje grupa...</span>
@@ -1568,71 +1543,10 @@
       }
     }
 
-    // -- VIDLJIVA KOLA (raspored vidljiv samo za kola iz niza) --
-    // Zapisuje se u config/active-season (isti dokument koji određuje aktivnu
-    // sezonu), tri odvojena polja, svako je NIZ brojeva kola (npr. [1,2,3,4,5,8]):
-    // trenutnoKolo (sezonske grupe, Grupe tab), trenutnoKoloAvg (AVG lige:
-    // diamond/gold/silver/bronze, zajednički niz) i trenutnoKoloZenska (Ženska liga).
-    // Zamjenjuje stari ručni unos u seasons/{sezona}.trenutnoKolo (obrisano iz Firestore).
-    // Index.html filtrira raspored po istim poljima (visibleRounds.includes(kolo)).
-    const KOLO_OPTIONS = Array.from({ length: 9 }, (_, i) => i + 1); // kola 1-9: 10. kolo ne postoji
-
-    // Isti oblik kao getVisibleRounds u index.html: niz -> brojevi, stari broj n -> 1..n,
-    // prazno/neispravno -> samo 1. kolo.
-    function getVisibleRounds(value) {
-      const list = Array.isArray(value)
-        ? value.map(Number).filter(n => Number.isInteger(n) && n > 0)
-        : Array.from({ length: Math.max(parseInt(value) || 0, 0) }, (_, i) => i + 1);
-      return list.length ? list : [1];
-    }
-
-    // Ženska liga ima vlastiti niz, sve ostale AVG lige dijele trenutnoKoloAvg.
-    const roundsFieldFor = leagueId => leagueId === 'zenska' ? 'trenutnoKoloZenska' : 'trenutnoKoloAvg';
-
-    const koloChipsHtml = field => {
-      const on = getVisibleRounds(activeSeasonConfig[field]);
-      return KOLO_OPTIONS.map(n =>
-        `<button type="button" class="kolo-chip${on.includes(n) ? ' on' : ''}" onclick="toggleVisibleRound('${field}', ${n})">${n}</button>`
-      ).join('');
-    };
-
-    // data-kolo-field omogućuje da se svi gumbi istog polja osvježe odjednom
-    // (trenutnoKoloAvg dijele paneli više AVG liga).
-    const koloControlHtml = field => `
-      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-        <span style="font-size:1rem;color:var(--muted);">Vidljiva kola:</span>
-        <div data-kolo-field="${field}" style="display:flex;gap:6px;flex-wrap:wrap;">${koloChipsHtml(field)}</div>
-      </div>`;
-
-    function renderTrenutnoKoloControls() {
-      const grupeEl = document.getElementById('trenutno-kolo-container');
-      if (grupeEl) grupeEl.innerHTML = koloControlHtml('trenutnoKolo');
-    }
-
-    // Gumbi vidljivih kola jedne AVG/Ženske lige - renderira ih loadAvgLeague na
-    // vrhu panela te lige (samo admin).
-    function renderAvgKoloControl(leagueId) {
-      return koloControlHtml(roundsFieldFor(leagueId));
-    }
-
-    // Klik na gumb uključuje/isključuje to kolo i sprema cijeli niz (sortiran, bez
-    // duplikata). Barem jedno kolo mora ostati vidljivo - prazan niz bi na stranici
-    // ionako pao na 1. kolo, pa ga ne dopuštamo da ne bude zbunjujuće.
-    window.toggleVisibleRound = async function (field, round) {
-      const current = getVisibleRounds(activeSeasonConfig[field]);
-      const next = current.includes(round)
-        ? current.filter(n => n !== round)
-        : [...current, round].sort((a, b) => a - b);
-      if (!next.length) { showToast('Barem jedno kolo mora ostati vidljivo.', 'error'); return; }
-      try {
-        await setDoc(doc(db, 'config', 'active-season'), { [field]: next }, { merge: true });
-        activeSeasonConfig[field] = next;
-        document.querySelectorAll(`[data-kolo-field="${field}"]`).forEach(el => { el.innerHTML = koloChipsHtml(field); });
-        showToast(`Vidljiva kola: ${next.join(', ')}.`, 'success');
-      } catch (err) {
-        showToast('Greška: ' + err.message, 'error');
-      }
-    };
+    // -- VIDLJIVA KOLA --
+    // config/active-season nosi trenutnoKolo (sezonske grupe), trenutnoKoloAvg (AVG lige) i trenutnoKoloZenska
+    // (Ženska liga): nizovi brojeva kola (npr. [1,2,3]) po kojima index.html filtrira raspored. Uređuju se samo
+    // ručno u Firebase konzoli (superadmin) - admin panel nema kontrole za njih.
 
     // -- HELPERS --
     const R64_DRAW = [
@@ -2141,7 +2055,6 @@
         // Nova sezona ne traži izmjenu koda: bez unosa u SEASON_LABELS oznaka se izvede iz ID-ja.
         const seasonLabel = SEASON_LABELS[ACTIVE_SEASON_ID] || ACTIVE_SEASON_ID.replace(/^sezona-(\d+)$/, 'Sezona $1');
         document.getElementById('welcome-msg').textContent = `Dobrodošli u ${seasonLabel}, ${user.email.split('@')[0]}!`;
-        if (currentIsAdmin) renderTrenutnoKoloControls();
 
         await loadBracketConfig();
         await loadGroups(currentIsAdmin, userData.groups || []);
@@ -2970,7 +2883,7 @@
         // Ženska liga je već postavljena - nema forme za novu grupu (AVG lige je imaju).
         // Za novu sezonu Ženske lige vrati formu: makni uvjet leagueId !== 'zenska'.
         const createFormHtml = leagueId !== 'zenska' ? renderAvgCreateForm(leagueId, groups, assignedNames) : '';
-        container.innerHTML = (currentIsAdmin ? renderAvgKoloControl(leagueId) : '') + groupsHtml + createFormHtml;
+        container.innerHTML = groupsHtml + createFormHtml;
 
       } catch (err) {
         container.innerHTML = `<div style="color:#ffaaaa;padding:20px;">Greška: ${esc(err.message)}</div>`;
