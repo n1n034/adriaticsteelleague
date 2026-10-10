@@ -4,8 +4,10 @@
     "ignore": [
       "firebase.json",
       "**/.*",
+      "**/.*/**",
       "**/node_modules/**",
-      "functions/**"
+      "functions/**",
+      "**/*.md"
     ],
     "headers": [
       {

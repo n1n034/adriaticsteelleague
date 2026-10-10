@@ -32,6 +32,8 @@
       --radius: 18px;
       --table-head: #183a78;
       --table-row-hover: rgba(110, 168, 255, 0.14);
+      --bar-h: 52px; /* visina traka za pretragu, prekidač sezone i tabove (manja na 768 / 480) */
+      --ease-glide: cubic-bezier(0.22, 1, 0.36, 1); /* brz start, mekano smirivanje: klizne crte, pločica i sjaj pretrage */
     }
 
     * { box-sizing: border-box; scrollbar-width: none; -ms-overflow-style: none; }
@@ -62,21 +64,73 @@
 
     .page { position: relative; min-height: 100vh; width: 100%; padding: 26px; }
 
-    .container { max-width: 1300px; margin: 0 auto; animation: fadeInUp 0.5s ease both; }
+    /* backwards (ne both): trajni transform bi fiksnu navigaciju (.main-nav) vezao uz .container umjesto uz zaslon */
+    .container { max-width: 1300px; margin: 0 auto; animation: fadeInUp 0.5s ease backwards; }
 
     .hero { text-align: center; margin-bottom: 40px; }
     .hero p { margin: 15px 0 15px 0; font-size: 2rem; font-weight: 600; letter-spacing: 1px; text-align: center; text-shadow: 0 6px 6px rgba(0, 0, 0, 0.5); }
 
-    .tabs { display: flex; justify-content: space-evenly; flex-wrap: wrap; margin-bottom: 24px; }
-
-    .tab-btn {
-      background: rgba(10,19,38,0.78); border: 1px solid rgba(255,255,255,0.18);
-      color: #fff; padding: 10px 40px; border-radius: 999px;
-      font-size: 1rem; font-weight: 700; letter-spacing: 0.5px;
-      cursor: pointer; transition: 0.25s ease;
+    /* -- KONTROLE: zajednički izgled (pretraga, prekidači, navigacija) -- */
+    .player-search-box, .seg-switch, .main-nav, .sub-tabs {
+      position: relative; overflow: hidden;
+      background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+      backdrop-filter: blur(7px); box-shadow: var(--shadow);
     }
-    .tab-btn:hover { background: rgba(38,74,138,0.92); }
-    .tab-btn.active { box-shadow: 0 0 12px rgba(255,255,255,0.55); background: rgba(21,49,99,1); border-color: rgba(255,255,255,0.8); }
+    /* Isti bijeli sjaj kao .accordion-item.open: u pretrazi se pali dok je polje u fokusu, a ispod navigacije
+       i podtabova klizi do aktivne stavke (JS: placeIndicator). Crte blijede prema rubovima (gradijent), a sjaj je
+       drop-shadow, ne box-shadow, da se topi zajedno s njima. */
+    .player-search-box::after {
+      position: absolute; left: 0; right: 0; bottom: 0; height: 3px; pointer-events: none;
+      background: linear-gradient(90deg, transparent, #fff 18%, #fff 82%, transparent);
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.6));
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .nav-indicator, .player-search-box::after, .seg-thumb, .sub-tabs-line { transition: none !important; }
+    }
+
+    /* -- NAVIGACIJA (glavna) -- */
+    /* Mobitel: plutajuća traka pri dnu zaslona, uvijek na dohvat palca. Od 769 px je običan red ispod pretrage.
+       Na mobitelu je fixed, pa .container ne smije imati trajni transform od animacije (vidi .container). */
+    .main-nav {
+      position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 80;
+      display: flex; height: 66px; padding: 0 4px; overflow: visible; /* visible: sjaj na gornjem rubu smije viriti */
+      transition: transform 0.25s ease, opacity 0.25s ease;
+    }
+    .nav-btn {
+      position: relative; flex: 1; min-width: 0; padding: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+      background: none; border: none; border-radius: 14px; cursor: pointer;
+      color: rgba(200,211,234,0.72); font-size: 0.64rem; font-weight: 600; white-space: nowrap;
+      transition: color 0.2s ease, background 0.2s ease;
+    }
+    .nav-btn i { font-size: 1.1rem; }
+    .nav-btn.active { color: #fff; }
+    .nav-btn:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(120,170,255,0.7); }
+    /* Hover samo gdje postoji miš - na touchu bi tapnuta stavka inače ostala "zalijepljena" svijetla */
+    @media (hover: hover) { .nav-btn:hover { color: #fff; } }
+    .nav-full { display: none; } /* puni naziv ("Najbolji u ligi") samo na desktopu, na mobitelu ne stane */
+    /* Kratka bijela crta visi s gornjeg ruba iznad aktivne stavke i klizi među stavkama. Položaj zadaje JS
+       (left/right, skrivena do prvog namještanja); --ind-inset je udio širine stavke koji se skida s obje strane */
+    .nav-indicator {
+      position: absolute; top: -1px; height: 3px; pointer-events: none; opacity: 0; --ind-inset: 0.15;
+      background: linear-gradient(90deg, transparent, #fff 14%, #fff 86%, transparent);
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.6));
+      transition: left 0.5s var(--ease-glide), right 0.5s var(--ease-glide);
+    }
+    /* Kad je tipkovnica otvorena (fokus u pretrazi) traka se skloni da ne pliva iznad nje */
+    @media (max-width: 768px) {
+      body:has(.player-search-input:focus) .main-nav { transform: translateY(120px); opacity: 0; pointer-events: none; }
+    }
+    @media (min-width: 769px) {
+      .main-nav { position: relative; left: auto; right: auto; bottom: auto; z-index: auto; height: var(--bar-h); margin-bottom: 24px; padding: 0; overflow: hidden; }
+      .nav-btn { flex-direction: row; gap: 10px; border-radius: 0; font-size: 0.95rem; letter-spacing: 0.2px; }
+      .nav-btn i { font-size: 1rem; }
+      .nav-short { display: none; }
+      .nav-full { display: inline; }
+      /* isti izgled kao .sub-tabs-line */
+      .nav-indicator { top: auto; bottom: 0; height: 2px; --ind-inset: 0; background: linear-gradient(90deg, transparent, #fff 14%, #fff 86%, transparent); }
+    }
+    @media (hover: hover) and (min-width: 769px) { .nav-btn:hover { background: var(--table-row-hover); } }
 
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
@@ -135,33 +189,98 @@
     .popup-match.highlight-target { animation: recentMatchHighlightPulse 1.1s ease-out 2; border-radius: 14px; }
 
     /* -- PLAYER SEARCH -- */
+    /* Pretraga i prekidač sezone u istom redu (isti izgled kao navigacija, vidi KONTROLE) */
     .player-search-wrap {
-      position: relative; margin-bottom: 24px; animation: fadeInUp 0.5s ease both; z-index: 60;
-      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      position: relative; margin-bottom: 22px; animation: fadeInUp 0.5s ease both; z-index: 60;
+      display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap; /* flex-end: pretraga i gumb sezone ostaju u istoj liniji, oznaka sezone viri iznad gumba */
     }
+    @media (min-width: 769px) { .player-search-wrap { margin-bottom: 10px; } } /* na desktopu odmah ispod je navigacija */
 
     .player-search-box {
-      display: flex; align-items: center; gap: 10px;
-      background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
-      padding: 12px 18px; backdrop-filter: blur(7px); box-shadow: var(--shadow);
-      transition: 0.2s ease;
-      width: max-content;
-      height: 44px;
+      flex: 1 1 150px; min-width: 0; height: var(--bar-h);
+      display: flex; align-items: center; gap: 10px; padding: 0 18px;
+      transition: border-color 0.2s ease;
     }
-    .player-search-box:has(.player-search-input:focus) { border-color: rgba(120,170,255,0.4); box-shadow: 0 0 0 3px rgba(120,170,255,0.12); }
+    .player-search-box::after {
+      content: ''; opacity: 0;
+      transform: scaleX(0.15); transform-origin: center;
+      transition: transform 0.6s var(--ease-glide), opacity 0.3s ease; /* sjaj se širi iz sredine */
+    }
+    .player-search-box:focus-within { border-color: rgba(255,255,255,0.3); }
+    .player-search-box:focus-within::after { transform: scaleX(1); opacity: 1; }
 
-    .player-search-icon { color: var(--muted); font-size: 0.95rem; }
+    .player-search-icon { color: var(--muted); font-size: 0.95rem; transition: color 0.2s ease; }
+    .player-search-box:focus-within .player-search-icon { color: #fff; }
 
+    /* font-size ostaje 1rem (16px): manji bi na iOS-u zumirao stranicu pri fokusu */
     .player-search-input {
-      flex: 1; background: transparent; border: none; outline: none;
-      color: #fff; font-size: 1rem; font-family: 'Lexend', sans-serif;
+      flex: 1; min-width: 0; width: 100%; background: transparent; border: none; outline: none;
+      color: #fff; font-size: 1rem; font-family: 'Lexend', sans-serif; text-overflow: ellipsis;
     }
-    .player-search-input::placeholder { color: rgba(255,255,255,0.35); }
+    .player-search-input::placeholder { color: rgba(200,211,234,0.6); }
 
+    /* -- PREKIDAČ SEZONE (uz pretragu; upravlja TABLICE, NAJBOLJI U LIGI i ŽDRIJEB) -- */
+    /* Oznaka "Arhiva sezona" stoji iznad prekidača, desno poravnata; pretraga i prekidač ostaju u istoj liniji */
+    .season-toggle { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+    .season-toggle:empty { display: none; } /* nema arhive - nema ni prekidača, pretraga zauzme cijeli red */
+    /* Stoji izravno na fotografiji (nema stakla iza), pa treba sjenu kao ostali naslovi na stranici */
+    .season-toggle-caption {
+      padding-right: 6px; font-size: 0.86rem; font-weight: 700; line-height: 1; letter-spacing: 0.2px; white-space: nowrap;
+      color: var(--text); text-shadow: 0 1px 3px rgba(0,0,0,0.85), 0 0 8px rgba(0,0,0,0.5);
+    }
+
+    /* -- PREKIDAČ SA SEGMENTIMA (sezona uz pretragu) -- */
+    .seg-switch { display: flex; align-items: stretch; height: var(--bar-h); padding: 4px; overflow: visible; } /* visible: sjaj pločice smije viriti iz trake */
+    .seg-btn {
+      position: relative; z-index: 1; min-width: 46px; padding: 0 12px;
+      background: none; border: none; border-radius: calc(var(--radius) - 5px); cursor: pointer;
+      color: rgba(200,211,234,0.72); font-size: 0.88rem; font-weight: 700; white-space: nowrap;
+      transition: color 0.2s ease;
+    }
+    .seg-btn.active { color: #fff; }
+    .seg-btn:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(120,170,255,0.7); }
+    @media (hover: hover) { .seg-btn:hover { color: #fff; } }
+    /* Aktivni segment: ispunjena pločica (boja zaglavlja akordeona) koja klizi između segmenata (JS: placeIndicator) */
+    .seg-thumb {
+      position: absolute; top: 4px; bottom: 4px; pointer-events: none; opacity: 0; /* left/right zadaje JS */
+      border-radius: calc(var(--radius) - 5px); background: var(--header);
+      border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 0 12px rgba(255,255,255,0.28);
+      transition: left 0.5s var(--ease-glide), right 0.5s var(--ease-glide);
+    }
+
+    /* -- PODTABOVI: vodoravna traka preko cijele širine s klizećom crtom (Gornji / Donji ždrijeb;
+       na mobitelu i tabletu i podtabovi AVG liga). JS: positionSubTabsLine -- */
+    .sub-tabs { display: flex; height: var(--bar-h); margin-bottom: 16px; }
+    .sub-tab {
+      position: relative; flex: 1; min-width: 0; padding: 0 8px;
+      background: none; border: none; border-radius: 0; cursor: pointer;
+      color: rgba(200,211,234,0.72); font-size: 0.9rem; font-weight: 600; letter-spacing: 0.2px; white-space: nowrap;
+      transition: color 0.2s ease, background 0.2s ease;
+    }
+    .sub-tab.active { color: #fff; }
+    .sub-tab:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(120,170,255,0.7); }
+    @media (hover: hover) { .sub-tab:hover { color: #fff; background: var(--table-row-hover); } }
+    /* Tanka crta preko cijele širine taba koja se samo na krajevima topi (gradijent); položaj zadaje JS */
+    .sub-tabs-line {
+      position: absolute; bottom: 0; height: 2px; pointer-events: none; opacity: 0; --ind-inset: 0;
+      background: linear-gradient(90deg, transparent, #fff 14%, #fff 86%, transparent);
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.6));
+      transition: left 0.5s var(--ease-glide), right 0.5s var(--ease-glide);
+    }
+    /* Niža varijanta za trake unutar akordeona grupe (Tablica | Raspored) */
+    .sub-tabs-sm { height: 34px; margin-bottom: 14px; }
+    .sub-tabs-sm .sub-tab { font-size: 0.85rem; }
+    /* Traka u profilu igrača (Sveukupno / sezone / ligama): ako tabova ima previše za širinu popupa, traka se klizi */
+    .sub-tabs-scroll { overflow-x: auto; overflow-y: hidden; margin-bottom: 18px; }
+    .sub-tabs-scroll .sub-tab { flex: 1 0 auto; padding: 0 14px; }
+    /* Druga razina profila (sezone unutar Sezone / AVG / Ženska liga): niža i prigušenija traka tik ispod glavne */
+    .sub-tabs.has-sub { margin-bottom: 8px; }
+    .sub-tabs-xs { height: 30px; background: rgba(8,14,28,0.55); box-shadow: none; }
+    .sub-tabs-xs .sub-tab { font-size: 0.8rem; }
     .player-search-results {
       position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 50;
-      background: var(--panel-2); border: 1px solid var(--line); border-radius: 14px;
-      box-shadow: var(--shadow); overflow: hidden; max-height: 340px; overflow-y: auto;
+      background: var(--panel-2); border: 1px solid var(--line); border-radius: var(--radius);
+      backdrop-filter: blur(7px); box-shadow: var(--shadow); overflow: hidden; max-height: 340px; overflow-y: auto;
       animation: fadeInUp 0.2s ease both;
     }
 
@@ -776,15 +895,15 @@
     }
 
     .player-avatar {
-      width: 92px;
-      height: 92px;
+      width: 108px;
+      height: 108px;
       border-radius: 999px;
       background: #2d5fb6;
       border: 3px solid rgb(138 187 229 / 50%);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2rem;
+      font-size: 2.3rem;
       font-weight: 900;
       color: #fff;
       box-shadow: 0 12px 30px rgba(126,184,255,0.25);
@@ -795,8 +914,8 @@
       position: absolute;
       bottom: -2px;
       right: -2px;
-      width: 26px;
-      height: 26px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       background: rgba(10,19,38,0.92);
       border: 2px solid rgba(255,255,255,0.5);
@@ -829,92 +948,60 @@
       color: rgba(255,255,255,0.6);
       margin-top: 4px;
     }
-    .player-season-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; padding-bottom: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
-    .player-season-tab {
-      padding: 6px 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
-      background: rgba(10,19,38,0.78); color: var(--muted);
-      font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: 0.2s ease;
-    }
-    .player-season-tab.active { background: rgba(21,49,99,1); border-color: rgba(255,255,255,0.2); color: #fff; }
 
-    .player-stats-grid {
-      display: grid;
-      /* Radimo trik s 15 stupaca kako bi se gornja 3 i donjih 5 savršeno poravnali na rubovima */
-      grid-template-columns: repeat(15, 1fr); 
-      gap: 12px; /* Malo veći razmak za "prozračniji" i skuplji izgled */
-      margin-bottom: 24px;
-      width: 100%;
+    /* -- STATISTIKA PROFILA: tri prstena (AVG, First 9, 180s) + red sporednih -- */
+    /* Svi prstenovi su uvijek vidljivi; klik na prsten mijenja samo graf ispod (JS: switchProfileChart).
+       Neodabrani su prigušeni (fokus na odabranom), a bijela crta ispod klizi do odabranog kao u trakama. */
+    .player-stats-card {
+      margin-bottom: 24px; padding: 10px 10px 0; overflow: hidden;
+      background: rgba(6,12,24,0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px;
     }
+    .stat-rings { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding-bottom: 6px; --p: 0; --mc: #8fcf3c; }
+    .stat-ring {
+      display: flex; flex-direction: column; align-items: center; padding: 10px 4px 12px;
+      background: none; border: none; border-radius: 12px; color: inherit; font: inherit; cursor: pointer;
+      opacity: 0.6; animation: statIn 0.5s var(--ease-glide) backwards; animation-delay: calc(var(--i) * 60ms);
+    }
+    .stat-ring.active { opacity: 1; }
+    @media (hover: hover) { .stat-ring:hover { opacity: 1; background: rgba(255,255,255,0.05); translate: 0 -2px; } }
+    @keyframes statIn { from { opacity: 0; translate: 0 10px; } }
+    .stat-ring-dial { position: relative; width: min(100%, 104px); aspect-ratio: 1; transition: scale 0.3s var(--ease-glide); }
+    .stat-ring.active .stat-ring-dial { scale: 1.05; }
+    .stat-ring-dial svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+    .sr-track { stroke: rgba(255,255,255,0.12); }
+    .sr-arc {
+      stroke: var(--c); stroke-linecap: round; stroke-dasharray: 251.3; stroke-dashoffset: var(--off);
+      animation: ringIn 1.1s var(--ease-glide) backwards; transition: filter 0.3s ease;
+    }
+    .stat-ring.active .sr-arc { filter: drop-shadow(0 0 6px var(--c)); }
+    @keyframes ringIn { from { stroke-dashoffset: 251.3; } }
+    .stat-ring-val { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; font-weight: 800; color: #fff; }
+    .stat-ring-label { margin-top: 8px; font-size: 0.7rem; font-weight: 600; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); transition: color 0.25s ease; }
+    .stat-ring.active .stat-ring-label { color: #fff; }
+    .stat-rings-line { position: absolute; left: 0; bottom: 0; width: 33.333%; height: 3px; pointer-events: none; translate: calc(var(--p) * 100%) 0; transition: translate 0.55s var(--ease-glide); }
+    .stat-rings-line::after {
+      content: ""; position: absolute; left: 22%; right: 22%; top: 0; bottom: 0; border-radius: 3px; background: var(--mc);
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+      filter: drop-shadow(0 0 6px var(--mc)); transition: background-color 0.4s ease;
+    }
+    .stat-row { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 1px solid rgba(255,255,255,0.08); }
+    .stat-cell { text-align: center; padding: 12px 2px; }
+    .stat-cell + .stat-cell { border-left: 1px solid rgba(255,255,255,0.07); }
+    .stat-cell-val { font-size: 1rem; font-weight: 800; color: #fff; }
+    .stat-cell-label { margin-top: 3px; font-size: 0.62rem; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
 
-    /* Osnovni stil za sve kutije (zadržavamo tvoju tamnu premium bazu) */
-    .player-stat-box {
-      background: rgba(6, 12, 24, 0.6); 
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px; 
-      padding: 12px 8px; 
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
+    /* Graf: crta se iscrtava, područje se pojavi, točke iskaču redom (svaki put kad se graf promijeni) */
+    .pc-line { fill: none; stroke-dasharray: 1; stroke-dashoffset: 1; animation: pcDraw 1.2s var(--ease-glide) 0.1s forwards; }
+    .pc-area { animation: pcFade 0.9s ease 0.4s backwards; }
+    .pc-dot { transform-box: fill-box; transform-origin: center; animation: pcPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; animation-delay: calc(0.35s + var(--k) * 90ms); }
+    @keyframes pcDraw { to { stroke-dashoffset: 0; } }
+    @keyframes pcFade { from { opacity: 0; } }
+    @keyframes pcPop { from { opacity: 0; transform: scale(0.3); } }
+    @media (prefers-reduced-motion: reduce) {
+      .stat-ring, .sr-arc, .pc-area, .pc-dot { animation: none; }
+      .pc-line { animation: none; stroke-dashoffset: 0; }
     }
-
-    /* AVG, First 9, 180s */
-    .player-stat-box:nth-child(-n+3) {
-      grid-column: span 5;
-    }
-    .player-stat-box:nth-child(1) {
-      background: linear-gradient(135deg, rgb(103 143 35), rgb(15 65 21));
-    }
-    .player-stat-box:nth-child(2) {
-      background: linear-gradient(135deg, rgb(39 120 189), rgb(28 50 89));    
-    }
-    .player-stat-box:nth-child(3) {
-      background: linear-gradient(135deg, rgb(151 119 47), rgb(53 61 29));
-    }
-
-    /* Posebno stiliziranje za velike vrijednosti (gornji red) */
-    .player-stat-box:nth-child(-n+3) .player-stat-box-val {
-      font-size: 26px;
-      font-weight: 800;
-      color: #ffffff;
-      text-shadow: 0 0 20px rgba(255, 255, 255, 0.1); /* Blagi premium sjaj */
-    }
-
-    /* Posebno stiliziranje za velike labele (gornji red) */
-    .player-stat-box:nth-child(-n+3) .player-stat-box-label {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 1.5px;
-      text-transform: uppercase;
-      margin-top: 4px;
-    }
-
-    /* --- SPOREDNE STATISTIKE (Donjih 5 kutija) --- */
-    /* Hvata sve elemente od 4. mjesta nadalje */
-    .player-stat-box:nth-child(n+4) {
-      grid-column: span 3; /* 15 / 5 = 3 stupca po elementu */
-      /* Zadržavaju tvoj originalni stil s tamnom pozadinom i rubom */
-    }
-
-    .player-stat-box:nth-child(n+4) .player-stat-box-val {
-      font-size: clamp(9px, 3.2vw, 14px);
-      font-weight: 700;
-      color: #e2e8f0;
-      white-space: nowrap;
-    }
-
-    .player-stat-box:nth-child(n+4) .player-stat-box-label {
-      font-size: 10px;
-      color: #475569;
-      font-weight: 600;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    .player-stat-box-val { font-size: 1.15rem; font-weight: 800; color: #7eb8ff; }
-    .player-stat-box-label { font-size: 0.62rem; font-weight: 600; color: var(--muted); letter-spacing: 0.5px; text-transform: uppercase; margin-top: 2px; }
-    .stat-icon { height: 1em; width: auto; vertical-align: middle; margin-right: 10px}
 
     .player-avg-chart-wrap {
       background: rgba(6,12,24,0.6); border: 1px solid rgba(255,255,255,0.08);
@@ -956,17 +1043,34 @@
     .player-match-score.draw { color: #f39c12; }
     .player-match-score.empty { color: rgba(255,255,255,0.2); font-size: 0.9rem; }
 
+    /* Detalj meča: otvara se glatko (grid 0fr -> 1fr, .pmd-in reže sadržaj dok je zatvoren), a statistika je ravna:
+       bez pozadinskih blokova, redovi se razdvajaju tankom crtom i izlaze jedan za drugim. */
     .player-match-detail-stats {
-      display: none;
-      padding: 14px;
-      background:rgb(52 71 115 / 50%);
+      display: grid; grid-template-rows: 0fr;
+      background: rgb(52 71 115 / 50%); border-radius: 0 0 10px 10px;
+      transition: grid-template-rows 0.45s var(--ease-glide);
     }
-    .player-match-detail-stats.open { display: block; border-radius: 0 0 10px 10px;}
-    .player-match-row.expanded .player-match-detail-stats { padding-bottom: 10px; }
-    .player-match-detail-stats .mpc-stats { padding: 0; }
+    .player-match-detail-stats.open { grid-template-rows: 1fr; }
+    .pmd-in { overflow: hidden; min-height: 0; }
+    .player-match-detail-stats .mpc-stats { padding: 6px 14px; gap: 0; }
+    .player-match-detail-stats .mpc-stat-row {
+      padding: 11px 0; border-top: 1px solid rgba(255,255,255,0.07);
+      opacity: 0; translate: 0 6px; transition: opacity 0.35s ease, translate 0.45s var(--ease-glide);
+    }
+    .player-match-detail-stats .mpc-stat-row:first-child { border-top: none; }
+    .player-match-detail-stats .mpc-stat-box { background: none; padding: 0; border-radius: 0; }
+    .player-match-detail-stats.open .mpc-stat-row { opacity: 1; translate: 0 0; }
+    .player-match-detail-stats.open .mpc-stat-row:nth-child(2) { transition-delay: 0.05s; }
+    .player-match-detail-stats.open .mpc-stat-row:nth-child(3) { transition-delay: 0.10s; }
+    .player-match-detail-stats.open .mpc-stat-row:nth-child(4) { transition-delay: 0.15s; }
+    .player-match-detail-stats.open .mpc-stat-row:nth-child(5) { transition-delay: 0.20s; }
+    .player-match-detail-stats.open .mpc-stat-row:nth-child(6) { transition-delay: 0.25s; }
+    .player-match-detail-stats.open .mpc-stat-row:nth-child(7) { transition-delay: 0.30s; }
 
     @media (max-width: 768px) {
-      .page { padding: 20px; }
+      :root { --bar-h: 48px; }
+      .page { padding: 20px 20px 100px; } /* 100px dolje: prostor za fiksnu navigaciju */
+      .toast { bottom: 90px; } /* iznad fiksne navigacije */
       h1 { font-size: 1.9rem; }
       .league-logo { max-width: 170px; }
       .social a { width: 45px; height: 45px; font-size: 1.15rem; }
@@ -981,13 +1085,12 @@
       thead th { font-size: 0.9rem; padding: 10px 8px; }
       tbody td  { font-size: 0.9rem; padding: 10px 8px; }
       tfoot td.table-footer-brand { font-size: 0.60rem; }
-      .tabs { gap: 20px; }
-      .tab-btn { font-size: 0.85rem; }
       .bracket-round { min-width: 160px; }
     }
 
     @media (max-width: 480px) {
-      .page { padding: 12px; }
+      :root { --bar-h: 46px; }
+      .page { padding: 12px 12px 100px; }
       h1 { font-size: 1.5rem; }
       .hero p { font-size: 1.3rem; margin: 0 0 16px 0; }
       .league-logo { max-width: 135px; }
@@ -1001,8 +1104,6 @@
       thead th { font-size: 0.78rem; padding: 8px 6px; }
       tbody td  { font-size: 0.78rem; padding: 8px 6px; }
       tfoot td.table-footer-brand { font-size: 0.50rem; }
-      .tabs { gap: 5px; margin-bottom: 16px;}
-      .tab-btn { font-size: 0.75rem; padding: 10px 20px; }
       .bracket-round { min-width: 140px; }
       .bracket-player { font-size: 0.72rem; padding: 6px 8px; }
       .yt {height: 200px;}
@@ -1011,11 +1112,44 @@
       .mpc-stats { padding: 14px 14px; }
       .mpc-stat-row { gap: 6px; }
       .mpc-stat-box { padding: 11px 10px; }
-      .player-search-wrap { flex-direction: column; align-items: center; margin: 16px auto; width: auto; }
-      .player-stats-grid { gap: 6px; }
-      .player-stat-box { padding: 10px 6px; }
+      .player-search-box { padding: 0 14px; gap: 8px; }
+      .seg-btn { padding: 0 10px; }
+      .season-toggle-caption { font-size: 0.76rem; }
+      .stat-ring-dial { width: min(100%, 92px); }
+      .stat-ring-val { font-size: 1.15rem; }
       .popup-match-top {column-gap: 0px;}
     }
+    /* -- KLIKABILNI ELEMENTI BEZ VLASTITOG HOVERA (kartice, imena, avatar) -- */
+    .mpc-avatar { transition: border-color 0.2s ease; }
+    .player-avatar { transition: box-shadow 0.25s ease; }
+    .player-avatar-camera { transition: scale 0.25s var(--ease-glide); }
+    @media (hover: hover) {
+      .recent-match-chip:hover { border-color: rgba(120,170,255,0.4); translate: 0 -2px; }
+      .mpc-player-col.clickable:hover .mpc-avatar { border-color: rgba(138,187,229,0.95); }
+      .player-name-link:hover, td[onclick]:hover { color: #7eb8ff; }
+      .player-avatar-wrap:hover .player-avatar { box-shadow: 0 12px 30px rgba(126,184,255,0.45); }
+      .player-avatar-wrap:hover .player-avatar-camera { scale: 1.12; }
+    }
+
+    /* -- INTERAKCIJE: isti prijelazi i povratna informacija na svakom gumbu i klikabilnom elementu --
+       Zajednički blok (kopiran u sve tri stranice - mijenjaj ga na svim stranicama). Mora ostati na kraju <style>:
+       jednake je specifičnosti kao pravila komponenti pa ih nadjačava redoslijedom, i tako svi imaju iste vremene.
+       Koristi zasebna svojstva scale/translate, pa se ne tuče s transform koji komponente već imaju. */
+    :is(button, [onclick], a[href]) {
+      transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease,
+                  opacity 0.2s ease, transform 0.25s var(--ease-glide), scale 0.25s var(--ease-glide), translate 0.25s var(--ease-glide);
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Pritisak: element se na tren utisne (--press: koliko; široki elementi se utisnu manje) */
+    :is(button, [onclick], a[href]):not(:disabled, td, th, tr, .match-popup-overlay):active { scale: var(--press, 0.97); }
+    .accordion-header, .player-match-row, .player-search-item, .recent-match-chip, .bracket-match, .kolo-card, .mpc-player-col.clickable { --press: 0.985; }
+    :is(button, [onclick], a[href]):focus-visible { outline: 2px solid rgba(120,170,255,0.7); outline-offset: 2px; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    @media (prefers-reduced-motion: reduce) {
+      :is(button, [onclick], a[href]) { transition: none; }
+      :is(button, [onclick], a[href]):active { scale: none; }
+    }
+
   </style>
 </head>
 <body>
@@ -1046,22 +1180,22 @@
       <div class="player-search-wrap">
         <div class="player-search-box">
           <i class="fas fa-search player-search-icon"></i>
-          <input type="text" id="player-search-input" class="player-search-input" placeholder="Pretraži igrača..." autocomplete="off" oninput="handlePlayerSearch(this.value)" onfocus="handlePlayerSearchFocus()">
+          <input type="text" id="player-search-input" class="player-search-input" placeholder="Pretraži igrača..." aria-label="Pretraži igrača" autocomplete="off" oninput="handlePlayerSearch(this.value)" onfocus="handlePlayerSearchFocus()">
         </div>
         <div id="player-search-results" class="player-search-results" style="display:none;"></div>
-        <div id="global-season-toggle" style="display:flex;gap:8px;flex-wrap:wrap;"></div>        
+        <div id="global-season-toggle" class="season-toggle"></div>
       </div>
 
-      <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('tablice')">TABLICE</button>
-        <button class="tab-btn" onclick="switchTab('najbolji')">NAJBOLJI U LIGI</button>
-        <button class="tab-btn" onclick="switchTab('zenska-liga')">ŽENSKA LIGA</button>
-        <button class="tab-btn" onclick="switchTab('avg-lige')">AVG LIGE</button>
-        <button class="tab-btn" onclick="switchTab('gornji-zdrijeb')">GORNJI ŽDRIJEB</button>
-        <button class="tab-btn" onclick="switchTab('donji-zdrijeb')">DONJI ŽDRIJEB</button>
-        <!-- YT-LIVE privremeno isključen (tab + panel s iframeom ispod su zakomentirani) -->
-        <!-- <button class="tab-btn" onclick="switchTab('yt-live')">YT-LIVE</button> -->
-      </div>
+      <nav class="main-nav" id="main-nav" aria-label="Glavna navigacija">
+        <button class="nav-btn active" data-tab="tablice" aria-current="true" onclick="switchTab('tablice')"><i class="fas fa-table-list" aria-hidden="true"></i><span>Tablice</span></button>
+        <button class="nav-btn" data-tab="najbolji" onclick="switchTab('najbolji')"><i class="fas fa-ranking-star" aria-hidden="true"></i><span><span class="nav-short">Najbolji</span><span class="nav-full">Najbolji u ligi</span></span></button>
+        <button class="nav-btn" data-tab="zenska-liga" onclick="switchTab('zenska-liga')"><i class="fas fa-venus" aria-hidden="true"></i><span>Ženska liga</span></button>
+        <button class="nav-btn" data-tab="avg-lige" onclick="switchTab('avg-lige')"><i class="fas fa-chart-column" aria-hidden="true"></i><span>AVG lige</span></button>
+        <button class="nav-btn" data-tab="zdrijeb" onclick="switchTab('zdrijeb')"><i class="fas fa-sitemap" aria-hidden="true"></i><span>Ždrijeb</span></button>
+        <!-- YT-LIVE privremeno isključen (stavka + panel s iframeom ispod su zakomentirani) -->
+        <!-- <button class="nav-btn" data-tab="yt-live" onclick="switchTab('yt-live')"><i class="fab fa-youtube" aria-hidden="true"></i><span>YT-LIVE</span></button> -->
+        <span class="nav-indicator" id="nav-indicator" aria-hidden="true"></span>
+      </nav>
 
       <div id="tab-tablice" class="tab-panel active">
         <div id="content"></div>
@@ -1073,21 +1207,28 @@
         <div id="best-matches-content" style="margin-top:16px;"></div>
       </div>
 
-      <div id="tab-gornji-zdrijeb" class="tab-panel">
-        <div id="gornji-zdrijeb-content">
-          <div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>
+      <div id="tab-zdrijeb" class="tab-panel">
+        <div class="sub-tabs" id="bracket-switch" role="group" aria-label="Ždrijeb">
+          <button type="button" class="sub-tab active" data-bracket="gornji" aria-pressed="true" onclick="switchBracketView('gornji')">Gornji ždrijeb</button>
+          <button type="button" class="sub-tab" data-bracket="donji" aria-pressed="false" onclick="switchBracketView('donji')">Donji ždrijeb</button>
+          <span class="sub-tabs-line" aria-hidden="true"></span>
         </div>
-        <div id="gornji-zdrijeb-archive-content" style="display:none;"></div>
+        <!-- Prikaz (display) gornjeg/donjeg ždrijeba mijenja samo ovaj omotač; unutarnje -content i -archive-content divove postavlja switchGlobalSeasonView -->
+        <div id="bracket-gornji">
+          <div id="gornji-zdrijeb-content">
+            <div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>
+          </div>
+          <div id="gornji-zdrijeb-archive-content" style="display:none;"></div>
+        </div>
+        <div id="bracket-donji" style="display:none;">
+          <div id="donji-zdrijeb-content">
+            <div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>
+          </div>
+          <div id="donji-zdrijeb-archive-content" style="display:none;"></div>
+        </div>
       </div>
 
-      <div id="tab-donji-zdrijeb" class="tab-panel">
-        <div id="donji-zdrijeb-content">
-          <div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>
-        </div>
-        <div id="donji-zdrijeb-archive-content" style="display:none;"></div>
-      </div>
-
-      <!-- YT-LIVE privremeno isključen - za povratak odkomentiraj ovaj panel i gumb u .tabs gore.
+      <!-- YT-LIVE privremeno isključen - za povratak odkomentiraj ovaj panel i stavku u .main-nav gore.
       <div id="tab-yt-live" class="tab-panel">
         <div id="yt-frame">
           <iframe class="yt" width="100%" height="731px" src="https://www.youtube.com/embed/ULQK_BW6uqY?si=bk6mvLSMDF3zxyEu"
@@ -1100,11 +1241,12 @@
       -->
 
       <div id="tab-avg-lige" class="tab-panel">
-        <div id="avg-lige-tabs" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-          <button class="player-season-tab active" onclick="switchAvgLigeTab('diamond', this)">💎 Diamond</button>
-          <button class="player-season-tab" onclick="switchAvgLigeTab('gold', this)">🥇 Gold</button>
-          <button class="player-season-tab" onclick="switchAvgLigeTab('silver', this)">🥈 Silver</button>
-          <button class="player-season-tab" onclick="switchAvgLigeTab('bronze', this)">🥉 Bronze</button>
+        <div class="sub-tabs" id="avg-lige-tabs" role="group" aria-label="AVG liga">
+          <button class="sub-tab active" onclick="switchAvgLigeTab('diamond', this)">💎 Diamond</button>
+          <button class="sub-tab" onclick="switchAvgLigeTab('gold', this)">🥇 Gold</button>
+          <button class="sub-tab" onclick="switchAvgLigeTab('silver', this)">🥈 Silver</button>
+          <button class="sub-tab" onclick="switchAvgLigeTab('bronze', this)">🥉 Bronze</button>
+          <span class="sub-tabs-line" aria-hidden="true"></span>
         </div>
         <div id="avg-lige-content"></div>
       </div>
@@ -1134,19 +1276,89 @@
       return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     }
 
+    // -- NAVIGACIJA (glavna) --
     function switchTab(name) {
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('tab-' + name).classList.add('active');
-      event.currentTarget.classList.add('active');
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        const on = b.dataset.tab === name;
+        b.classList.toggle('active', on);
+        if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
+      });
+      positionNavIndicator(true);
 
       if (name === 'avg-lige') {
+        positionSubTabsLine(document.getElementById('avg-lige-tabs'), false); // panel je do sad bio skriven (širine 0), pa liniju treba odmah izmjeriti
         window.loadAvgLige(activeAvgLigeTab);
       }
       if (name === 'zenska-liga') {
         window.loadAvgLige('zenska');
       }
+      if (name === 'zdrijeb') {
+        positionSubTabsLine(document.getElementById('bracket-switch'), false);
+      }
     }
+
+    // Klizna crta (navigacija, podtabovi) odnosno pločica (prekidač sezone) ispod aktivnog gumba.
+    // Položaj se zadaje rubovima (left/right) i "elastično": vodeći rub stiže brzo, zadnji kasni, pa se crta na tren
+    // rastegne i smiri. --ind-inset (udio širine gumba) crtu skuplja s obje strane. animate=false postavlja bez klizanja.
+    // Roditelj crte mora biti position:relative/fixed (offsetLeft se mjeri od njega); u skrivenom panelu se ne radi ništa.
+    function placeIndicator(ind, btn, animate) {
+      if (!ind || !btn || !ind.offsetParent) return;
+      const inset = (parseFloat(getComputedStyle(ind).getPropertyValue('--ind-inset')) || 0) * btn.offsetWidth;
+      const left = btn.offsetLeft + inset;
+      const right = ind.offsetParent.clientWidth - btn.offsetLeft - btn.offsetWidth + inset;
+      const prevLeft = parseFloat(ind.style.left);
+      if (!animate || isNaN(prevLeft)) {
+        ind.style.transition = 'none';
+        ind.style.left = left + 'px'; ind.style.right = right + 'px'; ind.style.opacity = '1';
+        void ind.offsetWidth; ind.style.transition = '';
+        return;
+      }
+      const toRight = left > prevLeft;
+      ind.style.transition = 'left ' + (toRight ? '0.5s' : '0.28s') + ' var(--ease-glide), right ' + (toRight ? '0.28s' : '0.5s') + ' var(--ease-glide)';
+      ind.style.left = left + 'px'; ind.style.right = right + 'px';
+    }
+
+    function positionNavIndicator(animate) {
+      placeIndicator(document.getElementById('nav-indicator'), document.querySelector('.nav-btn.active'), animate);
+    }
+
+    // Klizna crta ispod aktivnog podtaba (Gornji / Donji ždrijeb, na mobitelu i tabletu i AVG lige);
+    // container je .sub-tabs, aktivni gumb je onaj s klasom .active
+    function positionSubTabsLine(container, animate) {
+      if (!container) return;
+      placeIndicator(container.querySelector('.sub-tabs-line'), container.querySelector('.sub-tab.active'), animate);
+    }
+
+    // Gornji / Donji ždrijeb unutar panela ŽDRIJEB. Mijenja samo omotače #bracket-gornji / #bracket-donji;
+    // connectori se sami preračunaju (ResizeObserver u PAIR OFFSET) čim ždrijeb postane vidljiv.
+    function switchBracketView(which) {
+      document.querySelectorAll('#bracket-switch .sub-tab').forEach(b => {
+        const on = b.dataset.bracket === which;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on);
+      });
+      document.getElementById('bracket-gornji').style.display = which === 'gornji' ? '' : 'none';
+      document.getElementById('bracket-donji').style.display = which === 'donji' ? '' : 'none';
+      positionSubTabsLine(document.getElementById('bracket-switch'), true);
+    }
+
+    (function initNav() {
+      // Širine stavki ovise o fontu (Lexend dolazi s CDN-a) i o širini ekrana, pa se sjaj/crta namješta
+      // ispočetka kad god gumb promijeni veličinu (observer javi i prvo mjerenje). Paneli ŽDRIJEB i AVG LIGE
+      // skriveni su dok se ne otvore (širine 0), pa se njihova crta namješta i pri otvaranju (switchTab).
+      const navRo = new ResizeObserver(() => positionNavIndicator(false));
+      document.querySelectorAll('.nav-btn').forEach(b => navRo.observe(b));
+      const subRo = new ResizeObserver(() => {
+        positionSubTabsLine(document.getElementById('bracket-switch'), false);
+        positionSubTabsLine(document.getElementById('avg-lige-tabs'), false);
+      });
+      document.querySelectorAll('#bracket-switch .sub-tab, #avg-lige-tabs .sub-tab').forEach(b => subRo.observe(b));
+      // Trake u otvorenim akordeonima grupa nemaju vlastiti observer, pa se crta namješta pri promjeni širine prozora
+      window.addEventListener('resize', () => document.querySelectorAll('.accordion-item.open .sub-tabs, #profile-tabs, #profile-subtabs').forEach(b => positionSubTabsLine(b, false)));
+      positionNavIndicator(false);
+    })();
 
     // -- BERGER --
     const berger8 = [
@@ -1522,11 +1734,22 @@
     // db/getDocs/collection/query/orderBy) i izlaže se kao window.loadAvgLige.
     function switchAvgLigeTab(leagueId, btn) {
       activeAvgLigeTab = leagueId;
-      document.querySelectorAll('#avg-lige-tabs .player-season-tab').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#avg-lige-tabs .sub-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      positionSubTabsLine(document.getElementById('avg-lige-tabs'), true);
       window.loadAvgLige(leagueId);
     }
     window.switchAvgLigeTab = switchAvgLigeTab;
+
+    // Tablica | Raspored traka unutar akordeona grupe: isti .sub-tabs kao drugdje, samo niža (.sub-tabs-sm).
+    // Položaj klizne crte namješta se pri otvaranju akordeona (toggleAccordion) i pri prebacivanju (switchGroupTab).
+    function groupSubTabsHtml(uid) {
+      return `<div class="sub-tabs sub-tabs-sm" role="group" aria-label="Prikaz grupe">
+        <button type="button" class="sub-tab active" onclick="switchGroupTab('${uid}','standings',this)">Tablica</button>
+        <button type="button" class="sub-tab" onclick="switchGroupTab('${uid}','raspored',this)">Raspored</button>
+        <span class="sub-tabs-line" aria-hidden="true"></span>
+      </div>`;
+    }
 
     function switchGroupTab(uid, tab, btn) {
       const target = document.getElementById(uid+'-'+tab);
@@ -1534,9 +1757,9 @@
       document.getElementById(uid+'-'+other).style.display = 'none';
       target.style.display=''; target.style.animation='none';
       requestAnimationFrame(()=>{ target.style.animation=''; });
-      const btns = btn.closest('div').querySelectorAll('.grp-tab-btn');
-      btns.forEach(b=>{ b.style.background='rgba(10,19,38,0.78)'; b.style.borderColor='rgba(255,255,255,0.12)'; b.style.color='var(--muted)'; });
-      btn.style.background='rgba(21,49,99,1)'; btn.style.borderColor='rgba(255,255,255,0.2)'; btn.style.color='#fff';
+      const bar = btn.closest('.sub-tabs');
+      bar.querySelectorAll('.sub-tab').forEach(b => b.classList.toggle('active', b === btn));
+      positionSubTabsLine(bar, true);
     }
 
     // Klik na ime igrača otvara njegov profil - koristi se u "Najbolji u ligi"
@@ -1775,6 +1998,19 @@
     function ensureSeasonRegistered(seasonId) {
       if (!SEASON_ORDER.includes(seasonId)) SEASON_ORDER.push(seasonId);
       if (!SEASON_LABELS[seasonId]) SEASON_LABELS[seasonId] = seasonId.replace(/^sezona-(\d+)$/, 'Sezona $1');
+    }
+
+    // AVG lige i Ženska liga imaju vlastito brojanje sezona: prva AVG sezona odigrana je uz sezonu 2 (sezona-2), prva sezona
+    // Ženske lige uz sezonu 3 (sezona-3), a svaka sljedeća ide uz sljedeću glavnu sezonu. Podaci su i dalje spremljeni pod
+    // ID-jem glavne sezone, samo se oznaka računa od prve sezone te lige. Glavna liga koristi obične oznake (SEASON_LABELS).
+    const AVG_FIRST_SEASON = 'sezona-2';
+    const ZENSKA_FIRST_SEASON = 'sezona-3';
+    function leagueSeasonLabel(leagueId, seasonId) {
+      const firstId = leagueId === 'zenska' ? ZENSKA_FIRST_SEASON : AVG_FIRST_SEASON;
+      const n = parseInt(String(seasonId).replace(/^sezona-/, ''), 10);
+      const first = parseInt(firstId.replace(/^sezona-/, ''), 10);
+      if (isNaN(n) || n < first) return SEASON_LABELS[seasonId] || seasonId;
+      return 'Sezona ' + (n - first + 1);
     }
 
     function registerPlayerSeasonData(playerName, seasonId, seasonLabel, group, groupName, standingsRow, matches, playoff = null) {
@@ -2040,7 +2276,8 @@
 
     // -- PLAYER PROFILE POPUP --
     let currentProfilePlayer = null;
-    let currentProfileSeason = 'overall';
+    let currentProfileTab = 'overall';   // glavna razina: 'overall' | 'seasons' | 'avg' | 'zenska'
+    let currentProfileSubs = {};         // druga razina: zadnja odabrana sezona po tabu { seasons, avg, zenska }
 
     // Postavlja se JEDINO kad profil otvara playerColHtml unutar kartice iz
     // openRecentMatchesPopup (vidi fromRecentMatchIndex u renderMatchPopupCard) -
@@ -2051,7 +2288,8 @@
 
     function openPlayerProfile(playerName, backToRecentMatchIndex) {
       currentProfilePlayer = playerName;
-      currentProfileSeason = 'overall';
+      currentProfileTab = 'overall';
+      currentProfileSubs = {};
       recentMatchesBackIndex = backToRecentMatchIndex != null ? backToRecentMatchIndex : null;
       document.getElementById('player-search-results').style.display = 'none';
       document.getElementById('player-search-input').value = '';
@@ -2064,49 +2302,79 @@
       openRecentMatchesPopup(recentMatchesBackIndex);
     }
 
-    function switchProfileSeason(seasonId) {
-      currentProfileSeason = seasonId;
-      renderPlayerProfile();
+    // Profil se iscrtava ispočetka, pa trake dobivaju nove crte: zapamti gdje su stare bile da nove mogu kliznuti odande
+    function profileLinesFrom() {
+      const grab = id => {
+        const l = document.querySelector(`#${id} .sub-tabs-line`);
+        return l && l.style.left ? { left: l.style.left, right: l.style.right } : null;
+      };
+      return { main: grab('profile-tabs'), sub: grab('profile-subtabs') };
     }
 
-    function statBoxes(stats) {
-        return `
-          <div class="player-stats-grid">
-            <div class="player-stat-box primary text-left">
-              <div class="player-stat-box-val"><img src="images/average-icon.png" alt="average-icon" class="stat-icon"> ${stats.avg}</div>
-              <div class="player-stat-box-label">AVG</div>
-            </div>
-            <div class="player-stat-box primary text-center">
-              <div class="player-stat-box-val"><img src="images/average-icon.png" alt="average-icon" class="stat-icon">${stats.f9}</div>
-              <div class="player-stat-box-label">First 9</div>
-            </div>
-            <div class="player-stat-box primary text-right">
-              <div class="player-stat-box-val"><img src="images/dart-icon.png" alt="dart-icon" class="stat-icon">${stats.x180}</div>
-              <div class="player-stat-box-label">180s</div>
-            </div>
+    // Glavna razina: Sveukupno | Sezone | AVG | Ženska liga. Sezonska traka je nakon promjene taba druga (druge sezone),
+    // pa joj se crta samo postavi, ne klizi.
+    function switchProfileTab(tab) {
+      const from = profileLinesFrom();
+      from.sub = null;
+      currentProfileTab = tab;
+      renderPlayerProfile(from);
+    }
 
-            <div class="player-stat-box secondary">
-              <div class="player-stat-box-val">${stats.pts}</div>
-              <div class="player-stat-box-label">PTS</div>
-            </div>
-            <div class="player-stat-box secondary">
-              <div class="player-stat-box-val">${stats.win}/${stats.draw}/${stats.lost}</div>
-              <div class="player-stat-box-label">W/D/L</div>
-            </div>
-            <div class="player-stat-box secondary">
-              <div class="player-stat-box-val">${stats.legs > 0 ? '+' + stats.legs : stats.legs}</div>
-              <div class="player-stat-box-label">Legs</div>
-            </div>
-            <div class="player-stat-box secondary">
-              <div class="player-stat-box-val">${stats.bl}</div>
-              <div class="player-stat-box-label">Best Leg</div>
-            </div>
-            <div class="player-stat-box secondary">
-              <div class="player-stat-box-val">${stats.bco}</div>
-              <div class="player-stat-box-label">Best CO</div>
-            </div>
-          </div>`;
-      }
+    // Druga razina: sezona unutar Sezone / AVG / Ženska liga. Svaki tab pamti svoju zadnju sezonu.
+    function switchProfileSub(tab, seasonId) {
+      const from = profileLinesFrom();
+      currentProfileTab = tab;
+      currentProfileSubs[tab] = seasonId;
+      renderPlayerProfile(from);
+    }
+
+    // Tri prstena (AVG, First 9, 180s) su uvijek vidljivi; klik na prsten mijenja samo graf ispod (switchProfileChart).
+    // AVG i First 9 pune se do 100, a 180s prema broju mečeva (180s po meču). Ispod su sporedne statistike u jednom redu.
+    const PROFILE_METRICS = {
+      avg:  { label: 'AVG',     color: '#8fcf3c', title: 'AVG kroz kola' },
+      f9:   { label: 'First 9', color: '#4da3ff', title: 'First 9 kroz kola' },
+      x180: { label: '180s',    color: '#f5c04a', title: '180s po meču' }
+    };
+
+    function statRingsHtml(stats, uid) {
+      const played = Math.max(1, stats.total || (stats.win + stats.draw + stats.lost) || 0);
+      const frac = key => {
+        const v = parseFloat(stats[key]);
+        if (isNaN(v)) return 0;
+        return Math.max(0, Math.min(1, key === 'x180' ? v / played : v / 100));
+      };
+      const ring = (key, idx) => {
+        const m = PROFILE_METRICS[key];
+        const off = (251.3 * (1 - frac(key))).toFixed(1);
+        return `<button type="button" class="stat-ring${key === 'avg' ? ' active' : ''}" data-metric="${key}" aria-pressed="${key === 'avg'}"
+            style="--c:${m.color};--off:${off};--i:${idx}" onclick="switchProfileChart(${uid}, '${key}')">
+          <span class="stat-ring-dial">
+            <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="sr-track" cx="50" cy="50" r="40" fill="none" stroke-width="9"/><circle class="sr-arc" cx="50" cy="50" r="40" fill="none" stroke-width="9"/></svg>
+            <span class="stat-ring-val">${stats[key]}</span>
+          </span>
+          <span class="stat-ring-label">${m.label}</span>
+        </button>`;
+      };
+      const legsColor = stats.legs > 0 ? '#2ecc71' : stats.legs < 0 ? '#e74c3c' : 'inherit';
+      const cells = [
+        ['PTS', stats.pts],
+        ['W/D/L', `<span style="color:#2ecc71">${stats.win}</span>/<span style="color:#f39c12">${stats.draw}</span>/<span style="color:#e74c3c">${stats.lost}</span>`],
+        ['Legs', `<span style="color:${legsColor}">${stats.legs > 0 ? '+' + stats.legs : stats.legs}</span>`],
+        ['Best Leg', stats.bl],
+        ['Best CO', stats.bco]
+      ];
+      return `
+        <div class="player-stats-card" data-chart="${uid}">
+          <div class="stat-rings" role="group" aria-label="Prikaz grafa">
+            ${ring('avg', 0)}${ring('f9', 1)}${ring('x180', 2)}
+            <span class="stat-rings-line" aria-hidden="true"></span>
+          </div>
+          <div class="stat-row">
+            ${cells.map(c => `<div class="stat-cell"><div class="stat-cell-val">${c[1]}</div><div class="stat-cell-label">${c[0]}</div></div>`).join('')}
+          </div>
+        </div>`;
+    }
+
     function matchRow(m, idx) {
       const resultIcons = {
         win:  '<span class="result-icon win"><i class="fas fa-check"></i></span>',
@@ -2118,7 +2386,7 @@
         ? `<span class="player-match-score ${m.result}">${escapeHtml(m.score)}</span>`
         : `<span class="player-match-score empty">-:-</span>`;
       const detailHtml = m.hasScore ? `
-        <div class="player-match-detail-stats" id="player-match-detail-${idx}">
+        <div class="player-match-detail-stats" id="player-match-detail-${idx}"><div class="pmd-in">
           ${renderMpcStatsHtml({
             average1: m.avgSelf, average2: m.avgOpp,
             first9_1: m.f9Self, first9_2: m.f9Opp,
@@ -2128,7 +2396,7 @@
             checkoutrate1: m.corateSelf, checkoutrate2: m.corateOpp,
             checkouts1: m.coattSelf, checkouts2: m.coattOpp
           }, m.result === 'win', m.result === 'loss', currentProfilePlayer, m.opponent, m._season)}
-        </div>` : '';
+        </div></div>` : '';
       return `<div class="player-match-item"><div class="player-match-row" onclick="toggleMatchDetail(this, ${idx})">
         <div class="player-match-row-left">
           <span class="player-match-kolo">${m._context ? escapeHtml(m._context) + ' · ' : ''}Kolo ${m.kolo}</span>
@@ -2141,8 +2409,12 @@
       </div>${detailHtml}</div>`;
     }
 
-    // -- AVG GRAF KROZ KOLA --
-    function avgChartHtml(matches, overallAvg, form) {
+    // -- AVG GRAF KROZ KOLA (i First 9 / 180s po meču; metriku bira prsten, vidi switchProfileChart) --
+    // profileCharts[uid] čuva točke svih triju metrika jedne sekcije profila (u popupu ih može biti više, npr. AVG lige).
+    const profileCharts = {};
+    let profileChartSeq = 0;
+
+    function avgChartHtml(matches, stats, form, uid) {
       const formHtml_ = (form && form.length) ? `
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.06);">
           <span style="font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">Forma (zadnjih ${form.length})</span>
@@ -2150,29 +2422,51 @@
         </div>` : '';
 
       const MAX_POINTS = 7;
-      const points = matches
-        .filter(m => m.hasScore && m.avgSelf != null && !isNaN(parseFloat(m.avgSelf)) && parseFloat(m.avgSelf) > 0)
-        .map(m => ({ label: m.chartLabel || `K${m.kolo}`, avg: parseFloat(m.avgSelf), season: m._season, result: m.result }))
+      // Samo mečevi s upisanim AVG-om (kao i prije). First 9 traži vlastitu vrijednost; 180s bez upisa računaju se kao 0
+      // (isto kao u zbroju na prstenu).
+      const withStats = matches.filter(m => m.hasScore && parseFloat(m.avgSelf) > 0);
+      const toPoints = (rows, valueOf) => rows
+        .map(m => ({ label: m.chartLabel || `K${m.kolo}`, val: valueOf(m), result: m.result }))
+        .filter(p => !isNaN(p.val))
         .slice(-MAX_POINTS);
+      profileCharts[uid] = {
+        series: {
+          avg:  toPoints(withStats, m => parseFloat(m.avgSelf)),
+          f9:   toPoints(withStats.filter(m => parseFloat(m.f9Self) > 0), m => parseFloat(m.f9Self)),
+          x180: toPoints(withStats, m => parseInt(m.x180Self) || 0)
+        },
+        ref: { avg: parseFloat(stats.avg), f9: parseFloat(stats.f9) }
+      };
 
-      if (points.length < 2) {
-        return `<div class="player-avg-chart-wrap">${formHtml_}<div class="player-avg-chart-empty">Nema dovoljno odigranih mečeva za prikaz grafa.</div></div>`;
+      return `<div class="player-avg-chart-wrap">${formHtml_}<div id="pchart-${uid}">${profileChartBody(uid, 'avg')}</div></div>`;
+    }
+
+    // Naslov + trend + SVG za jednu metriku jedne sekcije (poziva se pri iscrtavanju i pri kliku na prsten).
+    function profileChartBody(uid, metric) {
+      const reg = profileCharts[uid], meta = PROFILE_METRICS[metric];
+      const pts = reg ? reg.series[metric] : [];
+      if (pts.length < 2) {
+        return `<div class="player-avg-chart-empty">Nema dovoljno odigranih mečeva za prikaz grafa.</div>`;
       }
 
-      const W = 600, H = 180, padL = 34, padR = 14, padT = 16, padB = 26;
+      const dec = metric === 'x180' ? 0 : 1;
+      const W = 600, H = 180, padL = 44, padR = 14, padT = 16, padB = 26;
       const innerW = W - padL - padR, innerH = H - padT - padB;
 
-      const avgs = points.map(p => p.avg);
-      let minAvg = Math.min(...avgs), maxAvg = Math.max(...avgs);
-      if (minAvg === maxAvg) { minAvg -= 1; maxAvg += 1; }
-      const pad = (maxAvg - minAvg) * 0.18;
-      minAvg -= pad; maxAvg += pad;
+      const vals = pts.map(p => p.val);
+      let minV = Math.min(...vals), maxV = Math.max(...vals);
+      if (metric === 'x180') {
+        minV = 0; maxV = Math.max(2, Math.ceil(maxV)); if (maxV % 2) maxV += 1;   // broj, ne prosjek: os od 0, cijele oznake
+      } else {
+        if (minV === maxV) { minV -= 1; maxV += 1; }
+        const pad = (maxV - minV) * 0.18;
+        minV -= pad; maxV += pad;
+      }
 
-
-      const xStep = points.length > 1 ? innerW / (points.length - 1) : 0;
-      const xy = points.map((p, i) => ({
+      const xStep = innerW / (pts.length - 1);
+      const xy = pts.map((p, i) => ({
         x: padL + i * xStep,
-        y: padT + innerH - ((p.avg - minAvg) / (maxAvg - minAvg)) * innerH,
+        y: padT + innerH - ((p.val - minV) / (maxV - minV)) * innerH,
         ...p
       }));
 
@@ -2181,48 +2475,48 @@
 
       const gridLines = [0, 0.5, 1].map(t => {
         const y = padT + innerH * t;
-        const val = (maxAvg - (maxAvg - minAvg) * t).toFixed(1);
+        const val = (maxV - (maxV - minV) * t).toFixed(dec);
+        // donja oznaka ide iznad crte, da se ne sudara s x-oznakom prvog kola
+        const ty = t === 1 ? y - 5 : y + 6;
         return `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-                <text x="${padL-6}" y="${(y+3).toFixed(1)}" font-size="14" fill="rgba(255,255,255,0.4)" text-anchor="end">${val}</text>`;
+                <text x="${padL-6}" y="${ty.toFixed(1)}" font-size="17" fill="rgba(255,255,255,0.45)" text-anchor="end">${val}</text>`;
       }).join('');
 
-      // Referentna linija: sezonski/overall prosjek AVG-a
-      const avgRefNum = parseFloat(overallAvg);
-      const avgRefLine = (!isNaN(avgRefNum) && avgRefNum >= minAvg && avgRefNum <= maxAvg) ? (() => {
-        const yRef = padT + innerH - ((avgRefNum - minAvg) / (maxAvg - minAvg)) * innerH;
+      // Referentna linija: prosjek te metrike (AVG ili First 9); za 180s je nema
+      const refNum = reg.ref[metric];
+      const avgRefLine = (refNum != null && !isNaN(refNum) && refNum >= minV && refNum <= maxV) ? (() => {
+        const yRef = padT + innerH - ((refNum - minV) / (maxV - minV)) * innerH;
         return `<line x1="${padL}" y1="${yRef.toFixed(1)}" x2="${W-padR}" y2="${yRef.toFixed(1)}" stroke="rgba(255,255,255,0.28)" stroke-width="1" stroke-dasharray="4,4"/>
-                <text x="${W-padR}" y="${(yRef-4).toFixed(1)}" font-size="14" fill="rgba(255,255,255,1)" text-anchor="end">AVG ${avgRefNum.toFixed(1)}</text>`;
+                <text x="${W-padR}" y="${(yRef-5).toFixed(1)}" font-size="17" fill="rgba(255,255,255,1)" text-anchor="end">${metric === 'avg' ? 'AVG' : 'F9'} ${refNum.toFixed(1)}</text>`;
       })() : '';
 
       // Max 7 točaka - prikaži sve x-oznake
-      const xLabels = xy.map((p,i) =>
-        `<text x="${p.x.toFixed(1)}" y="${H-8}" font-size="14" fill="rgba(255,255,255,0.4)" text-anchor="middle">${escapeHtml(p.label)}</text>`
+      const xLabels = xy.map(p =>
+        `<text x="${p.x.toFixed(1)}" y="${H-8}" font-size="17" fill="rgba(255,255,255,0.5)" text-anchor="middle">${escapeHtml(p.label)}</text>`
       ).join('');
 
       const dotColor = r => r === 'win' ? '#2ecc71' : r === 'loss' ? '#e74c3c' : r === 'draw' ? '#f39c12' : '#7eb8ff';
-      const dots = xy.map(p =>
-        `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="${dotColor(p.result)}" stroke="#0d1426" stroke-width="1.5">
-           <title>${escapeHtml(p.label)}: ${p.avg.toFixed(2)}</title>
+      const valTxt = v => metric === 'x180' ? String(v) : v.toFixed(2);
+      const dots = xy.map((p, i) =>
+        `<circle class="pc-dot" style="--k:${i}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="4.5" fill="${dotColor(p.result)}" stroke="#0d1426" stroke-width="1.5">
+           <title>${escapeHtml(p.label)}: ${valTxt(p.val)}</title>
          </circle>`
       ).join('');
 
-      const lastAvg = xy[xy.length-1].avg.toFixed(2);
-      const firstAvg = xy[0].avg.toFixed(2);
-      const trendUp = xy[xy.length-1].avg >= xy[0].avg;
+      const trendUp = xy[xy.length-1].val >= xy[0].val;
 
-      return `<div class="player-avg-chart-wrap">
-        ${formHtml_}
+      return `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-          <span style="font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">AVG kroz kola</span>
-          <span style="font-size:0.75rem;font-weight:700;color:${trendUp?'#2ecc71':'#e74c3c'};">${firstAvg} → ${lastAvg}</span>
+          <span style="font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);">${meta.title}</span>
+          <span style="font-size:0.75rem;font-weight:700;color:${trendUp?'#2ecc71':'#e74c3c'};">${valTxt(xy[0].val)} → ${valTxt(xy[xy.length-1].val)}</span>
         </div>
-        <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="color:${meta.color};">
           <defs>
-            <linearGradient id="avgFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#7eb8ff" stop-opacity="0.32"/>
-              <stop offset="100%" stop-color="#7eb8ff" stop-opacity="0"/>
+            <linearGradient id="pcFill-${uid}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.32"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
             </linearGradient>
-            <filter id="avgGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id="pcGlow-${uid}" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="2.5" result="blur"/>
               <feMerge>
                 <feMergeNode in="blur"/>
@@ -2231,13 +2525,29 @@
             </filter>
           </defs>
           ${gridLines}
-          <path d="${areaPath}" fill="url(#avgFill)"/>
-          <path d="${linePath}" fill="none" stroke="#7eb8ff" stroke-width="2" filter="url(#avgGlow)"/>
+          <path class="pc-area" d="${areaPath}" fill="url(#pcFill-${uid})"/>
+          <path class="pc-line" pathLength="1" d="${linePath}" stroke="currentColor" stroke-width="2.2" filter="url(#pcGlow-${uid})"/>
           ${dots}
           ${xLabels}
           ${avgRefLine}
-        </svg>
-      </div>`;
+        </svg>`;
+    }
+
+    // Klik na prsten: mijenja se samo graf (i oznaka odabranog prstena); prstenovi i brojke ostaju kako jesu.
+    function switchProfileChart(uid, metric) {
+      const meta = PROFILE_METRICS[metric];
+      const host = document.getElementById(`pchart-${uid}`);
+      const card = document.querySelector(`.player-stats-card[data-chart="${uid}"]`);
+      if (!meta || !host || !card) return;
+      card.querySelectorAll('.stat-ring').forEach(b => {
+        const on = b.dataset.metric === metric;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on);
+      });
+      const rings = card.querySelector('.stat-rings');
+      rings.style.setProperty('--p', Object.keys(PROFILE_METRICS).indexOf(metric));
+      rings.style.setProperty('--mc', meta.color);
+      host.innerHTML = profileChartBody(uid, metric);
     }
 
     // -- PLAYOFF MEČEVI IGRAČA --
@@ -2335,7 +2645,7 @@
       Object.entries(entry.avgLeagues || {}).forEach(([seasonId, byLeague]) => {
         Object.entries(byLeague).forEach(([leagueId, ad]) => {
           if (ad.kind !== 'live') return;
-          const context = `${ad.leagueLabel} · ${SEASON_LABELS[seasonId] || seasonId}`;
+          const context = `${ad.leagueLabel} · ${leagueSeasonLabel(leagueId, seasonId)}`;
           const seasonKey = `avg:${seasonId}:${leagueId}`;
           add(ad.matches, seasonId, 'group', context, seasonKey);
           add(getAvgPlayoffMatchesForPlayer(playerName, seasonId, leagueId), seasonId, 'playoff', context, seasonKey);
@@ -2358,7 +2668,7 @@
       const iconHtml = resultIcons[m.result] || '';
       const scoreHtml = `<span class="player-match-score ${m.result}">${escapeHtml(m.score)}</span>`;
       const detailHtml = `
-        <div class="player-match-detail-stats" id="playoff-match-detail-${idx}">
+        <div class="player-match-detail-stats" id="playoff-match-detail-${idx}"><div class="pmd-in">
           ${renderMpcStatsHtml({
             average1: m.avgSelf, average2: m.avgOpp,
             first9_1: m.f9Self, first9_2: m.f9Opp,
@@ -2368,7 +2678,7 @@
             checkoutrate1: m.corateSelf, checkoutrate2: m.corateOpp,
             checkouts1: m.coattSelf, checkouts2: m.coattOpp
           }, m.result === 'win', m.result === 'loss', currentProfilePlayer, m.opponent, m._season)}
-        </div>`;
+        </div></div>`;
       return `<div class="player-match-item"><div class="player-match-row" onclick="togglePlayoffMatchDetail(this, ${idx})">
         <div class="player-match-row-left">
           <span class="player-match-kolo">${m._context ? escapeHtml(m._context) + ' · ' : ''}${escapeHtml(m.bracketLabel)}${m.roundLabel ? ' · ' + escapeHtml(m.roundLabel.split('-')[0].trim()) : ''}</span>
@@ -2516,7 +2826,8 @@
             ...playoffMatches.map(m => ({ ...m, chartLabel: roundShortLabel(m.roundLabel) }))
           ];
       const form = formFromMatches(matchesForChart);
-      const chartHtml = avgChartHtml(matchesForChart, stats.avg, form);
+      const uid = ++profileChartSeq;
+      const chartHtml = avgChartHtml(matchesForChart, stats, form, uid);
 
       let matchesHtml;
       if (isOverall) {
@@ -2532,12 +2843,14 @@
           : '';
       }
 
-      return `${statBoxes(stats)}${chartHtml}${matchesHtml}${playoffHtml}`;
+      return `${statRingsHtml(stats, uid)}${chartHtml}${matchesHtml}${playoffHtml}`;
     }
 
-    function renderPlayerProfile() {
+    // lineFrom: { main, sub } - položaji kliznih crta prije ponovnog iscrtavanja (samo pri prebacivanju taba istog igrača), vidi profileLinesFrom
+    function renderPlayerProfile(lineFrom) {
       const entry = playerDatabase[currentProfilePlayer];
       if (!entry) return;
+      Object.keys(profileCharts).forEach(k => delete profileCharts[k]);
 
       const availableSeasons = SEASON_ORDER.filter(s => entry.seasons[s]);
       // Ženska liga ima vlastiti tab ('zenska'), ostale AVG lige su u tabu 'avg' - oba
@@ -2549,52 +2862,74 @@
       const latestSeason = availableSeasons[availableSeasons.length-1];
       const groupLabel = latestSeason ? entry.seasons[latestSeason].groupName : '';
 
+      // Dvije razine tabova: glavni (Sveukupno | Sezone | AVG | Ženska liga) i ispod njega sezone odabranog taba.
+      // Tab koji igrač nema (npr. Ženska liga) se ne prikazuje, a ako je bio odabran, vraća se na Sveukupno.
+      const subsByTab = { seasons: availableSeasons, avg: availableAvgSeasons, zenska: availableZenskaSeasons };
+      const tab = (currentProfileTab !== 'overall' && !(subsByTab[currentProfileTab] || []).length) ? 'overall' : currentProfileTab;
+      const subList = tab === 'overall' ? [] : subsByTab[tab];
+      // Zadnja odabrana sezona tog taba, a inače najnovija koju igrač ima (nova sezona AVG lige tako postaje zadana)
+      const sub = subList.length
+        ? (subList.includes(currentProfileSubs[tab]) ? currentProfileSubs[tab] : subList[subList.length - 1])
+        : null;
+
+      // Sezonska traka je uvijek tu kad tab ima sezone (i kad je samo jedna), da nova sezona ne mijenja izgled
+      const showSubs = subList.length > 0;
+
+      const mainTabs = [['overall', 'Sveukupno']];
+      if (availableSeasons.length) mainTabs.push(['seasons', 'Sezone']);
+      if (availableAvgSeasons.length) mainTabs.push(['avg', 'AVG']);
+      if (availableZenskaSeasons.length) mainTabs.push(['zenska', 'Ženska liga']);
+
       const tabsHtml = `
-        <div class="player-season-tabs">
-          <button class="player-season-tab ${currentProfileSeason==='overall'?'active':''}" onclick="switchProfileSeason('overall')">Sveukupno</button>
-          ${availableSeasons.map(s => `<button class="player-season-tab ${currentProfileSeason===s?'active':''}" onclick="switchProfileSeason('${s}')">${SEASON_LABELS[s]||s}</button>`).join('')}
-          ${availableZenskaSeasons.length ? `<button class="player-season-tab ${currentProfileSeason==='zenska'?'active':''}" onclick="switchProfileSeason('zenska')">Ženska liga</button>` : ''}
-          ${availableAvgSeasons.length ? `<button class="player-season-tab ${currentProfileSeason==='avg'?'active':''}" onclick="switchProfileSeason('avg')">AVG</button>` : ''}
-        </div>`;
+        <div class="sub-tabs sub-tabs-sm sub-tabs-scroll${showSubs ? ' has-sub' : ''}" id="profile-tabs" role="group" aria-label="Prikaz profila">
+          ${mainTabs.map(([key, label]) => `<button type="button" class="sub-tab ${tab===key?'active':''}" onclick="switchProfileTab('${key}')">${label}</button>`).join('')}
+          <span class="sub-tabs-line" aria-hidden="true"></span>
+        </div>
+        ${showSubs ? `
+        <div class="sub-tabs sub-tabs-sm sub-tabs-xs sub-tabs-scroll" id="profile-subtabs" role="group" aria-label="Sezona">
+          ${subList.map(s => `<button type="button" class="sub-tab ${sub===s?'active':''}" onclick="switchProfileSub('${tab}', '${s}')">${tab==='seasons' ? (SEASON_LABELS[s]||s) : leagueSeasonLabel(tab, s)}</button>`).join('')}
+          <span class="sub-tabs-line" aria-hidden="true"></span>
+        </div>` : ''}`;
 
       const idxRef = { value: 0 };
       let contentHtml;
 
-      if (currentProfileSeason === 'avg' || currentProfileSeason === 'zenska') {
-        // Svaka liga/sezona u kojoj igrač igra dobiva vlastitu sekciju
-        // (naslov liga+sezona, pa 'kind' grana prikaz - live: puni stat/graf/
-        // mečevi/playoff blok kao sezonski tab; history: kompaktna kartica bez
-        // mečeva, vidi avgHistoryCardHtml). Sortirano po SEASON_ORDER.
-        // Tab 'zenska' prikazuje samo Žensku ligu, tab 'avg' sve ostale AVG lige.
-        const wantZenska = currentProfileSeason === 'zenska';
-        contentHtml = (wantZenska ? availableZenskaSeasons : availableAvgSeasons).map(seasonId => {
+      if (tab === 'avg' || tab === 'zenska') {
+        // Odabrana sezona prikazuje sve lige u kojima igrač igra (naslov liga+sezona,
+        // pa 'kind' grana prikaz - live: puni stat/graf/mečevi/playoff blok kao
+        // sezonski tab; history: kompaktna kartica bez mečeva, vidi
+        // avgHistoryCardHtml). Tab 'zenska' prikazuje samo Žensku ligu, tab 'avg'
+        // sve ostale AVG lige.
+        const wantZenska = tab === 'zenska';
+        contentHtml = [sub].map(seasonId => {
           const byLeague = entry.avgLeagues[seasonId];
           return leaguesIn(seasonId, wantZenska).map(leagueId => {
             const ad = byLeague[leagueId];
             if (ad.kind === 'history') {
               const resultText = isFemalePlayer(currentProfilePlayer) ? feminizeResult(ad.result) : ad.result;
-              return avgHistoryCardHtml(ad.leagueLabel, SEASON_LABELS[seasonId] || seasonId, ad.avg, resultText);
+              return avgHistoryCardHtml(ad.leagueLabel, leagueSeasonLabel(leagueId, seasonId), ad.avg, resultText);
             }
             const stats = computeAvgStatsWithPlayoffs(currentProfilePlayer, seasonId, leagueId, ad.standings);
             const matches = ad.matches.map(m => ({...m, _season: `avg:${seasonId}:${leagueId}`}));
             const playoffMatches = getAvgPlayoffMatchesForPlayer(currentProfilePlayer, seasonId, leagueId).map(m => ({...m, _season: `avg:${seasonId}:${leagueId}`}));
-            const leagueHeader = `<div class="player-profile-group" style="margin:14px 0 10px;font-size:0.95rem;">${escapeHtml(ad.leagueLabel)} - ${escapeHtml(SEASON_LABELS[seasonId] || seasonId)} - ${escapeHtml(ad.groupName)}</div>`;
-            return leagueHeader + buildProfileSectionHtml(stats, matches, playoffMatches, null, idxRef);
+            const leagueHeader = `<div class="player-profile-group" style="margin:14px 0 10px;font-size:0.95rem;">${escapeHtml(ad.leagueLabel)} - ${escapeHtml(leagueSeasonLabel(leagueId, seasonId))} - ${escapeHtml(ad.groupName)}</div>`;
+            // Ženska liga je jedna liga, pa naslov (liga - sezona - grupa) ne treba: tab i sezonska traka već kažu sve
+            return (wantZenska ? '' : leagueHeader) + buildProfileSectionHtml(stats, matches, playoffMatches, null, idxRef);
           }).join('');
         }).join('');
       } else {
-        const isOverall = currentProfileSeason === 'overall';
+        const isOverall = tab === 'overall';
         let stats, matches;
         if (isOverall) {
           stats = computeOverallStats(currentProfilePlayer);
           matches = [];
         } else {
-          const sd = entry.seasons[currentProfileSeason];
-          stats = computeSeasonStatsWithPlayoffs(currentProfilePlayer, currentProfileSeason, sd.standings);
-          matches = sd.matches.map(m => ({...m, _season: currentProfileSeason}));
+          const sd = entry.seasons[sub];
+          stats = computeSeasonStatsWithPlayoffs(currentProfilePlayer, sub, sd.standings);
+          matches = sd.matches.map(m => ({...m, _season: sub}));
         }
 
-        const sd = !isOverall ? entry.seasons[currentProfileSeason] : null;
+        const sd = !isOverall ? entry.seasons[sub] : null;
         const playoffNote = sd?.playoff || null;
 
         // "Sveukupno" - mečevi (grupe, playoff, sezone + AVG lige) se skupljaju
@@ -2605,7 +2940,7 @@
         const overallMatches = isOverall ? collectOverallMatches(currentProfilePlayer) : null;
         const playoffMatches = isOverall
           ? []
-          : getPlayoffMatchesForPlayer(currentProfilePlayer, currentProfileSeason).map(m => ({...m, _season: currentProfileSeason}));
+          : getPlayoffMatchesForPlayer(currentProfilePlayer, sub).map(m => ({...m, _season: sub}));
 
         contentHtml = buildProfileSectionHtml(stats, matches, playoffMatches, playoffNote, idxRef, overallMatches);
       }
@@ -2643,6 +2978,23 @@
         ${contentHtml}`;
 
       showPopup('', body, '');
+
+      // Klizne crte traka (glavna i sezonska): pri prebacivanju počinju na starom mjestu pa kliznu na novo (trake su nove,
+      // ali izgledaju kao iste); pri prvom otvaranju samo se postave. Aktivni tab se centrira ako traka klizi.
+      [['main', 'profile-tabs'], ['sub', 'profile-subtabs']].forEach(([which, id]) => {
+        const bar = document.getElementById(id);
+        const line = bar && bar.querySelector('.sub-tabs-line');
+        if (!line) return;
+        const from = lineFrom && lineFrom[which];
+        if (from) {
+          line.style.transition = 'none';
+          line.style.left = from.left; line.style.right = from.right; line.style.opacity = '1';
+          void line.offsetWidth; line.style.transition = '';
+        }
+        positionSubTabsLine(bar, !!from);
+        const active = bar.querySelector('.sub-tab.active');
+        if (active) bar.scrollLeft = active.offsetLeft - (bar.clientWidth - active.offsetWidth) / 2;
+      });
     }
 
     // highlightMec - opcionalno, kad se popup otvara izravno na jedan meč (npr.
@@ -2969,7 +3321,7 @@
 
     function buildGroupContentHtml(groupName, groupIndex, standings, schedule, matchesMap) {
       const standingsHtml = `<div class="table-wrap"><table>
-        <thead><tr><th>#</th><th style="text-align:left;">Igrač</th><th>Form</th><th>W</th><th>D</th><th>L</th><th>Tot</th><th>Legs</th><th>PTS</th><th>AVG</th><th>First 9</th><th>Best Leg</th><th>Best CO</th><th>180</th></tr></thead>        <tbody>${standings.map((p,i)=>`<tr>
+        <thead><tr><th>#</th><th style="text-align:left;">Igrač</th><th>Forma</th><th>W</th><th>D</th><th>L</th><th>Tot</th><th>Legs</th><th>PTS</th><th>AVG</th><th>First 9</th><th>Best Leg</th><th>Best CO</th><th>180</th></tr></thead>        <tbody>${standings.map((p,i)=>`<tr>
           <td>${i+1}</td>
           <td style="text-align:left;font-weight:700;cursor:pointer;" onclick="openPlayerProfile('${escapeHtml(p.name).replace(/'/g,"\\'")}')">${escapeHtml(p.name)}</td>
           <td>${formHtml(p.form)}</td>
@@ -2994,8 +3346,8 @@
           <div style="display:flex; gap:8px; min-width:max-content;">
             ${schedule.map(({kolo,matches,bye})=>`
               
-              <div onclick="if(this.parentElement.parentElement.getAttribute('data-moved') !== 'true') { openKoloPopup(${groupIndex},${kolo}); } else { this.parentElement.parentElement.setAttribute('data-moved', 'false'); }"
-                style="width:max-content; cursor:pointer; background:rgba(6,12,24,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; transition:border-color 0.2s ease;"
+              <div class="kolo-card" onclick="if(this.parentElement.parentElement.getAttribute('data-moved') !== 'true') { openKoloPopup(${groupIndex},${kolo}); } else { this.parentElement.parentElement.setAttribute('data-moved', 'false'); }"
+                style="width:max-content; cursor:pointer; background:rgba(6,12,24,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden;"
                 onmouseover="this.style.borderColor='rgba(255,255,255,0.25)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
                 
                 <div style="background:var(--header); padding:8px 12px; font-size:clamp(0.65rem,2.5vw,0.8rem); font-weight:700; display:flex; justify-content:space-between; align-items:center; gap:8px;">
@@ -3041,10 +3393,7 @@
         </button>
         <div class="accordion-content">
           <div class="accordion-inner">
-            <div style="display:flex;gap:8px;margin-bottom:15px;">
-              <button onclick="switchGroupTab('${uid}','standings',this)" class="grp-tab-btn" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);background:rgba(21,49,99,1);color:#fff;font-size:0.8rem;font-weight:700;cursor:pointer;">Standings</button>
-              <button onclick="switchGroupTab('${uid}','raspored',this)" class="grp-tab-btn" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);background:rgba(10,19,38,0.78);color:var(--muted);font-size:0.8rem;font-weight:700;cursor:pointer;">Raspored</button>
-            </div>
+            ${groupSubTabsHtml(uid)}
             <div id="${uid}-standings" style="animation:fadeInUp 0.25s ease both;"></div>
             <div id="${uid}-raspored"  style="display:none;animation:fadeInUp 0.25s ease both;"></div>
           </div>
@@ -3078,6 +3427,7 @@
       const icon    = item.querySelector('.accordion-icon');
       if (shouldOpen) {
         item.classList.add('open');
+        positionSubTabsLine(item.querySelector('.sub-tabs'), false); // traka je do sad bila skrivena u zatvorenom akordeonu
         content.style.maxHeight = content.scrollHeight + 'px';
         content.addEventListener('transitionend', () => { content.style.maxHeight = 'none'; }, {once:true});
         if (icon) icon.textContent = '▲';
@@ -3108,7 +3458,7 @@
       // Identična logika kao buildGroupContentHtml, samo koristi uid (već
       // namespace-an sa seasonId) umjesto golog groupIndex u onclick pozivima.
       const standingsHtml = `<div class="table-wrap"><table>
-        <thead><tr><th>#</th><th style="text-align:left;">Igrač</th><th>Form</th><th>W</th><th>D</th><th>L</th><th>Tot</th><th>Legs</th><th>PTS</th><th>AVG</th><th>First 9</th><th>Best Leg</th><th>Best CO</th><th>180</th></tr></thead>        <tbody>${standings.map((p,i)=>`<tr>
+        <thead><tr><th>#</th><th style="text-align:left;">Igrač</th><th>Forma</th><th>W</th><th>D</th><th>L</th><th>Tot</th><th>Legs</th><th>PTS</th><th>AVG</th><th>First 9</th><th>Best Leg</th><th>Best CO</th><th>180</th></tr></thead>        <tbody>${standings.map((p,i)=>`<tr>
           <td>${i+1}</td>
           <td style="text-align:left;font-weight:700;cursor:pointer;" onclick="openPlayerProfile('${escapeHtml(p.name).replace(/'/g,"\\'")}')">${escapeHtml(p.name)}</td>
           <td>${formHtml(p.form)}</td>
@@ -3133,8 +3483,8 @@
           <div style="display:flex; gap:8px; min-width:max-content;">
             ${schedule.map(({kolo,matches,bye})=>`
 
-              <div onclick="if(this.parentElement.parentElement.getAttribute('data-moved') !== 'true') { openArchiveKoloPopup('${uid}',${kolo}); } else { this.parentElement.parentElement.setAttribute('data-moved', 'false'); }"
-                style="width:max-content; cursor:pointer; background:rgba(6,12,24,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden; transition:border-color 0.2s ease;"
+              <div class="kolo-card" onclick="if(this.parentElement.parentElement.getAttribute('data-moved') !== 'true') { openArchiveKoloPopup('${uid}',${kolo}); } else { this.parentElement.parentElement.setAttribute('data-moved', 'false'); }"
+                style="width:max-content; cursor:pointer; background:rgba(6,12,24,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:10px; overflow:hidden;"
                 onmouseover="this.style.borderColor='rgba(255,255,255,0.25)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
 
                 <div style="background:var(--header); padding:8px 12px; font-size:clamp(0.65rem,2.5vw,0.8rem); font-weight:700; display:flex; justify-content:space-between; align-items:center; gap:8px;">
@@ -3177,10 +3527,7 @@
         </button>
         <div class="accordion-content">
           <div class="accordion-inner">
-            <div style="display:flex;gap:8px;margin-bottom:15px;">
-              <button onclick="switchGroupTab('${uid}','standings',this)" class="grp-tab-btn" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.2);background:rgba(21,49,99,1);color:#fff;font-size:0.8rem;font-weight:700;cursor:pointer;">Standings</button>
-              <button onclick="switchGroupTab('${uid}','raspored',this)" class="grp-tab-btn" style="padding:6px 16px;border-radius:999px;border:1px solid rgba(255,255,255,0.12);background:rgba(10,19,38,0.78);color:var(--muted);font-size:0.8rem;font-weight:700;cursor:pointer;">Raspored</button>
-            </div>
+            ${groupSubTabsHtml(uid)}
             <div id="${uid}-standings" style="animation:fadeInUp 0.25s ease both;"></div>
             <div id="${uid}-raspored"  style="display:none;animation:fadeInUp 0.25s ease both;"></div>
           </div>
@@ -3589,6 +3936,7 @@
   </script>
 
   <script type="module">
+    // -- FIREBASE INIT --
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAnalytics }  from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
     import { getFirestore, collection, getDocs, query, orderBy, getDoc, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
@@ -3756,6 +4104,7 @@
       }
     };
 
+    // -- TABLICE: UČITAVANJE (aktivna sezona) --
     async function loadStandings(seasonId) {
       const content = document.getElementById('content');
       content.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje podataka...</span></div>`;
@@ -3852,6 +4201,7 @@
       }
     }
 
+    // -- ŽDRIJEB: UČITAVANJE (gornji/donji, aktivna sezona) --
     // Podaci se dohvate i renderiraju odmah čim stignu, umjesto da čekaju
     // da korisnik otvori taj tab - ovo je bitno i da NAJBOLJI U LIGI odmah
     // uključi playoff mečeve u izračun.
@@ -4243,7 +4593,7 @@
 
         archiveDataCache[seasonId] = groupsHtml.join('');
         archiveGroupStandingsMap[seasonId] = groupStandingsMap;
-        renderGlobalSeasonToggle(); // sezona sad ima podataka - prikaži joj pil u toggleu
+        renderGlobalSeasonToggle(); // sezona sad ima podataka - prikaži joj segment u prekidaču
 
         // Eager preload playoff (gornji+donji ždrijeb) mečeva ove arhivske
         // sezone - potrebno da player profile odmah prikaže i zbroji playoff
@@ -4288,23 +4638,55 @@
     }
 
     // -- ZAJEDNIČKI TOGGLE (TABLICE + NAJBOLJI U LIGI + GORNJI/DONJI ŽDRIJEB) --
-    // Jedan gumb-red u .player-search-wrap upravlja sve četiri sekcije odjednom.
+    // Jedan prekidač (.seg-switch) pokraj pretrage upravlja sve četiri sekcije odjednom;
+    // oznaka "Arhiva sezona" iznad njega (desno poravnata) pokazuje da se tu bira i prošla sezona.
     // Bracket arhiva ostaje lijena (fetch tek na klik + cache u
     // archiveBracketDataCache/archiveLowerBracketDataCache), TABLICE i Najbolji
     // su već eager učitani (loadArchiveSeason/loadLeagueStatsForSeason u bootstrapu).
-    function renderGlobalSeasonToggle() {
-      const wrap = document.getElementById('global-season-toggle');
-      const archiveSeasons = Object.keys(archiveDataCache).filter(s => SEASON_ORDER.includes(s)).sort((a,b)=>SEASON_ORDER.indexOf(a)-SEASON_ORDER.indexOf(b));
-      if (!archiveSeasons.length) { wrap.innerHTML = ''; return; } // nema arhive - ne prikazuj toggle (današnje ponašanje)
+    // renderGlobalSeasonToggle se zove više puta (kad stigne podatak sezone i pri svakom
+    // prebacivanju), pa DOM gradi samo kad se promijeni skup sezona - inače bi se pločica
+    // svaki put stvarala ispočetka i nikad ne bi kliznula između segmenata.
+    const seasonToggleEl = document.getElementById('global-season-toggle');
+    const seasonSwitchObserver = new ResizeObserver(() => positionSeasonThumb(false));
 
-      const activeLabel = SEASON_LABELS[ACTIVE_SEASON_ID] || ACTIVE_SEASON_ID;
-      const buttons = [
-        `<button class="player-season-tab ${activeSeasonView==='active'?'active':''}" onclick="switchGlobalSeasonView('active')">${escapeHtml(activeLabel)}</button>`,
-        ...archiveSeasons.map(s =>
-          `<button class="player-season-tab ${activeSeasonView===s?'active':''}" onclick="switchGlobalSeasonView('${s}')">${escapeHtml(SEASON_LABELS[s]||s)}</button>`
-        )
-      ];
-      wrap.innerHTML = buttons.join('');
+    function positionSeasonThumb(animate) {
+      placeIndicator(seasonToggleEl.querySelector('.seg-thumb'), seasonToggleEl.querySelector('.seg-btn.active'), animate);
+    }
+
+    function renderGlobalSeasonToggle() {
+      const archiveSeasons = Object.keys(archiveDataCache).filter(s => SEASON_ORDER.includes(s));
+      if (!archiveSeasons.length) { seasonToggleEl.innerHTML = ''; seasonToggleEl.dataset.keys = ''; return; } // nema arhive - ne prikazuj toggle (današnje ponašanje)
+
+      // Kronološki (2, 3, ...); view 'active' je pogled na aktivnu sezonu, ostali su arhivski
+      const seasonIx = id => { const i = SEASON_ORDER.indexOf(id); return i < 0 ? SEASON_ORDER.length : i; };
+      const views = [...archiveSeasons.map(s => ({ view: s, id: s })), { view: 'active', id: ACTIVE_SEASON_ID }]
+        .sort((a, b) => seasonIx(a.id) - seasonIx(b.id));
+
+      const keys = views.map(v => v.view + ':' + v.id).join('|');
+      const rebuilt = seasonToggleEl.dataset.keys !== keys;
+      if (rebuilt) {
+        seasonSwitchObserver.disconnect();
+        seasonToggleEl.innerHTML =
+          '<span class="season-toggle-caption" id="season-toggle-caption">Arhiva sezona</span>' +
+          '<div class="seg-switch" role="group" aria-labelledby="season-toggle-caption">' +
+            views.map(v => {
+              const label = SEASON_LABELS[v.id] || v.id;
+              const num = (v.id.match(/\d+/) || [])[0];
+              const short = num ? 'S' + num : label; // 'sezona-3' -> 'S3'; čitači ekrana dobiju puni naziv preko aria-label
+              return `<button type="button" class="seg-btn" data-view="${v.view}" aria-label="${escapeHtml(label)}" onclick="switchGlobalSeasonView('${v.view}')">${escapeHtml(short)}</button>`;
+            }).join('') +
+            '<span class="seg-thumb" aria-hidden="true"></span>' +
+          '</div>';
+        seasonToggleEl.dataset.keys = keys;
+        seasonToggleEl.querySelectorAll('.seg-btn').forEach(b => seasonSwitchObserver.observe(b));
+      }
+
+      seasonToggleEl.querySelectorAll('.seg-btn').forEach(b => {
+        const on = b.dataset.view === activeSeasonView;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on);
+      });
+      positionSeasonThumb(!rebuilt);
     }
 
     function switchGlobalSeasonView(target) {

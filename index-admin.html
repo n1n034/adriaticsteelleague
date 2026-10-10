@@ -35,6 +35,7 @@
       --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
       --radius: 18px;
       --accent: #4a90e2;
+      --ease-glide: cubic-bezier(0.22, 1, 0.36, 1); /* brz start, mekano smirivanje: klizna crta */
     }
 
     * {
@@ -216,10 +217,6 @@
       box-shadow: 0 0 20px rgba(74, 144, 226, 0.25);
     }
 
-    .btn-login:active {
-      transform: scale(0.98);
-    }
-
     .btn-login:disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -385,35 +382,132 @@
     }
 
     /* -- ADMIN TABS -- */
+    /* Glavni admin tabovi: vodoravna traka s klizećom crtom (isti izgled kao navigacija na index.html).
+       Na uskim ekranima se klizi, a rub blijedi samo na strani gdje ima još tabova (klase postavlja updateAdminTabsFade). */
     .admin-tabs {
-      display: flex;
-      gap: 8px;
+      position: relative;
+      overflow: hidden;
       margin-bottom: 24px;
-      flex-wrap: wrap;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      backdrop-filter: blur(7px);
+      box-shadow: var(--shadow);
+    }
+
+    .admin-tabs-scroll {
+      --fade-l: 0px;
+      --fade-r: 0px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      -webkit-mask-image: linear-gradient(90deg, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+      mask-image: linear-gradient(90deg, transparent, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent);
+    }
+
+    .admin-tabs.can-scroll-left .admin-tabs-scroll {
+      --fade-l: 36px;
+    }
+
+    .admin-tabs.can-scroll-right .admin-tabs-scroll {
+      --fade-r: 36px;
+    }
+
+    .admin-tabs-track {
+      position: relative;
+      display: flex;
+      width: max-content;
+      min-width: 100%;
     }
 
     .admin-tab-btn {
-      padding: 10px 24px;
-      background: rgba(10, 19, 38, 0.78);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 999px;
-      color: var(--muted);
-      font-size: 0.85rem;
+      flex: 1 0 auto;
+      height: 40px;
+      padding: 0 22px;
+      background: none;
+      border: none;
+      border-radius: 0;
+      color: rgba(200, 211, 234, 0.72);
+      font-size: 0.88rem;
       font-weight: 600;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
       cursor: pointer;
-      transition: 0.2s ease;
-    }
-
-    .admin-tab-btn:hover {
-      background: rgba(38, 74, 138, 0.7);
-      color: #fff;
     }
 
     .admin-tab-btn.active {
-      background: rgba(21, 49, 99, 1);
-      border-color: rgba(255, 255, 255, 0.7);
       color: #fff;
-      box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+    }
+
+    .admin-tab-btn:focus-visible {
+      outline: none;
+      box-shadow: inset 0 0 0 2px rgba(120, 170, 255, 0.7);
+    }
+
+    /* Hover samo gdje postoji miš - na touchu bi tapnuti gumb inače ostao "zalijepljen" svijetao */
+    @media (hover: hover) {
+      .admin-tab-btn:hover {
+        color: #fff;
+        background: rgba(110, 168, 255, 0.14);
+      }
+    }
+
+    /* Tanka crta preko cijele širine taba koja se na krajevima topi (gradijent); položaj zadaje JS (placeIndicator) */
+    .sub-tabs-line {
+      position: absolute;
+      bottom: 0;
+      height: 2px;
+      pointer-events: none;
+      opacity: 0;
+      --ind-inset: 0;
+      background: linear-gradient(90deg, transparent, #fff 14%, #fff 86%, transparent);
+      filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
+      transition: left 0.5s var(--ease-glide), right 0.5s var(--ease-glide);
+    }
+
+    /* Podtabovi (AVG lige): ista vodoravna traka preko cijele širine */
+    .sub-tabs {
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      height: 48px;
+      margin-bottom: 20px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      backdrop-filter: blur(7px);
+      box-shadow: var(--shadow);
+    }
+
+    .sub-tab {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      padding: 0 8px;
+      background: none;
+      border: none;
+      border-radius: 0;
+      color: rgba(200, 211, 234, 0.72);
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .sub-tab.active {
+      color: #fff;
+    }
+
+    .sub-tab:focus-visible {
+      outline: none;
+      box-shadow: inset 0 0 0 2px rgba(120, 170, 255, 0.7);
+    }
+
+    @media (hover: hover) {
+      .sub-tab:hover {
+        color: #fff;
+        background: rgba(110, 168, 255, 0.14);
+      }
     }
 
     .admin-tab-panel {
@@ -921,29 +1015,7 @@
     }
 
     /* -- AVG LIGE -- */
-    .avg-league-tab-btn {
-      padding: 8px 20px;
-      border-radius: 999px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: 0.2s ease;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: rgba(10, 19, 38, 0.78);
-      color: var(--muted);
-    }
-
-    .avg-league-tab-btn:hover {
-      background: rgba(38, 74, 138, 0.7);
-      color: #fff;
-    }
-
-    .avg-league-tab-btn.active {
-      background: rgba(21, 49, 99, 1);
-      border-color: rgba(255, 255, 255, 0.7);
-      color: #fff;
-      box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
-    }
+    /* Podtabovi AVG liga koriste .sub-tabs (vidi ADMIN TABS) */
 
     .avg-create-form {
       background: var(--panel);
@@ -1235,10 +1307,48 @@
       .avg-create-form .two-col {
         grid-template-columns: 1fr !important;
       }
+    }
+    /* -- GUMB ZA BRISANJE U KARTICI (mala crvena pilula) -- */
+    .btn-chip-delete {
+      background: rgba(231, 76, 60, 0.12);
+      border: 1px solid rgba(231, 76, 60, 0.3);
+      border-radius: 999px;
+      color: #e74c3c;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      cursor: pointer;
+    }
 
-      .admin-tabs {
-        justify-content: space-evenly
-      }
+    .btn-chip-delete:hover {
+      background: rgba(231, 76, 60, 0.25);
+    }
+
+    /* -- KLIKABILNI ELEMENTI: podizanje na hover za gumbe-akcije -- */
+    @media (hover: hover) {
+      .btn-login:not(:disabled):hover, .btn-logout:hover, .bedit-btn-save:not(:disabled):hover, .bedit-btn-delete:hover,
+      .player-photo-btn:not(:disabled):hover, .photo-request-btn:hover, .btn-chip-delete:hover,
+      .kolo-chip:hover { translate: 0 -1px; }
+    }
+
+    /* -- INTERAKCIJE: isti prijelazi i povratna informacija na svakom gumbu i klikabilnom elementu --
+       Zajednički blok (kopiran u sve tri stranice - mijenjaj ga na svim stranicama). Mora ostati na kraju <style>:
+       jednake je specifičnosti kao pravila komponenti pa ih nadjačava redoslijedom, i tako svi imaju iste vremene.
+       Koristi zasebna svojstva scale/translate, pa se ne tuče s transform koji komponente već imaju. */
+    :is(button, [onclick], a[href]) {
+      transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease,
+                  opacity 0.2s ease, transform 0.25s var(--ease-glide), scale 0.25s var(--ease-glide), translate 0.25s var(--ease-glide);
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Pritisak: element se na tren utisne (--press: koliko; široki elementi se utisnu manje) */
+    :is(button, [onclick], a[href]):not(:disabled, td, th, tr, .bedit-overlay):active { scale: var(--press, 0.97); }
+    .group-card, .bam-match, .player-checkbox-row { --press: 0.985; }
+    :is(button, [onclick], a[href]):focus-visible { outline: 2px solid rgba(120, 170, 255, 0.7); outline-offset: 2px; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    @media (prefers-reduced-motion: reduce) {
+      :is(button, [onclick], a[href]) { transition: none; }
+      :is(button, [onclick], a[href]):active { scale: none; }
+      .sub-tabs-line { transition: none !important; }
     }
   </style>
 </head>
@@ -1291,25 +1401,30 @@
         <h2 id="welcome-msg"></h2>
       </div>
 
-      <div class="admin-tabs">
-        <button class="admin-tab-btn active" id="tab-btn-grupe" onclick="switchAdminTab('grupe', this)">
-          <i class="fas fa-layer-group" style="margin-right:6px;"></i>Grupe
-        </button>
-        <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('zenska', this)">
-          <i class="fas fa-crown" style="margin-right:6px;"></i>Ženska liga
-        </button>
-        <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('avg-lige', this)">
-          <i class="fas fa-chart-bar" style="margin-right:6px;"></i>AVG Lige
-        </button>
-        <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('bracket', this)">
-          <i class="fas fa-trophy" style="margin-right:6px;"></i>Gornji ždrijeb
-        </button>
-        <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('lower-bracket', this)">
-          <i class="fas fa-trophy" style="margin-right:6px;"></i>Donji ždrijeb
-        </button>
-        <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('igraci', this)">
-          <i class="fas fa-image" style="margin-right:6px;"></i>Igrači
-        </button>
+      <div class="admin-tabs" id="admin-tabs">
+        <div class="admin-tabs-scroll">
+          <div class="admin-tabs-track">
+            <button class="admin-tab-btn active" id="tab-btn-grupe" onclick="switchAdminTab('grupe', this)">
+              <i class="fas fa-layer-group" style="margin-right:6px;"></i>Grupe
+            </button>
+            <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('zenska', this)">
+              <i class="fas fa-crown" style="margin-right:6px;"></i>Ženska liga
+            </button>
+            <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('avg-lige', this)">
+              <i class="fas fa-chart-bar" style="margin-right:6px;"></i>AVG Lige
+            </button>
+            <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('bracket', this)">
+              <i class="fas fa-trophy" style="margin-right:6px;"></i>Gornji ždrijeb
+            </button>
+            <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('lower-bracket', this)">
+              <i class="fas fa-trophy" style="margin-right:6px;"></i>Donji ždrijeb
+            </button>
+            <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('igraci', this)">
+              <i class="fas fa-image" style="margin-right:6px;"></i>Igrači
+            </button>
+            <span class="sub-tabs-line" aria-hidden="true"></span>
+          </div>
+        </div>
       </div>
 
       <div id="admin-tab-grupe" class="admin-tab-panel active">
@@ -1338,16 +1453,16 @@
       </div>
 
       <div id="admin-tab-avg-lige" class="admin-tab-panel">
-        <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
-          <button class="avg-league-tab-btn active" id="avg-tab-btn-diamond"
+        <div class="sub-tabs" id="avg-league-tabs" role="group" aria-label="AVG liga">
+          <button class="sub-tab active" id="avg-tab-btn-diamond"
             onclick="switchAvgLeagueTab('diamond', this)">💎 Diamond</button>
-          <button class="avg-league-tab-btn" id="avg-tab-btn-gold" onclick="switchAvgLeagueTab('gold', this)">🥇
+          <button class="sub-tab" id="avg-tab-btn-gold" onclick="switchAvgLeagueTab('gold', this)">🥇
             Gold</button>
-          <button class="avg-league-tab-btn" id="avg-tab-btn-silver" onclick="switchAvgLeagueTab('silver', this)">🥈
+          <button class="sub-tab" id="avg-tab-btn-silver" onclick="switchAvgLeagueTab('silver', this)">🥈
             Silver</button>
-          <button class="avg-league-tab-btn" id="avg-tab-btn-bronze" onclick="switchAvgLeagueTab('bronze', this)">🥉
+          <button class="sub-tab" id="avg-tab-btn-bronze" onclick="switchAvgLeagueTab('bronze', this)">🥉
             Bronze</button>
-          
+          <span class="sub-tabs-line" aria-hidden="true"></span>
         </div>
         <div id="avg-league-diamond" class="avg-league-panel" style="display: block;">
           <div id="avg-container-diamond"></div>
@@ -1389,6 +1504,7 @@
   <div class="toast" id="toast"></div>
 
   <script type="module">
+    // -- FIREBASE INIT --
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, deleteDoc, deleteField, collection, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
@@ -1459,7 +1575,7 @@
     // diamond/gold/silver/bronze, zajednički niz) i trenutnoKoloZenska (Ženska liga).
     // Zamjenjuje stari ručni unos u seasons/{sezona}.trenutnoKolo (obrisano iz Firestore).
     // Index.html filtrira raspored po istim poljima (visibleRounds.includes(kolo)).
-    const KOLO_OPTIONS = Array.from({ length: 10 }, (_, i) => i + 1);
+    const KOLO_OPTIONS = Array.from({ length: 9 }, (_, i) => i + 1); // kola 1-9: 10. kolo ne postoji
 
     // Isti oblik kao getVisibleRounds u index.html: niz -> brojevi, stari broj n -> 1..n,
     // prazno/neispravno -> samo 1. kolo.
@@ -1651,11 +1767,68 @@
     }
 
     // -- ADMIN TABS --
+    // Klizna crta ispod aktivnog taba. Položaj se zadaje rubovima (left/right) i "elastično": vodeći rub stiže brzo,
+    // zadnji kasni, pa se crta na tren rastegne i smiri. animate=false postavlja je bez klizanja. Isto kao na index.html.
+    function placeIndicator(ind, btn, animate) {
+      if (!ind || !btn || !ind.offsetParent) return;
+      const inset = (parseFloat(getComputedStyle(ind).getPropertyValue('--ind-inset')) || 0) * btn.offsetWidth;
+      const left = btn.offsetLeft + inset;
+      const right = ind.offsetParent.clientWidth - btn.offsetLeft - btn.offsetWidth + inset;
+      const prevLeft = parseFloat(ind.style.left);
+      if (!animate || isNaN(prevLeft)) {
+        ind.style.transition = 'none';
+        ind.style.left = left + 'px'; ind.style.right = right + 'px'; ind.style.opacity = '1';
+        void ind.offsetWidth; ind.style.transition = '';
+        return;
+      }
+      const toRight = left > prevLeft;
+      ind.style.transition = 'left ' + (toRight ? '0.5s' : '0.28s') + ' var(--ease-glide), right ' + (toRight ? '0.28s' : '0.5s') + ' var(--ease-glide)';
+      ind.style.left = left + 'px'; ind.style.right = right + 'px';
+    }
+
+    function positionSubTabsLine(bar, animate) {
+      if (bar) placeIndicator(bar.querySelector('.sub-tabs-line'), bar.querySelector('.admin-tab-btn.active, .sub-tab.active'), animate);
+    }
+
+    // Blijedi rub glavne trake samo na strani gdje ima još tabova
+    function updateAdminTabsFade() {
+      const bar = document.getElementById('admin-tabs');
+      const s = bar && bar.querySelector('.admin-tabs-scroll');
+      if (!s) return;
+      bar.classList.toggle('can-scroll-left', s.scrollLeft > 4);
+      bar.classList.toggle('can-scroll-right', s.scrollLeft < s.scrollWidth - s.clientWidth - 4);
+    }
+
+    // center: aktivni tab dolazi u sredinu trake (na uskim ekranima)
+    function positionAdminTabs(animate, center) {
+      const track = document.querySelector('.admin-tabs-track');
+      positionSubTabsLine(track, animate);
+      const s = document.querySelector('.admin-tabs-scroll');
+      const b = track && track.querySelector('.admin-tab-btn.active');
+      if (center && s && b) s.scrollTo({ left: b.offsetLeft - (s.clientWidth - b.offsetWidth) / 2, behavior: 'smooth' });
+      updateAdminTabsFade();
+    }
+
+    // Širine tabova ovise o fontu i o tome koji su tabovi vidljivi (operater vidi samo Grupe), pa se crta namješta
+    // ispočetka kad god tab promijeni veličinu (observer javi i prvo mjerenje, i kad se admin panel prikaže)
+    (function initAdminTabs() {
+      const track = document.querySelector('.admin-tabs-track');
+      if (!track) return;
+      const ro = new ResizeObserver(() => positionAdminTabs(false, false));
+      track.querySelectorAll('.admin-tab-btn').forEach(b => ro.observe(b));
+      document.querySelector('.admin-tabs-scroll').addEventListener('scroll', updateAdminTabsFade, { passive: true });
+      window.addEventListener('resize', updateAdminTabsFade);
+      const avgRo = new ResizeObserver(() => positionSubTabsLine(document.getElementById('avg-league-tabs'), false));
+      document.querySelectorAll('#avg-league-tabs .sub-tab').forEach(b => avgRo.observe(b));
+    })();
+
     window.switchAdminTab = function (name, btn) {
       document.querySelectorAll('.admin-tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('admin-tab-' + name).classList.add('active');
       btn.classList.add('active');
+      positionAdminTabs(true, true);
+      if (name === 'avg-lige') positionSubTabsLine(document.getElementById('avg-league-tabs'), false); // panel je do sad bio skriven (širine 0)
       if (name === 'avg-lige') loadAvgLeague(currentAvgLeague);
       if (name === 'zenska') loadAvgLeague('zenska');
       if (name === 'igraci') { loadPlayersPhotoGrid(); loadPhotoRequests(); }
@@ -1961,6 +2134,7 @@
         document.getElementById('admin-brand-sub').textContent = currentIsAdmin ? 'Admin Pristup' : 'Operater Pristup';
 
         document.querySelectorAll('.admin-only-tab').forEach(b => b.style.display = currentIsAdmin ? '' : 'none');
+        positionAdminTabs(false, false); // vidljivi tabovi su se promijenili
         if (!currentIsAdmin) switchAdminTab('grupe', document.getElementById('tab-btn-grupe'));
 
         ACTIVE_SEASON_ID = await resolveActiveSeasonId();
@@ -2046,9 +2220,7 @@
               <div class="group-card-footer">
                 <span class="group-card-action">Upravljaj grupom →</span>
                 ${isAdmin ? `
-                  <button onclick="event.stopPropagation(); deleteSeasonGroup('${g.id}')"
-                    style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);border-radius:999px;color:#e74c3c;font-size:0.72rem;font-weight:700;padding:4px 12px;cursor:pointer;transition:0.2s ease;"
-                    onmouseover="this.style.background='rgba(231,76,60,0.25)'" onmouseout="this.style.background='rgba(231,76,60,0.12)'">
+                  <button class="btn-chip-delete" onclick="event.stopPropagation(); deleteSeasonGroup('${g.id}')">
                     <i class="fas fa-trash"></i>
                   </button>
                 ` : ''}
@@ -2741,7 +2913,7 @@
         showToast('Greška: ' + err.message, 'error');
       }
     };
-    //  AVG LIGE + ŽENSKA LIGA
+    // -- AVG LIGE + ŽENSKA LIGA --
     // AVG lige: avg-leagues/{ACTIVE_SEASON_ID}/{leagueId}/{groupId} - grupa je
     // dokument izravno u {leagueId} kolekciji (nema posrednog "groups" naziva).
     // Ženska liga je odvojena kolekcija women-league/{ACTIVE_SEASON_ID}/groups/{groupId}.
@@ -2763,9 +2935,10 @@
 
     window.switchAvgLeagueTab = function (leagueId, btn) {
       document.querySelectorAll('.avg-league-panel').forEach(p => p.style.display = 'none');
-      document.querySelectorAll('.avg-league-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#avg-league-tabs .sub-tab').forEach(b => b.classList.remove('active'));
       document.getElementById('avg-league-' + leagueId).style.display = 'block';
       btn.classList.add('active');
+      positionSubTabsLine(document.getElementById('avg-league-tabs'), true);
       currentAvgLeague = leagueId;
       loadAvgLeague(leagueId);
     };
@@ -2820,9 +2993,7 @@
           <div class="group-card-footer">
             <span class="group-card-action">Upravljaj grupom →</span>
             ${currentIsAdmin ? `
-              <button onclick="event.stopPropagation(); deleteAvgGroup('${leagueId}','${esc(g.id)}')"
-                style="background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.3);border-radius:999px;color:#e74c3c;font-size:0.72rem;font-weight:700;padding:4px 12px;cursor:pointer;transition:0.2s ease;"
-                onmouseover="this.style.background='rgba(231,76,60,0.25)'" onmouseout="this.style.background='rgba(231,76,60,0.12)'">
+              <button class="btn-chip-delete" onclick="event.stopPropagation(); deleteAvgGroup('${leagueId}','${esc(g.id)}')">
                 <i class="fas fa-trash"></i>
               </button>
             ` : ''}

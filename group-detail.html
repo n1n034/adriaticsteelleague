@@ -48,6 +48,8 @@
       --success: #2ecc71;
       --warning: #f39c12;
       --danger: #e74c3c;
+      --ease-glide: cubic-bezier(0.22, 1, 0.36, 1); /* brz start, mekano smirivanje: klizna crta */
+      --table-row-hover: rgba(110, 168, 255, 0.14);
     }
 
     * {
@@ -245,36 +247,65 @@
       pointer-events: none;
     }
 
-    .tabs {
+    /* -- PODTABOVI: vodoravna traka preko cijele širine s klizećom crtom (isti izgled kao .sub-tabs na index.html) -- */
+    .sub-tabs {
+      position: relative;
+      overflow: hidden;
       display: flex;
-      gap: 8px;
+      height: 50px;
       margin-bottom: 24px;
-      flex-wrap: wrap;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      backdrop-filter: blur(7px);
+      box-shadow: var(--shadow);
     }
 
-    .tab-btn {
-      padding: 10px 24px;
-      background: rgba(10, 19, 38, 0.78);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 999px;
-      color: var(--muted);
+    .sub-tab {
+      position: relative;
+      flex: 1;
+      min-width: 0;
+      padding: 0 8px;
+      background: none;
+      border: none;
+      border-radius: 0;
+      color: rgba(200, 211, 234, 0.72);
       font-family: 'Lexend', sans-serif;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 600;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
       cursor: pointer;
-      transition: 0.2s ease;
     }
 
-    .tab-btn:hover {
-      background: rgba(38, 74, 138, 0.7);
+    .sub-tab.active {
       color: #fff;
     }
 
-    .tab-btn.active {
-      background: rgba(21, 49, 99, 1);
-      border-color: rgba(255, 255, 255, 0.7);
-      color: #fff;
-      box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+    .sub-tab:focus-visible {
+      outline: none;
+      box-shadow: inset 0 0 0 2px rgba(120, 170, 255, 0.7);
+    }
+
+    /* Hover samo gdje postoji miš - na touchu bi tapnuti gumb inače ostao "zalijepljen" svijetao */
+    @media (hover: hover) {
+      .sub-tab:hover {
+        color: #fff;
+        background: rgba(110, 168, 255, 0.14);
+      }
+    }
+
+    /* Tanka crta preko cijele širine taba koja se na krajevima topi (gradijent); položaj zadaje JS (placeIndicator) */
+    .sub-tabs-line {
+      position: absolute;
+      bottom: 0;
+      height: 2px;
+      pointer-events: none;
+      opacity: 0;
+      --ind-inset: 0;
+      background: linear-gradient(90deg, transparent, #fff 14%, #fff 86%, transparent);
+      filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
+      transition: left 0.5s var(--ease-glide), right 0.5s var(--ease-glide);
     }
 
     .tab-panel {
@@ -309,61 +340,87 @@
       letter-spacing: 0.5px;
     }
 
+    /* -- TABLICA GRUPE: isti izgled kao na index.html (kopija stilova tablice, forme i podnožja; mijenjaj na obje stranice) -- */
+    /* Tablica ide rub do ruba unutar kartice (.standings-wrap), pa .table-wrap nema vlastiti obrub ni razmak
+       (inače bi izgledalo kao tablica u tablici); sve unutra je isto kao na index.html */
     .table-wrap {
       overflow-x: auto;
+      background: var(--panel-2);
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
+      background: var(--panel-2);
+      color: #eef4ff;
     }
 
     thead th {
       background: var(--table-head);
       color: #fff;
-      padding: 12px 14px;
-      font-size: 0.85rem;
-      font-weight: 700;
       text-align: center;
+      padding: 13px 14px;
+      font-size: 1rem;
+      font-weight: 700;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.10);
       white-space: nowrap;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    thead th:first-child {
-      text-align: left;
     }
 
     tbody td {
-      padding: 11px 14px;
-      font-size: 0.88rem;
+      padding: 12px 14px;
+      font-size: 1rem;
       color: #edf3ff;
       text-align: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       white-space: nowrap;
     }
 
-    tbody td:first-child {
-      text-align: left;
-      font-weight: 600;
-    }
-
-    tbody tr:hover {
-      background: rgba(110, 168, 255, 0.08);
+    tbody tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.035);
     }
 
     tbody tr:nth-child(4) td {
-      border-bottom: 2px solid rgba(255, 255, 255, 0.4);
+      border-bottom: 2px solid rgba(255, 255, 255, 0.75);
     }
 
-    .rank-cell {
-      font-weight: 700;
-      color: var(--muted);
-      width: 32px;
+    tbody tr:hover {
+      background: var(--table-row-hover);
     }
 
-    .pts-cell {
+    .form-badges {
+      display: inline-flex;
+      gap: 3px;
+      vertical-align: middle;
+    }
+
+    .form-badge {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
       font-weight: 800;
-      color: #7eb8ff;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .form-badge.w { background: rgba(46, 204, 113, 0.85); }
+    .form-badge.l { background: rgba(231, 76, 60, 0.85); }
+    .form-badge.d { background: rgba(243, 156, 18, 0.85); }
+
+    @media (max-width: 768px) {
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 560px; }
+      thead th { font-size: 0.9rem; padding: 10px 8px; }
+      tbody td { font-size: 0.9rem; padding: 10px 8px; }
+    }
+
+    @media (max-width: 480px) {
+      table { min-width: 500px; }
+      thead th { font-size: 0.78rem; padding: 8px 6px; }
+      tbody td { font-size: 0.78rem; padding: 8px 6px; }
     }
 
     .kolo-section {
@@ -838,6 +895,32 @@
         font-size: 0.82rem;
       }
     }
+    /* -- KLIKABILNI ELEMENTI BEZ VLASTITOG HOVERA -- */
+    @media (hover: hover) {
+      td[onclick]:hover { color: #7eb8ff; }
+      .btn-save:not(:disabled):hover, .btn-delete:not(:disabled):hover, .btn-logout:hover,
+      .back-btn:hover, .btn-toggle-stats:hover { translate: 0 -1px; }
+    }
+
+    /* -- INTERAKCIJE: isti prijelazi i povratna informacija na svakom gumbu i klikabilnom elementu --
+       Zajednički blok (kopiran u sve tri stranice - mijenjaj ga na svim stranicama). Mora ostati na kraju <style>:
+       jednake je specifičnosti kao pravila komponenti pa ih nadjačava redoslijedom, i tako svi imaju iste vremene.
+       Koristi zasebna svojstva scale/translate, pa se ne tuče s transform koji komponente već imaju. */
+    :is(button, [onclick], a[href]) {
+      transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.25s ease,
+                  opacity 0.2s ease, transform 0.25s var(--ease-glide), scale 0.25s var(--ease-glide), translate 0.25s var(--ease-glide);
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Pritisak: element se na tren utisne (--press: koliko; široki elementi se utisnu manje) */
+    :is(button, [onclick], a[href]):not(:disabled, td, th, tr):active { scale: var(--press, 0.97); }
+    .kolo-header { --press: 0.985; }
+    :is(button, [onclick], a[href]):focus-visible { outline: 2px solid rgba(120, 170, 255, 0.7); outline-offset: 2px; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    @media (prefers-reduced-motion: reduce) {
+      :is(button, [onclick], a[href]) { transition: none; }
+      :is(button, [onclick], a[href]):active { scale: none; }
+      .sub-tabs-line { transition: none !important; }
+    }
   </style>
 </head>
 
@@ -871,13 +954,14 @@
       </div>
 
       <!-- TABS -->
-      <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('standings', this)">
+      <div class="sub-tabs" role="group" aria-label="Prikaz grupe">
+        <button class="sub-tab active" onclick="switchTab('standings', this)">
           <i class="fas fa-table" style="margin-right:6px;"></i>Tablica
         </button>
-        <button class="tab-btn" onclick="switchTab('raspored', this)">
+        <button class="sub-tab" onclick="switchTab('raspored', this)">
           <i class="fas fa-calendar-alt" style="margin-right:6px;"></i>Raspored & Rezultati
         </button>
+        <span class="sub-tabs-line" aria-hidden="true"></span>
       </div>
 
       <!-- TAB: STANDINGS -->
@@ -907,6 +991,7 @@
   <div class="toast" id="toast"></div>
 
   <script type="module">
+    // -- FIREBASE INIT --
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, collection, getDocs, setDoc, deleteDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
@@ -1224,7 +1309,7 @@
     function computeStandings() {
       const stats = {};
       players.forEach(p => {
-        stats[p] = { win: 0, draw: 0, lost: 0, total: 0, legs: 0, pts: 0, avgSum: 0, avgCount: 0, f9Sum: 0, f9Count: 0, bl: 0, bco: 0, x180: 0 };
+        stats[p] = { win: 0, draw: 0, lost: 0, total: 0, legs: 0, pts: 0, avgSum: 0, avgCount: 0, f9Sum: 0, f9Count: 0, bl: 0, bco: 0, x180: 0, form: [] };
       });
 
       schedule.forEach(({ kolo, matches }) => {
@@ -1243,12 +1328,15 @@
           } else if (m.score === '5-5') {
             st1.draw++; st2.draw++;
             st1.pts++; st2.pts++;
+            st1.form.push('D'); st2.form.push('D');
           } else if (s1 > s2) {
             st1.win++; st2.lost++;
             st1.pts += 2;
+            st1.form.push('W'); st2.form.push('L');
           } else {
             st2.win++; st1.lost++;
             st2.pts += 2;
+            st1.form.push('L'); st2.form.push('W');
           }
 
           // 0 se namjerno tretira kao "nema podatka" (isto kao null) - stvaran
@@ -1274,11 +1362,19 @@
           legs: s.legs, pts: s.pts,
           avg: s.avgCount > 0 ? (s.avgSum / s.avgCount).toFixed(2) : '--',
           f9: s.f9Count > 0 ? (s.f9Sum / s.f9Count).toFixed(2) : '--',
-          bl: s.bl || '',
-          bco: s.bco || '',
-          x180: s.x180
+          bl: s.bl || '--',
+          bco: s.bco || '--',
+          x180: s.x180,
+          form: s.form.slice(-5)
         }))
-        .sort((a, b) => b.pts - a.pts || b.legs - a.legs);
+        // isti poredak kao na index.html (bodovi, legovi, pa AVG)
+        .sort((a, b) => b.pts - a.pts || b.legs - a.legs || (a.avg === '--' ? 1 : b.avg === '--' ? -1 : parseFloat(b.avg) - parseFloat(a.avg)));
+    }
+
+    // Zadnjih 5 mečeva kao W/D/L značke (isto kao formHtml na index.html)
+    function formHtml(form) {
+      if (!form || !form.length) return '';
+      return `<span class="form-badges">${form.map(r => `<span class="form-badge ${r.toLowerCase()}">${r}</span>`).join('')}</span>`;
     }
 
     // group-detail.html nema svoj player profile modal (to je infrastruktura
@@ -1302,32 +1398,19 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th style="text-align:left;">Igrač</th>
-                  <th>W</th><th>D</th><th>L</th>
-                  <th>Tot</th><th>Legs</th><th>PTS</th>
-                  <th>AVG</th><th>First 9</th>
-                  <th>Best Leg</th><th>Best CO</th><th>180</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${standings.map((p, i) => `
-                  <tr>
-                    <td class="rank-cell">${i + 1}</td>
-                    <td style="text-align:left;font-weight:700;cursor:pointer;" onclick="openPlayerProfileTab('${esc(p.name).replace(/'/g,"\\'")}')">${esc(p.name)}</td>
-                    <td style="color:#2ecc71;font-weight:700;">${p.win}</td>
-                    <td style="color:#f39c12;font-weight:700;">${p.draw}</td>
-                    <td style="color:#e74c3c;font-weight:700;">${p.lost}</td>
-                    <td>${p.total}</td>
-                    <td style="color:${p.legs > 0 ? '#2ecc71' : p.legs < 0 ? '#e74c3c' : 'inherit'}">${p.legs > 0 ? '+' + p.legs : p.legs}</td>
-                    <td class="pts-cell">${p.pts}</td>
-                    <td>${p.avg}</td><td>${p.f9}</td>
-                    <td>${p.bl || '--'}</td><td>${p.bco || '--'}</td><td>${p.x180}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
+              <thead><tr><th>#</th><th style="text-align:left;">Igrač</th><th>Forma</th><th>W</th><th>D</th><th>L</th><th>Tot</th><th>Legs</th><th>PTS</th><th>AVG</th><th>First 9</th><th>Best Leg</th><th>Best CO</th><th>180</th></tr></thead>
+              <tbody>${standings.map((p, i) => `<tr>
+                <td>${i + 1}</td>
+                <td style="text-align:left;font-weight:700;cursor:pointer;" onclick="openPlayerProfileTab('${esc(p.name).replace(/'/g,"\\'")}')">${esc(p.name)}</td>
+                <td>${formHtml(p.form)}</td>
+                <td style="color:#2ecc71;font-weight:700;">${p.win}</td>
+                <td style="color:#f39c12;font-weight:700;">${p.draw}</td>
+                <td style="color:#e74c3c;font-weight:700;">${p.lost}</td>
+                <td>${p.total}</td>
+                <td style="color:${p.legs > 0 ? '#2ecc71' : p.legs < 0 ? '#e74c3c' : 'inherit'}">${p.legs > 0 ? '+' + p.legs : p.legs}</td>
+                <td style="font-weight:800;color:#7eb8ff;">${p.pts}</td>
+                <td>${p.avg}</td><td>${p.f9}</td><td>${p.bl}</td><td>${p.bco}</td><td>${p.x180}</td>
+              </tr>`).join('')}</tbody>
             </table>
           </div>
         </div>
@@ -1644,12 +1727,46 @@
     }
 
     // -- TAB SWITCH --
+    // Klizna crta ispod aktivnog taba. Položaj se zadaje rubovima (left/right) i "elastično": vodeći rub stiže brzo,
+    // zadnji kasni, pa se crta na tren rastegne i smiri. animate=false postavlja je bez klizanja. Isto kao na index.html.
+    function placeIndicator(ind, btn, animate) {
+      if (!ind || !btn || !ind.offsetParent) return;
+      const inset = (parseFloat(getComputedStyle(ind).getPropertyValue('--ind-inset')) || 0) * btn.offsetWidth;
+      const left = btn.offsetLeft + inset;
+      const right = ind.offsetParent.clientWidth - btn.offsetLeft - btn.offsetWidth + inset;
+      const prevLeft = parseFloat(ind.style.left);
+      if (!animate || isNaN(prevLeft)) {
+        ind.style.transition = 'none';
+        ind.style.left = left + 'px'; ind.style.right = right + 'px'; ind.style.opacity = '1';
+        void ind.offsetWidth; ind.style.transition = '';
+        return;
+      }
+      const toRight = left > prevLeft;
+      ind.style.transition = 'left ' + (toRight ? '0.5s' : '0.28s') + ' var(--ease-glide), right ' + (toRight ? '0.28s' : '0.5s') + ' var(--ease-glide)';
+      ind.style.left = left + 'px'; ind.style.right = right + 'px';
+    }
+
+    function positionSubTabsLine(bar, animate) {
+      if (bar) placeIndicator(bar.querySelector('.sub-tabs-line'), bar.querySelector('.sub-tab.active'), animate);
+    }
+
     window.switchTab = function (name, btn) {
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
       document.getElementById('tab-' + name).classList.add('active');
       btn.classList.add('active');
+      positionSubTabsLine(btn.closest('.sub-tabs'), true);
     };
+
+    // Širine tabova ovise o fontu (Lexend dolazi s CDN-a) i o širini ekrana, pa se crta namješta ispočetka
+    // kad god tab promijeni veličinu (observer javi i prvo mjerenje, i kad traka postane vidljiva)
+    (function initSubTabs() {
+      const bar = document.querySelector('.sub-tabs');
+      if (!bar) return;
+      const ro = new ResizeObserver(() => positionSubTabsLine(bar, false));
+      bar.querySelectorAll('.sub-tab').forEach(b => ro.observe(b));
+      positionSubTabsLine(bar, false);
+    })();
 
     // -- TOAST --
     function showToast(msg, type = 'success') {
