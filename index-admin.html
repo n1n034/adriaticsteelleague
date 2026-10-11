@@ -480,6 +480,23 @@
       box-shadow: inset 0 0 0 2px rgba(120, 170, 255, 0.7);
     }
 
+    /* Traka koja se klizi kad tabovi ne stanu (AVG lige na mobitelu): jednake širine dok stanu, inače prirodne */
+    .sub-tabs-scroll {
+      overflow-x: auto;
+      overflow-y: hidden;
+      scrollbar-width: none;
+    }
+
+    .sub-tabs-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .sub-tabs-scroll .sub-tab {
+      flex: 1 1 0;
+      min-width: max-content;
+      padding: 0 14px;
+    }
+
     @media (hover: hover) {
       .sub-tab:hover {
         color: #fff;
@@ -661,6 +678,25 @@
 
     .bam-match:hover .bam-player {
       border-color: rgba(0, 102, 255, 0.7);
+    }
+
+    /* Zadnja kolona: finale je točno na sredini (spojnice polufinala padaju na pola), a utakmica za 3. mjesto ispod njega */
+    .bracket-admin-matches.final-col { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr auto 1fr; }
+    .final-col > .bracket-admin-final-title { grid-row: 1; align-self: end; }
+    .final-col > .bam-match { grid-row: 2; }
+    .final-col > .third-wrap { grid-row: 3; align-self: start; }
+
+    /* Utakmica za 3. mjesto prima poražene polufinaliste: ulazna crta je ista kao ostale, a okomita crta polufinala
+       produžena je do njenog stuba (--third-up računa setPairOffsetsAdmin) */
+    .bam-match.third-match::after {
+      content: '';
+      position: absolute;
+      bottom: 50%;
+      right: calc(100% + 7px);
+      width: 0;
+      height: var(--third-up, 0px);
+      border-left: 1.5px solid rgba(255, 255, 255, 1);
+      pointer-events: none;
     }
 
     .bam-player {
@@ -1428,7 +1464,7 @@
       </div>
 
       <div id="admin-tab-avg-lige" class="admin-tab-panel">
-        <div class="sub-tabs" id="avg-league-tabs" role="group" aria-label="AVG liga">
+        <div class="sub-tabs sub-tabs-scroll" id="avg-league-tabs" role="group" aria-label="AVG liga">
           <button class="sub-tab active" id="avg-tab-btn-diamond"
             onclick="switchAvgLeagueTab('diamond', this)">💎 Diamond</button>
           <button class="sub-tab" id="avg-tab-btn-gold" onclick="switchAvgLeagueTab('gold', this)">🥇
@@ -2292,13 +2328,14 @@
 
     function computeStandingsSimple(players, matchesMap) {
       const stats = {};
-      players.forEach(p => { stats[p] = { pts: 0, legs: 0, avgSum: 0, avgCount: 0 }; });
+      players.forEach(p => { stats[p] = { pts: 0, legs: 0, avgSum: 0, avgCount: 0, total: 0 }; });
       Object.values(matchesMap).forEach(m => {
         if (!m.score) return;
         const parts = m.score.split('-'); if (parts.length !== 2) return;
         const s1 = parseInt(parts[0]), s2 = parseInt(parts[1]); if (isNaN(s1) || isNaN(s2)) return;
         const st1 = stats[m.player1], st2 = stats[m.player2]; if (!st1 || !st2) return;
         st1.legs += (s1 - s2); st2.legs += (s2 - s1);
+        if (m.score !== '0-0') { st1.total++; st2.total++; }
         if (m.score === '0-0') {
         } else if (m.score === '5-5') { st1.pts++; st2.pts++; }
         else if (s1 > s2) { st1.pts += 2; } else { st2.pts += 2; }
@@ -2308,7 +2345,7 @@
         if (m.average2) { st2.avgSum += parseFloat(m.average2) || 0; st2.avgCount++; }
       });
       return players
-        .map(name => { const s = stats[name]; return { name, pts: s.pts, legs: s.legs, avg: s.avgCount > 0 ? s.avgSum / s.avgCount : 0 }; })
+        .map(name => { const s = stats[name]; return { name, pts: s.pts, legs: s.legs, total: s.total, avg: s.avgCount > 0 ? s.avgSum / s.avgCount : 0 }; })
         .sort((a, b) => b.pts - a.pts || b.legs - a.legs || b.avg - a.avg);
     }
 
@@ -2318,6 +2355,90 @@
       const rank = parseInt(m[1]) - 1, grp = m[2];
       const st = gsm[grp]; if (!st || !st[rank]) return code;
       return st[rank].name;
+    }
+
+    // -- PLAYOFF PODLIGE (AVG lige i Ženska liga) --
+    // Iz svake grupe lige ulazi PLAYOFF_PER_GROUP najboljih. Ždrijeb se generira za bilo koji broj grupa i prolaznika:
+    // nositelji idu po rangu pa po grupi (1A, 1B, 2A, 2B...), parovi su standardni (1. protiv zadnjeg...), prvaci grupa
+    // završe na suprotnim polovicama, a parovi iz iste grupe izbjegnuti su u prvom kolu. Kad broj nije potencija dvojke,
+    // najbolji nositelji dobivaju slobodan prolaz. Uvijek postoji i utakmica za 3. mjesto (THIRD_1).
+    // Ista logika je i u index.html - kad se mijenja, mijenjati na oba mjesta.
+    const PLAYOFF_PER_GROUP = 4;
+
+    function makePlayoffLayout(groupCount, perGroup) {
+      const letters = 'ABCDEFGHIJKLMNOP'.slice(0, groupCount).split('');
+      const seeds = [];
+      for (let r = 1; r <= perGroup; r++) letters.forEach(g => seeds.push({ code: r + g, g }));
+      const N = seeds.length;
+      let P = 2; while (P < N) P *= 2;
+      const k = Math.log2(P);
+      // redoslijed nositelja u ždrijebu ([1, P, ...]; susjedni su parovi)
+      let order = [1, 2];
+      while (order.length < P) { const n = order.length * 2; order = order.flatMap(sd => [sd, n + 1 - sd]); }
+      const seedAt = n => (n <= N ? seeds[n - 1] : null);
+      const pairs = [];
+      for (let i = 0; i < P; i += 2) pairs.push([order[i], order[i + 1]]);
+      const real = pr => seedAt(pr[0]) && seedAt(pr[1]);
+      const same = pr => real(pr) && seedAt(pr[0]).g === seedAt(pr[1]).g;
+      // par iz iste grupe: zamijeni slabijeg nositelja s igračem iz drugog pravog meča (nikad u slobodan prolaz)
+      for (let i = 0; i < pairs.length; i++) {
+        if (!same(pairs[i])) continue;
+        let done = false;
+        for (let j = 0; j < pairs.length && !done; j++) {
+          if (j === i || !real(pairs[j])) continue;
+          for (const pos of [0, 1]) {
+            const a = [pairs[i][0], pairs[i][1]], b = [pairs[j][0], pairs[j][1]];
+            const t = a[1]; a[1] = b[pos]; b[pos] = t;
+            if (!same(a) && !same(b)) { pairs[i] = a; pairs[j] = b; done = true; break; }
+          }
+        }
+      }
+      return {
+        N, P, k,
+        ids: ROUND_IDS.slice(-k), labels: ROUND_LABELS.slice(-k),
+        draw: pairs.map(([a, b]) => ({ p1: seedAt(a) ? seedAt(a).code : null, p2: seedAt(b) ? seedAt(b).code : null, bye: !seedAt(a) || !seedAt(b) }))
+      };
+    }
+
+    // Sastavlja stablo: pobjednici se prenose u sljedeće kolo, slobodni prolazi prolaze sami, a utakmica za 3. mjesto
+    // uzima poražene polufinaliste. saved = spremljeni mečevi (matchId -> podaci), resolve(kod) vraća ime nositelja
+    // (ili null dok nije poznat).
+    function computePlayoffTree(layout, saved, resolve) {
+      const winnerOf = m => (m && m.winner ? (m.winner === 'player1' ? m.p1 : m.p2) : null);
+      const loserOf = m => (m && m.winner && m.p1 && m.p2 ? (m.winner === 'player1' ? m.p2 : m.p1) : null);
+      const rounds = [];
+      layout.ids.forEach((rid, r) => {
+        const prev = rounds[r - 1];
+        const count = r === 0 ? layout.draw.length : prev.length / 2;
+        const cur = [];
+        for (let i = 0; i < count; i++) {
+          const id = `${rid}_${i + 1}`;
+          const sv = saved[id] || {};
+          let p1, p2, code1 = null, code2 = null, bye = false;
+          if (r === 0) {
+            const d = layout.draw[i];
+            code1 = d.p1; code2 = d.p2; bye = !!d.bye;
+            p1 = sv.player1 || (d.p1 ? resolve(d.p1) : null);
+            p2 = sv.player2 || (d.p2 ? resolve(d.p2) : null);
+          } else {
+            p1 = sv.player1 || winnerOf(prev[i * 2]);
+            p2 = sv.player2 || winnerOf(prev[i * 2 + 1]);
+          }
+          let winner = sv.winner || null;
+          if (bye) winner = p1 ? 'player1' : (p2 ? 'player2' : null);
+          cur.push({ id, p1, p2, code1, code2, bye, winner, score: sv.score || '', saved: sv, label: `${layout.labels[r]} - Meč ${i + 1}` });
+        }
+        rounds.push(cur);
+      });
+      let third = null;
+      if (rounds.length >= 2) {
+        const sf = rounds[rounds.length - 2], sv = saved.THIRD_1 || {};
+        third = {
+          id: 'THIRD_1', p1: sv.player1 || loserOf(sf[0]), p2: sv.player2 || loserOf(sf[1]),
+          code1: null, code2: null, bye: false, winner: sv.winner || null, score: sv.score || '', saved: sv, label: 'Utakmica za 3. mjesto'
+        };
+      }
+      return { rounds, third };
     }
 
     // -- PAIR OFFSET (za connector linije) --
@@ -2339,6 +2460,16 @@
           bottom.style.setProperty('--pair-offset', offset + 'px');
         }
       });
+
+      // Utakmica za 3. mjesto stoji u koloni finala, pa produži okomitu crtu polufinala do njenog stuba
+      wrap.querySelectorAll('.bam-match.third-match').forEach(third => {
+        const prev = third.closest('.bracket-admin-round')?.previousElementSibling;
+        const sfs = prev ? prev.querySelectorAll(':scope > .bracket-admin-matches > .bam-match') : [];
+        const sf = sfs[sfs.length - 1];
+        if (!sf) return;
+        const tr = third.getBoundingClientRect(), fr = sf.getBoundingClientRect();
+        third.style.setProperty('--third-up', Math.max(0, (tr.top + tr.height / 2) - (fr.top + fr.height / 2)) + 'px');
+      });
     }
 
     // Pokreni mjerenje tek kad je layout stvarno stabilan: nakon fontova
@@ -2346,8 +2477,7 @@
     function scheduleAllPairOffsetsAdmin() {
       const run = () => {
         requestAnimationFrame(() => requestAnimationFrame(() => {
-          if (document.getElementById('bracket-admin-wrap-upper')) setPairOffsetsAdmin('bracket-admin-wrap-upper');
-          if (document.getElementById('bracket-admin-wrap-lower')) setPairOffsetsAdmin('bracket-admin-wrap-lower');
+          document.querySelectorAll('.bracket-admin-wrap').forEach(w => setPairOffsetsAdmin(w.id));
         }));
       };
       if (document.fonts && document.fonts.ready) {
@@ -2363,8 +2493,7 @@
     function debouncedRecalcAdmin() {
       clearTimeout(pairOffsetDebounceAdmin);
       pairOffsetDebounceAdmin = setTimeout(() => {
-        if (document.getElementById('bracket-admin-wrap-upper')) setPairOffsetsAdmin('bracket-admin-wrap-upper');
-        if (document.getElementById('bracket-admin-wrap-lower')) setPairOffsetsAdmin('bracket-admin-wrap-lower');
+        document.querySelectorAll('.bracket-admin-wrap').forEach(w => setPairOffsetsAdmin(w.id));
       }, 100);
     }
 
@@ -2435,12 +2564,14 @@
       const roundsHtml = rounds.map((matches, ri) => `
         <div class="bracket-admin-round">
           <div class="bracket-admin-round-title">${ROUND_LABELS[ri]}</div>
-          <div class="bracket-admin-matches">
+          <div class="bracket-admin-matches${ri === rounds.length - 1 ? ' final-col' : ''}">
             ${ri === rounds.length - 1 ? `<div class="bracket-admin-final-title">🏆 FINALE</div>` : ''}
             ${matches.map((m, i) => matchHtml(m, i % 2 === 0 ? 'pair-top' : 'pair-bottom')).join('')}
             ${ri === rounds.length - 1 ? `
+<div class="third-wrap">
               <div class="bracket-admin-third-title">🥉 Utakmica za 3. mjesto</div>
-              ${matchHtml(thirdMatch)}
+              ${matchHtml(thirdMatch, 'third-match')}
+</div>
             ` : ''}
           </div>
         </div>`).join('');
@@ -2519,12 +2650,14 @@
       const roundsHtml = rounds.map((matches, ri) => `
     <div class="bracket-admin-round">
       <div class="bracket-admin-round-title">${layout.labels[ri]}</div>
-      <div class="bracket-admin-matches">
+      <div class="bracket-admin-matches${ri === rounds.length - 1 ? ' final-col' : ''}">
         ${ri === rounds.length - 1 ? `<div class="bracket-admin-final-title">🏆 DONJE FINALE</div>` : ''}
         ${matches.map((m, i) => matchHtml(m, i % 2 === 0 ? 'pair-top' : 'pair-bottom')).join('')}
         ${ri === rounds.length - 1 ? `
+<div class="third-wrap">
           <div class="bracket-admin-third-title">🥉 Donja utakmica za 3. mjesto</div>
-          ${matchHtml(thirdMatch)}
+          ${matchHtml(thirdMatch, 'third-match')}
+</div>
         ` : ''}
       </div>
     </div>`).join('');
@@ -2844,6 +2977,9 @@
     };
     const AVG_RESERVED_DOC_IDS = ['rezultati', 'bracket'];
 
+    // Forma "Nova grupa" u panelima AVG liga je isključena (grupe su postavljene); true je vraća, npr. za novu sezonu.
+    const AVG_CREATE_FORM_ENABLED = false;
+
     let currentAvgLeague = 'diamond';
 
     window.switchAvgLeagueTab = function (leagueId, btn) {
@@ -2851,9 +2987,225 @@
       document.querySelectorAll('#avg-league-tabs .sub-tab').forEach(b => b.classList.remove('active'));
       document.getElementById('avg-league-' + leagueId).style.display = 'block';
       btn.classList.add('active');
-      positionSubTabsLine(document.getElementById('avg-league-tabs'), true);
+      const bar = document.getElementById('avg-league-tabs');
+      positionSubTabsLine(bar, true);
+      // na uskom ekranu odabrani tab dolazi na sredinu trake (kad se traka ne klizi, scrollTo ne radi ništa)
+      bar.scrollTo({ left: btn.offsetLeft - (bar.clientWidth - btn.offsetWidth) / 2, behavior: 'smooth' });
       currentAvgLeague = leagueId;
       loadAvgLeague(leagueId);
+    };
+
+    // -- PLAYOFF PODLIGE (admin) --
+    // Parovi dolaze iz makePlayoffLayout i tablica grupa, a rezultati se spremaju u jedan dokument {liga}/bracket kao
+    // mapa matches (isti oblik čita index.html i profil igrača). Spremanje i brisanje samo za admina (kao gornji ždrijeb).
+    const leaguePlayoffCtx = {};   // leagueId -> { layout, gsm, perGroup, groups }
+    const leaguePlayoffData = {};  // leagueId -> { matchId: podaci meča } (za popup)
+
+    const leaguePlayoffRef = leagueId => doc(db, ...leagueGroupsPath(ACTIVE_SEASON_ID, leagueId), 'bracket');
+
+    // Ime nositelja se pokazuje tek kad je taj igrač odigrao barem jedan meč u grupi (inače je poredak samo redoslijed upisa)
+    function resolvePlayoffName(code, gsm) {
+      const m = code && code.match(/^(\d+)([A-P])$/);
+      if (!m) return null;
+      const row = (gsm[m[2]] || [])[parseInt(m[1]) - 1];
+      return row && row.total ? row.name : null;
+    }
+
+    async function renderLeaguePlayoffAdmin(leagueId) {
+      const host = document.getElementById('league-playoff-' + leagueId);
+      const ctx = leaguePlayoffCtx[leagueId];
+      if (!host) return;
+      if (!ctx) { host.innerHTML = ''; return; }
+
+      let saved = {};
+      try {
+        const snap = await getDoc(leaguePlayoffRef(leagueId));
+        saved = snap.exists() ? (snap.data().matches || {}) : {};
+      } catch (err) {
+        host.innerHTML = `<div style="color:#ffaaaa;padding:12px 0;">Greška pri učitavanju ždrijeba: ${esc(err.message)}</div>`;
+        return;
+      }
+
+      const tree = computePlayoffTree(ctx.layout, saved, code => resolvePlayoffName(code, ctx.gsm));
+      const store = leaguePlayoffData[leagueId] = {};
+
+      const matchHtml = (m, pairClass) => {
+        store[m.id] = { ...m.saved, player1: m.p1, player2: m.p2, roundLabel: m.label, bye: m.bye };
+        const w = m.winner, parts = m.score ? m.score.split('-') : [];
+        const n1 = m.p1 || m.code1, n2 = m.p2 || m.code2;
+        const row1 = `<div class="bam-player ${w === 'player1' ? 'winner' : w === 'player2' ? 'loser' : (!m.p1 ? 'tbd' : '')}">
+            <span class="bam-player-name">${esc(n1 || 'TBD')}</span>
+            ${m.score ? `<span class="bam-player-score">${esc(parts[0] || '')}</span>` : ''}
+          </div>`;
+        const row2 = (m.bye && !m.p2)
+          ? `<div class="bam-player tbd"><span class="bam-player-name">Slobodan prolaz</span></div>`
+          : `<div class="bam-player ${w === 'player2' ? 'winner' : w === 'player1' ? 'loser' : (!m.p2 ? 'tbd' : '')}">
+            <span class="bam-player-name">${esc(n2 || 'TBD')}</span>
+            ${m.score ? `<span class="bam-player-score">${esc(parts[1] || '')}</span>` : ''}
+          </div>`;
+        return `<div class="bam-match ${pairClass || ''}" data-match-id="${m.id}"${m.bye ? ' style="cursor:default;"' : ''}>${row1}${row2}</div>`;
+      };
+
+      const last = tree.rounds.length - 1;
+      const roundsHtml = tree.rounds.map((matches, ri) => `
+        <div class="bracket-admin-round">
+          <div class="bracket-admin-round-title">${ctx.layout.labels[ri]}</div>
+          <div class="bracket-admin-matches${ri === last ? ' final-col' : ''}">
+            ${ri === last ? `<div class="bracket-admin-final-title">🏆 FINALE</div>` : ''}
+            ${matches.map((m, i) => matchHtml(m, i % 2 === 0 ? 'pair-top' : 'pair-bottom')).join('')}
+            ${ri === last && tree.third ? `
+<div class="third-wrap">
+              <div class="bracket-admin-third-title">🥉 Utakmica za 3. mjesto</div>
+              ${matchHtml(tree.third, 'third-match')}
+</div>
+            ` : ''}
+          </div>
+        </div>`).join('');
+
+      host.innerHTML = `
+        <h3 style="margin:6px 0 12px;">Ždrijeb</h3>
+        <div class="bracket-admin-wrap" id="bracket-admin-wrap-${leagueId}">
+          <div class="bracket-admin-rounds">${roundsHtml}</div>
+        </div>`;
+
+      requestAnimationFrame(() => scheduleAllPairOffsetsAdmin());
+      window.__observeBracketAdminWrap('bracket-admin-wrap-' + leagueId);
+
+      host.onclick = e => {
+        const card = e.target.closest('.bam-match');
+        if (card) openLeaguePlayoffEditPopup(leagueId, card.dataset.matchId);
+      };
+    }
+
+    function openLeaguePlayoffEditPopup(leagueId, matchId) {
+      const d = leaguePlayoffData[leagueId]?.[matchId];
+      if (!d || d.bye) return;
+      const p1 = d.player1 || 'TBD';
+      const p2 = d.player2 || 'TBD';
+      const legs = getPlayoffLegs(matchId, true);
+      const timestampLabel = d.timestamp ? formatMatchTimestamp(d.timestamp) : '';
+      const legsLabel = legs ? `<div class="bedit-legs-label">Best of ${legs} legs${timestampLabel ? `<div style="font-size:0.65rem;color:var(--muted);margin-top:3px;text-transform:none;letter-spacing:0;">${esc(timestampLabel)}</div>` : ''}</div>` : '';
+      const canSave = currentIsAdmin && d.player1 && d.player2;
+
+      document.getElementById('bedit-popup-content').innerHTML = `
+        <div class="bedit-header">
+          <span class="bedit-title">${esc(d.roundLabel || matchId)}</span>
+          <button class="bedit-close" onclick="closeBEditPopup()">✕</button>
+        </div>
+        ${legsLabel}
+        <div class="bedit-players">
+          <span class="bedit-player-name">${esc(p1)}</span>
+          <span class="bedit-vs">VS</span>
+          <span class="bedit-player-name right">${esc(p2)}</span>
+        </div>
+        <div class="bedit-section">
+          <div class="bedit-section-title">Rezultat</div>
+          <div class="bedit-score-row">
+            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(d.score ? d.score.split('-')[0] || '' : '')}" onfocus="this.select()">
+            <span class="bedit-score-sep">-</span>
+            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="9" placeholder="0" value="${esc(d.score ? d.score.split('-')[1] || '' : '')}" onfocus="this.select()">
+          </div>
+        </div>
+        <div class="bedit-section">
+          <div class="bedit-section-title">Statistika</div>
+          <div class="bedit-stats-grid">
+            <input class="bedit-stat-input" id="bedit-avg1" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(d.average1 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
+            <span class="bedit-stat-label">AVG</span>
+            <input class="bedit-stat-input" id="bedit-avg2" type="number" step="0.01" min="0" placeholder="AVG" value="${esc(d.average2 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(d.first9_1 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
+            <span class="bedit-stat-label">First 9</span>
+            <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(d.first9_2 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(d.checkoutrate1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <span class="bedit-stat-label">CO rate %</span>
+            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(d.checkoutrate2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-coatt1" type="text" placeholder="6/30" value="${esc(d.checkouts1 ?? '')}">
+            <span class="bedit-stat-label">Checkouts</span>
+            <input class="bedit-stat-input" id="bedit-coatt2" type="text" placeholder="6/30" value="${esc(d.checkouts2 ?? '')}">
+            <input class="bedit-stat-input" id="bedit-bco1" type="number" min="0" placeholder="Best CO" value="${esc(d.bestcheckout1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <span class="bedit-stat-label">Best CO</span>
+            <input class="bedit-stat-input" id="bedit-bco2" type="number" min="0" placeholder="Best CO" value="${esc(d.bestcheckout2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bl1" type="number" min="0" placeholder="Best Leg" value="${esc(d.bestleg1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <span class="bedit-stat-label">Best Leg</span>
+            <input class="bedit-stat-input" id="bedit-bl2" type="number" min="0" placeholder="Best Leg" value="${esc(d.bestleg2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-180_1" type="number" min="0" placeholder="180s" value="${esc(d['180_1'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <span class="bedit-stat-label">180s</span>
+            <input class="bedit-stat-input" id="bedit-180_2" type="number" min="0" placeholder="180s" value="${esc(d['180_2'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+          </div>
+        </div>
+        <div class="bedit-actions">
+          ${canSave ? `
+          <button class="bedit-btn-delete" id="bedit-delete-btn" onclick="deleteLeaguePlayoffMatch('${leagueId}', '${matchId}')"><i class="fas fa-trash"></i> Izbriši</button>
+          <button class="bedit-btn-save" id="bedit-save-btn" onclick="saveLeaguePlayoffMatch('${leagueId}', '${matchId}')">
+            <i class="fas fa-save"></i> Spremi
+          </button>` : (currentIsAdmin ? '<span style="font-size:0.85rem;color:var(--muted);">Igrači još nisu poznati.</span>' : '')}
+        </div>
+        `;
+
+      document.getElementById('bedit-overlay').style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    window.saveLeaguePlayoffMatch = async function (leagueId, matchId) {
+      const d = leaguePlayoffData[leagueId]?.[matchId];
+      if (!d || !d.player1 || !d.player2) { showToast('Igrači još nisu poznati.', 'error'); return; }
+      const btn = document.getElementById('bedit-save-btn');
+      const s1 = parseInt(document.getElementById('bedit-s1')?.value) || 0;
+      const s2 = parseInt(document.getElementById('bedit-s2')?.value) || 0;
+      if (s1 === s2) { showToast('Meč ždrijeba ne može biti neriješen.', 'error'); return; }
+
+      const data = {
+        player1: d.player1, player2: d.player2,
+        score: `${s1}-${s2}`, winner: s1 > s2 ? 'player1' : 'player2',
+        roundLabel: d.roundLabel,
+        average1: pfOrNull(document.getElementById('bedit-avg1')?.value),
+        average2: pfOrNull(document.getElementById('bedit-avg2')?.value),
+        first9_1: pfOrNull(document.getElementById('bedit-f9_1')?.value),
+        first9_2: pfOrNull(document.getElementById('bedit-f9_2')?.value),
+        bestleg1: pi(document.getElementById('bedit-bl1')?.value),
+        bestleg2: pi(document.getElementById('bedit-bl2')?.value),
+        bestcheckout1: pi(document.getElementById('bedit-bco1')?.value),
+        bestcheckout2: pi(document.getElementById('bedit-bco2')?.value),
+        '180_1': pi(document.getElementById('bedit-180_1')?.value),
+        '180_2': pi(document.getElementById('bedit-180_2')?.value),
+        checkoutrate1: pf(document.getElementById('bedit-corate1')?.value),
+        checkoutrate2: pf(document.getElementById('bedit-corate2')?.value),
+        checkouts1: document.getElementById('bedit-coatt1')?.value?.trim() || null,
+        checkouts2: document.getElementById('bedit-coatt2')?.value?.trim() || null,
+        timestamp: serverTimestamp(),
+      };
+      Object.keys(data).forEach(k => { if (data[k] === null || data[k] === undefined) delete data[k]; });
+
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sprema...';
+      try {
+        await setDoc(leaguePlayoffRef(leagueId), { matches: { [matchId]: data } }, { merge: true });
+        await setDoc(doc(db, 'seasons', ACTIVE_SEASON_ID), { lastUpdated: new Date() }, { merge: true });
+        btn.classList.add('saved'); btn.innerHTML = '<i class="fas fa-check"></i> Spremljeno';
+        showToast('Meč spremljen!', 'success');
+        setTimeout(() => {
+          document.getElementById('bedit-overlay').style.display = 'none';
+          document.body.style.overflow = '';
+        }, 800);
+        await renderLeaguePlayoffAdmin(leagueId);
+      } catch (err) {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Spremi';
+        showToast('Greška: ' + err.message, 'error');
+      }
+    };
+
+    window.deleteLeaguePlayoffMatch = async function (leagueId, matchId) {
+      if (!confirm('Izbrisati sve podatke ovog meča?')) return;
+      const btn = document.getElementById('bedit-delete-btn');
+      btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      try {
+        await setDoc(leaguePlayoffRef(leagueId), { matches: { [matchId]: deleteField() } }, { merge: true });
+        showToast('Meč izbrisan!', 'success');
+        document.getElementById('bedit-overlay').style.display = 'none';
+        document.body.style.overflow = '';
+        await renderLeaguePlayoffAdmin(leagueId);
+      } catch (err) {
+        btn.disabled = false; btn.innerHTML = '<i class="fas fa-trash"></i> Izbriši';
+        showToast('Greška: ' + err.message, 'error');
+      }
     };
 
     async function loadAvgLeague(leagueId) {
@@ -2861,7 +3213,7 @@
       container.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje...</span></div>`;
 
       try {
-        await loadAllPlayers();
+        if (AVG_CREATE_FORM_ENABLED) await loadAllPlayers();
 
         const basePath = leagueGroupsPath(ACTIVE_SEASON_ID, leagueId);
         const groupsSnap = await getDocs(collection(db, ...basePath));
@@ -2872,18 +3224,33 @@
         const withPlayers = await Promise.all(groups.map(async g => {
           const ps = await getDocs(collection(db, ...basePath, g.id, 'players'));
           const players = []; ps.forEach(p => players.push(p.data().name));
-          return { ...g, players };
+          const ms = await getDocs(collection(db, ...basePath, g.id, 'matches'));
+          const matchesMap = {}; ms.forEach(m => { const d = m.data(); matchesMap[`${d.kolo}_${d.mec}`] = d; });
+          return { ...g, players, matchesMap };
         }));
+
+        // Ždrijeb: tablice grupa (po id-u grupe: A, B...) i parovi iz generatora
+        const standingsList = withPlayers.map(g => computeStandingsSimple(g.players, g.matchesMap));
+        const sizes = standingsList.map(st => st.length).filter(n => n > 0);
+        const perGroup = sizes.length ? Math.min(PLAYOFF_PER_GROUP, ...sizes) : 0;
+        if (withPlayers.length && perGroup * withPlayers.length >= 2) {
+          const gsm = {};
+          standingsList.forEach((st, i) => { gsm['ABCDEFGHIJKLMNOP'[i]] = st; });
+          leaguePlayoffCtx[leagueId] = { layout: makePlayoffLayout(withPlayers.length, perGroup), gsm, perGroup, groups: withPlayers.length };
+        } else {
+          delete leaguePlayoffCtx[leagueId];
+        }
 
         const groupsHtml = withPlayers.length > 0
           ? '<div class="groups-grid">' + withPlayers.map(g => renderAvgGroupCard(g, leagueId)).join('') + '</div>'
-          : `<div style="text-align:center;color:var(--muted);padding:20px 0 28px;">Nema grupa.${leagueId !== 'zenska' ? ' Kreiraj prvu grupu ispod.' : ''}</div>`;
+          : `<div style="text-align:center;color:var(--muted);padding:20px 0 28px;">Nema grupa.${AVG_CREATE_FORM_ENABLED && leagueId !== 'zenska' ? ' Kreiraj prvu grupu ispod.' : ''}</div>`;
 
         const assignedNames = new Set(withPlayers.flatMap(g => g.players));
         // Ženska liga je već postavljena - nema forme za novu grupu (AVG lige je imaju).
         // Za novu sezonu Ženske lige vrati formu: makni uvjet leagueId !== 'zenska'.
-        const createFormHtml = leagueId !== 'zenska' ? renderAvgCreateForm(leagueId, groups, assignedNames) : '';
-        container.innerHTML = groupsHtml + createFormHtml;
+        const createFormHtml = AVG_CREATE_FORM_ENABLED && leagueId !== 'zenska' ? renderAvgCreateForm(leagueId, groups, assignedNames) : '';
+        container.innerHTML = groupsHtml + `<div id="league-playoff-${leagueId}" style="margin-top:22px;"></div>` + createFormHtml;
+        renderLeaguePlayoffAdmin(leagueId);
 
       } catch (err) {
         container.innerHTML = `<div style="color:#ffaaaa;padding:20px;">Greška: ${esc(err.message)}</div>`;

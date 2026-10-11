@@ -271,8 +271,12 @@
     .sub-tabs-sm { height: 34px; margin-bottom: 14px; }
     .sub-tabs-sm .sub-tab { font-size: 0.85rem; }
     /* Traka u profilu igrača (Sveukupno / sezone / ligama): ako tabova ima previše za širinu popupa, traka se klizi */
-    .sub-tabs-scroll { overflow-x: auto; overflow-y: hidden; margin-bottom: 18px; }
+    .sub-tabs-scroll { overflow-x: auto; overflow-y: hidden; margin-bottom: 18px; scrollbar-width: none; }
+    .sub-tabs-scroll::-webkit-scrollbar { display: none; }
     .sub-tabs-scroll .sub-tab { flex: 1 0 auto; padding: 0 14px; }
+    /* AVG lige: tabovi su jednake širine dok stanu, a ispod prirodne širine se traka klizi; razmak ispod kao kod ostalih traka */
+    #avg-lige-tabs.sub-tabs-scroll { margin-bottom: 16px; }
+    #avg-lige-tabs .sub-tab { flex: 1 1 0; min-width: max-content; }
     /* Druga razina profila (sezone unutar Sezone / AVG / Ženska liga): niža i prigušenija traka tik ispod glavne */
     .sub-tabs.has-sub { margin-bottom: 8px; }
     .sub-tabs-xs { height: 30px; background: rgba(8,14,28,0.55); box-shadow: none; }
@@ -409,6 +413,25 @@
     }
 
     .bracket-match { position: relative; }
+
+    /* Zadnja kolona: finale je točno na sredini (spojnice polufinala padaju na pola), a utakmica za 3. mjesto ispod njega */
+    .bracket-matches.final-col { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: 1fr auto 1fr; }
+    .final-col > .bracket-final-title { grid-row: 1; align-self: end; }
+    .final-col > .bracket-match { grid-row: 2; }
+    .final-col > .third-wrap { grid-row: 3; align-self: start; }
+
+    /* Utakmica za 3. mjesto prima poražene polufinaliste: ulazna crta je ista kao ostale, a okomita crta polufinala
+       produžena je do njenog stuba (--third-up računa setPairOffsets) */
+    .bracket-match.third-match::after {
+      content: '';
+      position: absolute;
+      bottom: 50%;
+      right: calc(100% + 7px);
+      width: 0;
+      height: var(--third-up, 0px);
+      border-left: 1.5px solid rgba(255,255,255,1);
+      pointer-events: none;
+    }
 
     .bracket-round-title {
       text-align: center; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.5px;
@@ -1244,7 +1267,7 @@
       -->
 
       <div id="tab-avg-lige" class="tab-panel">
-        <div class="sub-tabs" id="avg-lige-tabs" role="group" aria-label="AVG liga">
+        <div class="sub-tabs sub-tabs-scroll" id="avg-lige-tabs" role="group" aria-label="AVG liga">
           <button class="sub-tab active" onclick="switchAvgLigeTab('diamond', this)">💎 Diamond</button>
           <button class="sub-tab" onclick="switchAvgLigeTab('gold', this)">🥇 Gold</button>
           <button class="sub-tab" onclick="switchAvgLigeTab('silver', this)">🥈 Silver</button>
@@ -1359,7 +1382,7 @@
       });
       document.querySelectorAll('#bracket-switch .sub-tab, #avg-lige-tabs .sub-tab').forEach(b => subRo.observe(b));
       // Trake u otvorenim akordeonima grupa nemaju vlastiti observer, pa se crta namješta pri promjeni širine prozora
-      window.addEventListener('resize', () => document.querySelectorAll('.accordion-item.open .sub-tabs, #profile-tabs, #profile-subtabs').forEach(b => positionSubTabsLine(b, false)));
+      window.addEventListener('resize', () => document.querySelectorAll('.accordion-item.open .sub-tabs, #profile-tabs, #profile-subtabs, [id^="league-tabs-"]').forEach(b => positionSubTabsLine(b, false)));
       positionNavIndicator(false);
     })();
 
@@ -1674,6 +1697,7 @@
     // -- AVG LIGE --
     const AVG_LEAGUE_LABELS = { diamond: '💎 Diamond', gold: '🥇 Gold', silver: '🥈 Silver', bronze: '🥉 Bronze', zenska: '👑 Ženska liga' };
     const avgLigeDataCache = {}; // leagueId -> html string (izgrađeno jednom, keširano)
+    const avgLigeStandings = {}; // leagueId -> [standings grupe A, grupe B...] (poredak grupa po id-u; trebaju playoffu)
     let activeAvgLigeTab = 'diamond'; // Ženska liga ima vlastiti glavni tab (ŽENSKA LIGA), ne ide u AVG LIGE
 
     function generateAvgSchedule(players) {
@@ -1739,7 +1763,10 @@
       activeAvgLigeTab = leagueId;
       document.querySelectorAll('#avg-lige-tabs .sub-tab').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      positionSubTabsLine(document.getElementById('avg-lige-tabs'), true);
+      const bar = document.getElementById('avg-lige-tabs');
+      positionSubTabsLine(bar, true);
+      // na uskom ekranu odabrani tab dolazi na sredinu trake (kad se traka ne klizi, scrollTo ne radi ništa)
+      bar.scrollTo({ left: btn.offsetLeft - (bar.clientWidth - btn.offsetWidth) / 2, behavior: 'smooth' });
       window.loadAvgLige(leagueId);
     }
     window.switchAvgLigeTab = switchAvgLigeTab;
@@ -2615,7 +2642,7 @@
     // loadAvgBracket (module blok, jedan dokument s mapom mečeva). Prazno dok
     // taj dokument ne postoji - vraća [].
     function getAvgPlayoffMatchesForPlayer(playerName, seasonId, leagueId) {
-      return collectMatchesFromBracketData((avgBracketDataMap[seasonId]||{})[leagueId], 'Playoff', playerName);
+      return collectMatchesFromBracketData((avgBracketDataMap[seasonId]||{})[leagueId], 'Ždrijeb', playerName);
     }
 
     // "Sveukupno" tab - svi odigrani mečevi igrača iz SVIH liga pod tim imenom:
@@ -2816,7 +2843,7 @@
         ? playoffMatches.map(m => playoffMatchRow(m, idxRef.value++)).join('')
         : '';
       const playoffHtml = (playoffTextHtml || playoffMatchesHtml)
-        ? `<div class="player-matches-title" style="margin-top:16px;">Playoff</div>${playoffTextHtml}${playoffMatchesHtml}`
+        ? `<div class="player-matches-title" style="margin-top:16px;">Ždrijeb</div>${playoffTextHtml}${playoffMatchesHtml}`
         : '';
 
       // Za graf: regularni mečevi (kronološki) + playoff mečevi nakon njih (grupna faza pa ždrijeb),
@@ -3047,16 +3074,30 @@
         }
       });
 
+      // Utakmica za 3. mjesto stoji u koloni finala (ispod finala), pa njen stub ne pada na okomitu crtu polufinala:
+      // izmjeri koliko je ispod sredine donjeg polufinala da se crta produži do nje.
+      const thirds = [];
+      wrap.querySelectorAll('.bracket-match.third-match').forEach(third => {
+        const prev = third.closest('.bracket-round')?.previousElementSibling;
+        const sfs = prev ? prev.querySelectorAll(':scope > .bracket-matches > .bracket-match') : [];
+        const sf = sfs[sfs.length - 1];
+        if (!sf) return;
+        const t = third.getBoundingClientRect(), f = sf.getBoundingClientRect();
+        thirds.push({ third, up: Math.max(0, (t.top + t.height / 2) - (f.top + f.height / 2)) });
+      });
+
       // FAZA 2 - WRITE: sad kad su sva čitanja gotova, upiši sve CSS varijable odjednom.
       pairs.forEach(({ top, bottom, offset }) => {
         top.style.setProperty('--pair-offset', offset + 'px');
         bottom.style.setProperty('--pair-offset', offset + 'px');
       });
+      thirds.forEach(({ third, up }) => third.style.setProperty('--third-up', up + 'px'));
     }
 
     // Pokreni mjerenje tek kad je layout stvarno stabilan: nakon fontova,
     // slika, i dva animacijska framea (da flex/space-around završi).
-    const BRACKET_WRAP_IDS = ['bracket-wrap-upper', 'bracket-wrap-lower', 'archive-bracket-wrap-upper', 'archive-bracket-wrap-lower'];
+    const BRACKET_WRAP_IDS = ['bracket-wrap-upper', 'bracket-wrap-lower', 'archive-bracket-wrap-upper', 'archive-bracket-wrap-lower',
+      'playoff-wrap-diamond', 'playoff-wrap-gold', 'playoff-wrap-silver', 'playoff-wrap-bronze', 'playoff-wrap-zenska'];
 
     function scheduleAllPairOffsets() {
       const run = () => {
@@ -3519,7 +3560,7 @@
       archiveGroupContentBuilders[uid] = () => buildArchiveGroupContentHtml(groupName, uid, standings, schedule, matchesMap);
       archiveGroupContentBuilt[uid] = false;
 
-      return `<div class="accordion-item">
+      return `<div class="accordion-item" data-uid="${uid}">
         <button class="accordion-header" onclick="handleArchiveAccordionClick(this, '${uid}')">
           <div class="accordion-title"><span class="accordion-badge">${escapeHtml(badgeLabel)}</span><span>${escapeHtml(groupName)}</span></div>
           <span class="accordion-icon">▼</span>
@@ -3550,6 +3591,23 @@
       ensureArchiveGroupContentBuilt(uid);
       const item = button.closest('.accordion-item');
       toggleAccordion(item, !item.classList.contains('open'));
+    }
+
+    // AVG lige i Ženska liga: svi akordeoni su po defaultu otvoreni (bez animacije; grupa je u ligi malo).
+    // HTML iz cachea ubacuje se iznova, pa se sadržaj svake grupe uvijek gradi ispočetka (flag "built" bi inače ostao
+    // od prošlog prikaza, a spremnici bi bili prazni).
+    function openAllLeagueAccordions(contentEl) {
+      contentEl.querySelectorAll('.accordion-item[data-uid]').forEach(item => {
+        const uid = item.dataset.uid;
+        archiveGroupContentBuilt[uid] = false;
+        ensureArchiveGroupContentBuilt(uid);
+        const content = item.querySelector('.accordion-content');
+        const icon = item.querySelector('.accordion-icon');
+        item.classList.add('open');
+        content.style.maxHeight = 'none';
+        if (icon) icon.textContent = '▲';
+        positionSubTabsLine(item.querySelector('.sub-tabs'), false);
+      });
     }
 
     // highlightMec - vidi komentar na openKoloPopup (isti obrazac).
@@ -3637,6 +3695,197 @@
       return standings[rank].name;
     }
 
+    // -- PLAYOFF PODLIGE (AVG lige i Ženska liga) --
+    // Iz svake grupe lige ulazi PLAYOFF_PER_GROUP najboljih. Ždrijeb se generira za bilo koji broj grupa i prolaznika:
+    // nositelji idu po rangu pa po grupi (1A, 1B, 2A, 2B...), parovi su standardni (1. protiv zadnjeg...), prvaci grupa
+    // završe na suprotnim polovicama, a parovi iz iste grupe izbjegnuti su u prvom kolu. Kad broj nije potencija dvojke,
+    // najbolji nositelji dobivaju slobodan prolaz. Uvijek postoji i utakmica za 3. mjesto (THIRD_1).
+    // Ista logika je i u index-admin.html - kad se mijenja, mijenjati na oba mjesta.
+    const PLAYOFF_PER_GROUP = 4;
+
+    function makePlayoffLayout(groupCount, perGroup) {
+      const letters = 'ABCDEFGHIJKLMNOP'.slice(0, groupCount).split('');
+      const seeds = [];
+      for (let r = 1; r <= perGroup; r++) letters.forEach(g => seeds.push({ code: r + g, g }));
+      const N = seeds.length;
+      let P = 2; while (P < N) P *= 2;
+      const k = Math.log2(P);
+      // redoslijed nositelja u ždrijebu ([1, P, ...]; susjedni su parovi)
+      let order = [1, 2];
+      while (order.length < P) { const n = order.length * 2; order = order.flatMap(sd => [sd, n + 1 - sd]); }
+      const seedAt = n => (n <= N ? seeds[n - 1] : null);
+      const pairs = [];
+      for (let i = 0; i < P; i += 2) pairs.push([order[i], order[i + 1]]);
+      const real = pr => seedAt(pr[0]) && seedAt(pr[1]);
+      const same = pr => real(pr) && seedAt(pr[0]).g === seedAt(pr[1]).g;
+      // par iz iste grupe: zamijeni slabijeg nositelja s igračem iz drugog pravog meča (nikad u slobodan prolaz)
+      for (let i = 0; i < pairs.length; i++) {
+        if (!same(pairs[i])) continue;
+        let done = false;
+        for (let j = 0; j < pairs.length && !done; j++) {
+          if (j === i || !real(pairs[j])) continue;
+          for (const pos of [0, 1]) {
+            const a = [pairs[i][0], pairs[i][1]], b = [pairs[j][0], pairs[j][1]];
+            const t = a[1]; a[1] = b[pos]; b[pos] = t;
+            if (!same(a) && !same(b)) { pairs[i] = a; pairs[j] = b; done = true; break; }
+          }
+        }
+      }
+      return {
+        N, P, k,
+        ids: ROUND_IDS.slice(-k), labels: ROUND_LABELS.slice(-k),
+        draw: pairs.map(([a, b]) => ({ p1: seedAt(a) ? seedAt(a).code : null, p2: seedAt(b) ? seedAt(b).code : null, bye: !seedAt(a) || !seedAt(b) }))
+      };
+    }
+
+    // Sastavlja stablo: pobjednici se prenose u sljedeće kolo, slobodni prolazi prolaze sami, a utakmica za 3. mjesto
+    // uzima poražene polufinaliste. saved = spremljeni mečevi (matchId -> podaci), resolve(kod) vraća ime nositelja
+    // (ili null dok nije poznat).
+    function computePlayoffTree(layout, saved, resolve) {
+      const winnerOf = m => (m && m.winner ? (m.winner === 'player1' ? m.p1 : m.p2) : null);
+      const loserOf = m => (m && m.winner && m.p1 && m.p2 ? (m.winner === 'player1' ? m.p2 : m.p1) : null);
+      const rounds = [];
+      layout.ids.forEach((rid, r) => {
+        const prev = rounds[r - 1];
+        const count = r === 0 ? layout.draw.length : prev.length / 2;
+        const cur = [];
+        for (let i = 0; i < count; i++) {
+          const id = `${rid}_${i + 1}`;
+          const sv = saved[id] || {};
+          let p1, p2, code1 = null, code2 = null, bye = false;
+          if (r === 0) {
+            const d = layout.draw[i];
+            code1 = d.p1; code2 = d.p2; bye = !!d.bye;
+            p1 = sv.player1 || (d.p1 ? resolve(d.p1) : null);
+            p2 = sv.player2 || (d.p2 ? resolve(d.p2) : null);
+          } else {
+            p1 = sv.player1 || winnerOf(prev[i * 2]);
+            p2 = sv.player2 || winnerOf(prev[i * 2 + 1]);
+          }
+          let winner = sv.winner || null;
+          if (bye) winner = p1 ? 'player1' : (p2 ? 'player2' : null);
+          cur.push({ id, p1, p2, code1, code2, bye, winner, score: sv.score || '', saved: sv, label: `${layout.labels[r]} - Meč ${i + 1}` });
+        }
+        rounds.push(cur);
+      });
+      let third = null;
+      if (rounds.length >= 2) {
+        const sf = rounds[rounds.length - 2], sv = saved.THIRD_1 || {};
+        third = {
+          id: 'THIRD_1', p1: sv.player1 || loserOf(sf[0]), p2: sv.player2 || loserOf(sf[1]),
+          code1: null, code2: null, bye: false, winner: sv.winner || null, score: sv.score || '', saved: sv, label: 'Utakmica za 3. mjesto'
+        };
+      }
+      return { rounds, third };
+    }
+
+    const leaguePlayoffMatchData = {}; // leagueId -> { matchId: podaci meča } (za popup)
+
+    // Stablo playoffa jedne lige. Imena su "TBD" i klik je isključen dok u config/active-season nije
+    // bracketNamesVisible: true (isti prekidač kao gornji/donji ždrijeb, vidi liveBracketNamesHidden).
+    function leaguePlayoffHtml(leagueId) {
+      const groupsStandings = avgLigeStandings[leagueId] || [];
+      const sizes = groupsStandings.map(st => st.length).filter(n => n > 0);
+      const perGroup = sizes.length ? Math.min(PLAYOFF_PER_GROUP, ...sizes) : 0;
+      if (!groupsStandings.length || perGroup * groupsStandings.length < 2) {
+        return '<div class="empty-state">Ždrijeb još nije dostupan.</div>';
+      }
+      const layout = makePlayoffLayout(groupsStandings.length, perGroup);
+      const letters = 'ABCDEFGHIJKLMNOP';
+      const gsm = {};
+      groupsStandings.forEach((st, i) => { gsm[letters[i]] = st; });
+      const saved = (avgBracketDataMap[window.ACTIVE_SEASON_ID] || {})[leagueId] || {};
+      const hideNames = liveBracketNamesHidden();
+      const tree = computePlayoffTree(layout, saved, code => resolveName(code, gsm));
+      const store = leaguePlayoffMatchData[leagueId] = {};
+
+      const matchHtml = (m, pairClass) => {
+        store[m.id] = { ...m.saved, player1: m.p1, player2: m.p2, roundLabel: m.label };
+        const parts = m.score ? m.score.split('-') : [];
+        const n1 = hideNames ? null : m.p1;
+        const n2 = hideNames ? null : m.p2;
+        const w = m.winner;
+        const clickAttr = (!hideNames && !m.bye) ? `onclick="openLeaguePlayoffMatchPopup('${leagueId}','${m.id}')"` : 'style="cursor:default;"';
+        const row1 = `<div class="bracket-player ${w==='player1'?'winner':w==='player2'?'loser':(!n1?'tbd':'')}">
+            <span class="bracket-player-name">${escapeHtml(n1 || 'TBD')}</span>
+            ${m.score ? `<span class="bracket-player-score">${escapeHtml(parts[0] || '')}</span>` : ''}
+          </div>`;
+        const row2 = (m.bye && !m.p2)
+          ? `<div class="bracket-player tbd"><span class="bracket-player-name">Slobodan prolaz</span></div>`
+          : `<div class="bracket-player ${w==='player2'?'winner':w==='player1'?'loser':(!n2?'tbd':'')}">
+            <span class="bracket-player-name">${escapeHtml(n2 || 'TBD')}</span>
+            ${m.score ? `<span class="bracket-player-score">${escapeHtml(parts[1] || '')}</span>` : ''}
+          </div>`;
+        return `<div class="bracket-match ${pairClass || ''}" ${clickAttr}>${row1}${row2}</div>`;
+      };
+
+      const last = tree.rounds.length - 1;
+      const roundsHtml = tree.rounds.map((matches, ri) => `
+        <div class="bracket-round">
+          <div class="bracket-round-title">${layout.labels[ri]}</div>
+          <div class="bracket-matches${ri === last ? ' final-col' : ''}">
+            ${ri === last ? `<div class="bracket-final-title">🏆 FINALE</div>` : ''}
+            ${matches.map((m, i) => matchHtml(m, i % 2 === 0 ? 'pair-top' : 'pair-bottom')).join('')}
+            ${ri === last && tree.third ? `
+<div class="third-wrap">
+              <div class="bracket-third-title">🥉 UTAKMICA ZA 3. MJESTO</div>
+              ${matchHtml(tree.third, 'third-match')}
+</div>
+            ` : ''}
+          </div>
+        </div>`).join('');
+
+      return `
+        <div class="bracket-wrap" id="playoff-wrap-${leagueId}">
+          <div class="bracket-rounds">${roundsHtml}</div>
+        </div>
+        <div style="text-align:center;padding:14px 12px;font-size:0.82rem;font-weight:600;color:rgba(255,255,255,0.5);">
+          Adriatic steel league ™ ®
+        </div>`;
+    }
+
+    function openLeaguePlayoffMatchPopup(leagueId, matchId) {
+      const d = leaguePlayoffMatchData[leagueId]?.[matchId];
+      if (!d) return;
+      const body = renderMatchPopupCard({
+        titleLabel: d.roundLabel || '',
+        legs: getPlayoffLegs(matchId, true),
+        matchTimestamp: d.timestamp || null,
+        p1: d.player1 || 'TBD', p2: d.player2 || 'TBD', d,
+        seasonId: `avg:${window.ACTIVE_SEASON_ID}:${leagueId}`
+      });
+      showPopup('', body, '');
+    }
+
+    // Panel jedne lige: traka Grupe | Ždrijeb, pa grupe (akordeoni) i stablo. Bez grupa nema trake.
+    function leaguePanelHtml(leagueId) {
+      const groupsHtml = avgLigeDataCache[leagueId] || '';
+      if (!(avgLigeStandings[leagueId] || []).length) return groupsHtml;
+      return `
+        <div class="sub-tabs sub-tabs-sm" id="league-tabs-${leagueId}" role="group" aria-label="Prikaz lige">
+          <button type="button" class="sub-tab active" onclick="switchLeagueView('${leagueId}','grupe',this)">Grupe</button>
+          <button type="button" class="sub-tab" onclick="switchLeagueView('${leagueId}','playoff',this)">Ždrijeb</button>
+          <span class="sub-tabs-line" aria-hidden="true"></span>
+        </div>
+        <div id="league-${leagueId}-grupe" style="animation:fadeInUp 0.25s ease both;">${groupsHtml}</div>
+        <div id="league-${leagueId}-playoff" style="display:none;">${leaguePlayoffHtml(leagueId)}</div>`;
+    }
+
+    function switchLeagueView(leagueId, view, btn) {
+      const bar = btn.closest('.sub-tabs');
+      bar.querySelectorAll('.sub-tab').forEach(b => b.classList.toggle('active', b === btn));
+      positionSubTabsLine(bar, true);
+      const grupe = document.getElementById(`league-${leagueId}-grupe`);
+      const playoff = document.getElementById(`league-${leagueId}-playoff`);
+      if (!grupe || !playoff) return;
+      grupe.style.display = view === 'grupe' ? '' : 'none';
+      playoff.style.display = view === 'playoff' ? '' : 'none';
+      if (view === 'playoff') {
+        window.__observeBracketWrap(`playoff-wrap-${leagueId}`);
+        requestAnimationFrame(() => scheduleAllPairOffsets());
+      }
+    }
+
     // Gradi HTML gornjeg žrijeba i puni proslijeđenu matchDataStore mapu (umjesto
     // da uvijek piše u globalnu bracketMatchData) - tako isti builder služi i za
     // živu sezonu i za arhivske sezone (svaka sa svojom namespace-anom mapom),
@@ -3722,12 +3971,14 @@
       const roundsHtml = rounds.map((matches, ri) => `
         <div class="bracket-round">
           <div class="bracket-round-title">${ROUND_LABELS[ri]}</div>
-          <div class="bracket-matches">
+          <div class="bracket-matches${ri === rounds.length - 1 ? ' final-col' : ''}">
             ${ri === rounds.length - 1 ? `<div class="bracket-final-title">🏆 FINALE</div>` : ''}
             ${matches.map((m,i) => matchHtml(m, i%2===0?'pair-top':'pair-bottom')).join('')}
             ${ri === rounds.length - 1 ? `
+<div class="third-wrap">
               <div class="bracket-third-title">🥉 UTAKMICA ZA 3. MJESTO</div>
-              ${matchHtml({ id: thirdId, player1: thirdMatch.player1, player2: thirdMatch.player2 })}
+              ${matchHtml({ id: thirdId, player1: thirdMatch.player1, player2: thirdMatch.player2 }, 'third-match')}
+</div>
             ` : ''}
           </div>
         </div>`).join('');
@@ -3858,12 +4109,14 @@
       const roundsHtml = rounds.map((matches, ri) => `
         <div class="bracket-round">
           <div class="bracket-round-title">${layout.labels[ri]}</div>
-          <div class="bracket-matches">
+          <div class="bracket-matches${ri === rounds.length - 1 ? ' final-col' : ''}">
             ${ri === rounds.length - 1 ? `<div class="bracket-final-title">🏆 DONJE FINALE</div>` : ''}
             ${matches.map((m,i) => matchHtml(m, i%2===0?'pair-top':'pair-bottom')).join('')}
             ${ri === rounds.length - 1 ? `
+<div class="third-wrap">
               <div class="bracket-third-title">🥉 DONJA UTAKMICA ZA 3. MJESTO</div>
-              ${matchHtml({id: thirdId, player1: thirdMatch.player1, player2: thirdMatch.player2})}
+              ${matchHtml({id: thirdId, player1: thirdMatch.player1, player2: thirdMatch.player2}, 'third-match')}
+</div>
             ` : ''}
           </div>
         </div>`).join('');
@@ -4477,6 +4730,7 @@
         return { html: createArchiveAccordion(group.name, uid, String(i+1), standings, visibleSchedule, matchesMap), standings };
       }));
 
+      avgLigeStandings[leagueId] = groupsData.map(g => g.standings);
       avgLigeDataCache[leagueId] = groupsData.length
         ? groupsData.map(g => g.html).join('')
         : '<div class="empty-state">Nema grupa za ovu ligu.</div>';
@@ -4491,14 +4745,28 @@
     async function loadAvgLige(leagueId) {
       // Ženska liga ima vlastiti glavni tab i kontejner, ostale lige dijele AVG LIGE tab.
       const contentEl = document.getElementById(leagueId === 'zenska' ? 'zenska-liga-content' : 'avg-lige-content');
-      if (avgLigeDataCache[leagueId]) { contentEl.innerHTML = avgLigeDataCache[leagueId]; return; }
-      contentEl.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje podataka...</span></div>`;
-      try {
-        await fetchAvgLeagueData(leagueId);
-        contentEl.innerHTML = avgLigeDataCache[leagueId];
-      } catch(err) {
-        contentEl.innerHTML = '<div class="error-state">Ne mogu dohvatiti podatke. ' + escapeHtml(err?.message||err) + '</div>';
+      if (!avgLigeDataCache[leagueId]) {
+        contentEl.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje podataka...</span></div>`;
+        try {
+          await fetchAvgLeagueData(leagueId);
+        } catch(err) {
+          contentEl.innerHTML = '<div class="error-state">Ne mogu dohvatiti podatke. ' + escapeHtml(err?.message||err) + '</div>';
+          return;
+        }
       }
+      contentEl.innerHTML = leaguePanelHtml(leagueId);
+      openAllLeagueAccordions(contentEl);
+      positionSubTabsLine(document.getElementById(`league-tabs-${leagueId}`), false);
+      window.__observeBracketWrap(`playoff-wrap-${leagueId}`);
+      // Playoff je jedan dokument koji se mijenja tijekom playoffa: svaki put se dohvati svježe, a osvježi se samo
+      // njegov dio panela (bez treperenja grupa).
+      loadAvgBracket(leagueId).then(() => {
+        const el = document.getElementById(`league-${leagueId}-playoff`);
+        if (!el) return;
+        el.innerHTML = leaguePlayoffHtml(leagueId);
+        window.__observeBracketWrap(`playoff-wrap-${leagueId}`);
+        requestAnimationFrame(() => scheduleAllPairOffsets());
+      });
     }
     window.loadAvgLige = loadAvgLige;
 
