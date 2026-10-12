@@ -1653,10 +1653,18 @@
       return withoutIndex.startsWith('L') ? withoutIndex.slice(1) : withoutIndex;
     }
 
-    function getPlayoffLegs(matchId, isAvg = false) {
+    // Broj legova ili { sets: N } kad AVG liga (ne Ženska, 'zenska') u rounds.{kolo}.sets ima broj setova.
+    function getPlayoffLegs(matchId, isAvg = false, leagueId = null) {
       const round = roundKeyFromMatchId(matchId);
       const rounds = isAvg ? bracketConfig?.avgPlayoff?.rounds : bracketConfig?.playoff?.rounds;
-      return rounds?.[round]?.legs;
+      const r = rounds?.[round];
+      return isAvg && leagueId !== 'zenska' && r?.sets ? { sets: r.sets } : r?.legs;
+    }
+
+    // v: broj legova ili { sets } -> "Best of 10 legs" / "Best of 3 sets"; prazno kad nema podatka (isto kao index.html)
+    function bestOfLabel(v) {
+      if (!v) return '';
+      return v.sets ? `Best of ${v.sets} sets` : `Best of ${v} legs`;
     }
 
 
@@ -2326,18 +2334,27 @@
       }
     }
 
-    function computeStandingsSimple(players, matchesMap) {
+    // withSets: AVG lige (osim Ženske) - meč odlučuju setovi (polje sets), a score je broj legova; poredak je bodovi,
+    // setovi, legovi, AVG. Stari AVG mečevi bez sets imaju setove u score. Ista logika kao computeStandings u index.html
+    // i group-detail.html (poredak određuje i prolaznike u playoff podlige).
+    function computeStandingsSimple(players, matchesMap, withSets = false) {
       const stats = {};
-      players.forEach(p => { stats[p] = { pts: 0, legs: 0, avgSum: 0, avgCount: 0, total: 0 }; });
+      players.forEach(p => { stats[p] = { pts: 0, sets: 0, legs: 0, avgSum: 0, avgCount: 0, total: 0 }; });
       Object.values(matchesMap).forEach(m => {
-        if (!m.score) return;
-        const parts = m.score.split('-'); if (parts.length !== 2) return;
+        const res = withSets ? (m.sets || m.score) : m.score;
+        if (!res) return;
+        const parts = res.split('-'); if (parts.length !== 2) return;
         const s1 = parseInt(parts[0]), s2 = parseInt(parts[1]); if (isNaN(s1) || isNaN(s2)) return;
         const st1 = stats[m.player1], st2 = stats[m.player2]; if (!st1 || !st2) return;
-        st1.legs += (s1 - s2); st2.legs += (s2 - s1);
-        if (m.score !== '0-0') { st1.total++; st2.total++; }
-        if (m.score === '0-0') {
-        } else if (m.score === '5-5') { st1.pts++; st2.pts++; }
+        if (withSets) {
+          st1.sets += (s1 - s2); st2.sets += (s2 - s1);
+          const lp = m.sets && m.score ? m.score.split('-') : [];
+          const l1 = parseInt(lp[0]), l2 = parseInt(lp[1]);
+          if (lp.length === 2 && !isNaN(l1) && !isNaN(l2)) { st1.legs += (l1 - l2); st2.legs += (l2 - l1); }
+        } else { st1.legs += (s1 - s2); st2.legs += (s2 - s1); }
+        if (res !== '0-0') { st1.total++; st2.total++; }
+        if (res === '0-0') {
+        } else if (res === '5-5') { st1.pts++; st2.pts++; }
         else if (s1 > s2) { st1.pts += 2; } else { st2.pts += 2; }
         // 0 se tretira kao "nema podatka" (isto kao null) - stvaran AVG od
         // točno 0.00 nije realan, pa bi ušao u prosjek samo greškom.
@@ -2345,8 +2362,8 @@
         if (m.average2) { st2.avgSum += parseFloat(m.average2) || 0; st2.avgCount++; }
       });
       return players
-        .map(name => { const s = stats[name]; return { name, pts: s.pts, legs: s.legs, total: s.total, avg: s.avgCount > 0 ? s.avgSum / s.avgCount : 0 }; })
-        .sort((a, b) => b.pts - a.pts || b.legs - a.legs || b.avg - a.avg);
+        .map(name => { const s = stats[name]; return { name, pts: s.pts, sets: s.sets, legs: s.legs, total: s.total, avg: s.avgCount > 0 ? s.avgSum / s.avgCount : 0 }; })
+        .sort((a, b) => b.pts - a.pts || (withSets ? b.sets - a.sets : 0) || b.legs - a.legs || b.avg - a.avg);
     }
 
     function resolveName(code, gsm) {
@@ -2688,7 +2705,7 @@
 
       const legs = getPlayoffLegs(matchId, false);
       const timestampLabel = saved.timestamp ? formatMatchTimestamp(saved.timestamp) : '';
-      const legsLabel = legs ? `<div class="bedit-legs-label">Best of ${legs} legs${timestampLabel ? `<div style="font-size:0.65rem;color:var(--muted);margin-top:3px;text-transform:none;letter-spacing:0;">${esc(timestampLabel)}</div>` : ''}</div>` : '';
+      const legsLabel = legs ? `<div class="bedit-legs-label">${bestOfLabel(legs)}${timestampLabel ? `<div style="font-size:0.65rem;color:var(--muted);margin-top:3px;text-transform:none;letter-spacing:0;">${esc(timestampLabel)}</div>` : ''}</div>` : '';
 
       document.getElementById('bedit-popup-content').innerHTML = `
         <div class="bedit-header">
@@ -2833,7 +2850,7 @@
 
       const legs = getPlayoffLegs(matchId, false);
       const timestampLabel = saved.timestamp ? formatMatchTimestamp(saved.timestamp) : '';
-      const legsLabel = legs ? `<div class="bedit-legs-label">Best of ${legs} legs${timestampLabel ? `<div style="font-size:0.65rem;color:var(--muted);margin-top:3px;text-transform:none;letter-spacing:0;">${esc(timestampLabel)}</div>` : ''}</div>` : '';
+      const legsLabel = legs ? `<div class="bedit-legs-label">${bestOfLabel(legs)}${timestampLabel ? `<div style="font-size:0.65rem;color:var(--muted);margin-top:3px;text-transform:none;letter-spacing:0;">${esc(timestampLabel)}</div>` : ''}</div>` : '';
 
       document.getElementById('bedit-popup-content').innerHTML = `
         <div class="bedit-header">
@@ -3082,9 +3099,9 @@
       if (!d || d.bye) return;
       const p1 = d.player1 || 'TBD';
       const p2 = d.player2 || 'TBD';
-      const legs = getPlayoffLegs(matchId, true);
+      const legs = getPlayoffLegs(matchId, true, leagueId);
       const timestampLabel = d.timestamp ? formatMatchTimestamp(d.timestamp) : '';
-      const legsLabel = legs ? `<div class="bedit-legs-label">Best of ${legs} legs${timestampLabel ? `<div style="font-size:0.65rem;color:var(--muted);margin-top:3px;text-transform:none;letter-spacing:0;">${esc(timestampLabel)}</div>` : ''}</div>` : '';
+      const legsLabel = legs ? `<div class="bedit-legs-label">${bestOfLabel(legs)}${timestampLabel ? `<div style="font-size:0.65rem;color:var(--muted);margin-top:3px;text-transform:none;letter-spacing:0;">${esc(timestampLabel)}</div>` : ''}</div>` : '';
       const canSave = currentIsAdmin && d.player1 && d.player2;
 
       document.getElementById('bedit-popup-content').innerHTML = `
@@ -3230,7 +3247,7 @@
         }));
 
         // Ždrijeb: tablice grupa (po id-u grupe: A, B...) i parovi iz generatora
-        const standingsList = withPlayers.map(g => computeStandingsSimple(g.players, g.matchesMap));
+        const standingsList = withPlayers.map(g => computeStandingsSimple(g.players, g.matchesMap, leagueId !== 'zenska'));
         const sizes = standingsList.map(st => st.length).filter(n => n > 0);
         const perGroup = sizes.length ? Math.min(PLAYOFF_PER_GROUP, ...sizes) : 0;
         if (withPlayers.length && perGroup * withPlayers.length >= 2) {

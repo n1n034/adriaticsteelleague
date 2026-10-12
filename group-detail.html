@@ -619,6 +619,17 @@
       margin-bottom: 14px;
     }
 
+    /* natpis iznad polja za setove / legove (AVG lige) */
+    .score-caption {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: 6px;
+    }
+
     .stats-grid-3col {
       display: flex;
       flex-direction: column;
@@ -1065,9 +1076,10 @@
     let schedule = []; // [{kolo, matches:[{mec,p1,p2}], bye}]
     let nicknameByName = {}; // ime igrača -> nadimak (iz korijenske players/{slug} kolekcije, vidi loadGroup)
 
-    // -- BRACKET CONFIG (Best of X legs) --
+    // -- BRACKET CONFIG (Best of X legs / sets) --
     // Jedan globalni dokument config/bracket-config. Za grupnu fazu (sezonske
-    // grupe) koristi se polje seasonLegs, za AVG lige polje avgLegs.
+    // grupe) koristi se polje seasonLegs, za AVG lige avgSets (Best of N sets),
+    // a Ženska liga i dalje avgLegs.
     // Ručno se uređuje u Firestore konzoli - ako polje fali, ostaje undefined
     // i prikaz se jednostavno ne renderira (bez fallback vrijednosti).
     let bracketConfig = null;
@@ -1082,8 +1094,16 @@
       }
     }
 
+    // Broj legova ili { sets: N } (AVG lige osim Ženske, config avgSets); tekst gradi bestOfLabel.
     function getGroupPhaseLegs() {
-      return leagueParam ? bracketConfig?.avgLegs : bracketConfig?.seasonLegs;
+      if (!leagueParam) return bracketConfig?.seasonLegs;
+      return leagueParam !== 'zenska' && bracketConfig?.avgSets ? { sets: bracketConfig.avgSets } : bracketConfig?.avgLegs;
+    }
+
+    // v: broj legova ili { sets } -> "Best of 10 legs" / "Best of 3 sets"; prazno kad nema podatka (isto kao index.html)
+    function bestOfLabel(v) {
+      if (!v) return '';
+      return v.sets ? `Best of ${v.sets} sets` : `Best of ${v} legs`;
     }
 
     // -- AUTH --
@@ -1306,26 +1326,41 @@
     }
 
     // -- STANDINGS --
+    // AVG lige (osim Ženske) se odlučuju setovima: polje sets ("2-1"), a score je tada broj legova. Poredak je
+    // bodovi, setovi, legovi, AVG (isto kao index.html computeStandings). Stari AVG mečevi bez sets imaju setove u score.
+    function leagueUsesSets() {
+      return !!leagueParam && leagueParam !== 'zenska';
+    }
+
     function computeStandings() {
+      const withSets = leagueUsesSets();
       const stats = {};
       players.forEach(p => {
-        stats[p] = { win: 0, draw: 0, lost: 0, total: 0, legs: 0, pts: 0, avgSum: 0, avgCount: 0, f9Sum: 0, f9Count: 0, bl: 0, bco: 0, x180: 0, form: [] };
+        stats[p] = { win: 0, draw: 0, lost: 0, total: 0, sets: 0, legs: 0, pts: 0, avgSum: 0, avgCount: 0, f9Sum: 0, f9Count: 0, bl: 0, bco: 0, x180: 0, form: [] };
       });
 
       schedule.forEach(({ kolo, matches }) => {
         matches.forEach(({ mec, player1, player2 }) => {
           const m = matchesMap[`${kolo}_${mec}`];
-          if (!m || !m.score) return;
-          const parts = m.score.split('-');
+          const res = m && (withSets ? (m.sets || m.score) : m.score); // ishod meča: setovi za AVG lige, inače score
+          if (!res) return;
+          const parts = res.split('-');
           if (parts.length !== 2) return;
           const s1 = parseInt(parts[0]), s2 = parseInt(parts[1]);
           if (isNaN(s1) || isNaN(s2)) return;
           const st1 = stats[player1], st2 = stats[player2];
           if (!st1 || !st2) return;
           st1.total++; st2.total++;
-          st1.legs += (s1 - s2); st2.legs += (s2 - s1);
-          if (m.score === '0-0') {
-          } else if (m.score === '5-5') {
+          if (withSets) {
+            st1.sets += (s1 - s2); st2.sets += (s2 - s1);
+            const lp = m.sets && m.score ? m.score.split('-') : [];
+            const l1 = parseInt(lp[0]), l2 = parseInt(lp[1]);
+            if (lp.length === 2 && !isNaN(l1) && !isNaN(l2)) { st1.legs += (l1 - l2); st2.legs += (l2 - l1); }
+          } else {
+            st1.legs += (s1 - s2); st2.legs += (s2 - s1);
+          }
+          if (res === '0-0') {
+          } else if (res === '5-5') {
             st1.draw++; st2.draw++;
             st1.pts++; st2.pts++;
             st1.form.push('D'); st2.form.push('D');
@@ -1359,7 +1394,7 @@
         .map(([name, s]) => ({
           name,
           win: s.win, draw: s.draw, lost: s.lost, total: s.total,
-          legs: s.legs, pts: s.pts,
+          sets: withSets ? s.sets : undefined, legs: s.legs, pts: s.pts,
           avg: s.avgCount > 0 ? (s.avgSum / s.avgCount).toFixed(2) : '--',
           f9: s.f9Count > 0 ? (s.f9Sum / s.f9Count).toFixed(2) : '--',
           bl: s.bl || '--',
@@ -1367,8 +1402,8 @@
           x180: s.x180,
           form: s.form.slice(-5)
         }))
-        // isti poredak kao na index.html (bodovi, legovi, pa AVG)
-        .sort((a, b) => b.pts - a.pts || b.legs - a.legs || (a.avg === '--' ? 1 : b.avg === '--' ? -1 : parseFloat(b.avg) - parseFloat(a.avg)));
+        // isti poredak kao na index.html (bodovi, [setovi za AVG lige], legovi, pa AVG)
+        .sort((a, b) => b.pts - a.pts || (withSets ? b.sets - a.sets : 0) || b.legs - a.legs || (a.avg === '--' ? 1 : b.avg === '--' ? -1 : parseFloat(b.avg) - parseFloat(a.avg)));
     }
 
     // Zadnjih 5 mečeva kao W/D/L značke (isto kao formHtml na index.html)
@@ -1388,6 +1423,7 @@
 
     function renderStandings() {
       const standings = computeStandings();
+      const showSets = leagueUsesSets(); // stupac Sets (ispred Legs) samo za AVG lige
       const container = document.getElementById('standings-container');
 
       container.innerHTML = `
@@ -1398,7 +1434,7 @@
           </div>
           <div class="table-wrap">
             <table>
-              <thead><tr><th>#</th><th style="text-align:left;">Igrač</th><th>Forma</th><th>W</th><th>D</th><th>L</th><th>Tot</th><th>Legs</th><th>PTS</th><th>AVG</th><th>First 9</th><th>Best Leg</th><th>Best CO</th><th>180</th></tr></thead>
+              <thead><tr><th>#</th><th style="text-align:left;">Igrač</th><th>Forma</th><th>W</th><th>D</th><th>L</th><th>Tot</th>${showSets ? '<th>Sets</th>' : ''}<th>Legs</th><th>PTS</th><th>AVG</th><th>First 9</th><th>Best Leg</th><th>Best CO</th><th>180</th></tr></thead>
               <tbody>${standings.map((p, i) => `<tr>
                 <td>${i + 1}</td>
                 <td style="text-align:left;font-weight:700;cursor:pointer;" onclick="openPlayerProfileTab('${esc(p.name).replace(/'/g,"\\'")}')">${esc(p.name)}</td>
@@ -1407,6 +1443,7 @@
                 <td style="color:#f39c12;font-weight:700;">${p.draw}</td>
                 <td style="color:#e74c3c;font-weight:700;">${p.lost}</td>
                 <td>${p.total}</td>
+                ${showSets ? `<td style="color:${p.sets > 0 ? '#2ecc71' : p.sets < 0 ? '#e74c3c' : 'inherit'}">${p.sets > 0 ? '+' + p.sets : p.sets}</td>` : ''}
                 <td style="color:${p.legs > 0 ? '#2ecc71' : p.legs < 0 ? '#e74c3c' : 'inherit'}">${p.legs > 0 ? '+' + p.legs : p.legs}</td>
                 <td style="font-weight:800;color:#7eb8ff;">${p.pts}</td>
                 <td>${p.avg}</td><td>${p.f9}</td><td>${p.bl}</td><td>${p.bco}</td><td>${p.x180}</td>
@@ -1454,8 +1491,13 @@
     function renderMatchCard(kolo, { mec, player1, player2 }) {
       const key = `${kolo}_${mec}`;
       const saved = matchesMap[key] || {};
-      const score = saved.score || '';
+      // AVG lige: glavni rezultat su setovi (sets), a score su legovi. Stari mečevi bez sets imaju setove u score,
+      // pa se oni prikazuju u poljima za setove, a legovi ostaju prazni dok se ne upišu.
+      const usesSets = leagueUsesSets();
+      const score = usesSets ? (saved.sets || saved.score || '') : (saved.score || '');
       const hasScore = !!score;
+      const setsParts = usesSets && score ? score.split('-') : ['', ''];
+      const legParts = saved.score && (!usesSets || saved.sets) ? saved.score.split('-') : ['', ''];
 
       const scoreDisplay = hasScore
         ? `<span class="score-display">${esc(score)}</span>`
@@ -1464,7 +1506,7 @@
       const disabled = canEditGroup ? '' : 'disabled';
 
       const legs = getGroupPhaseLegs();
-      const legsLabel = legs ? `<div class="best-of-label">Best of ${legs} legs</div>` : '';
+      const legsLabel = legs ? `<div class="best-of-label">${bestOfLabel(legs)}</div>` : '';
 
       return `
         <div class="match-card ${hasScore ? 'has-score' : ''}" id="match-${kolo}-${mec}">
@@ -1485,10 +1527,18 @@
           </div>
  
           <div class="match-stats ${hasScore ? 'visible' : ''}" id="stats-${kolo}-${mec}">
+            ${usesSets ? `
+            <div class="score-caption">Setovi</div>
             <div class="stats-score-row">
-              <input class="score-input" type="number" min="0" max="9" id="s1-${kolo}-${mec}" value="${saved.score ? saved.score.split('-')[0] : ''}" ${disabled} placeholder="0" onfocus="this.select()">
+              <input class="score-input" type="number" min="0" max="9" id="ss1-${kolo}-${mec}" value="${esc(setsParts[0])}" ${disabled} placeholder="0" onfocus="this.select()">
               <span class="score-sep">:</span>
-              <input class="score-input" type="number" min="0" max="9" id="s2-${kolo}-${mec}" value="${saved.score ? saved.score.split('-')[1] : ''}" ${disabled} placeholder="0" onfocus="this.select()">
+              <input class="score-input" type="number" min="0" max="9" id="ss2-${kolo}-${mec}" value="${esc(setsParts[1])}" ${disabled} placeholder="0" onfocus="this.select()">
+            </div>
+            <div class="score-caption">Legovi</div>` : ''}
+            <div class="stats-score-row">
+              <input class="score-input" type="number" min="0" max="9" id="s1-${kolo}-${mec}" value="${esc(legParts[0])}" ${disabled} placeholder="0" onfocus="this.select()">
+              <span class="score-sep">:</span>
+              <input class="score-input" type="number" min="0" max="9" id="s2-${kolo}-${mec}" value="${esc(legParts[1])}" ${disabled} placeholder="0" onfocus="this.select()">
             </div>
 
             <div class="stats-grid-3col">
@@ -1577,16 +1627,37 @@
       const btn = document.getElementById(`save-${kolo}-${mec}`);
       const s1 = document.getElementById(`s1-${kolo}-${mec}`)?.value?.trim();
       const s2 = document.getElementById(`s2-${kolo}-${mec}`)?.value?.trim();
+      const usesSets = leagueUsesSets();
 
       if (!s1 && !s2) {
-        showToast('Unesite rezultat!', 'error');
+        showToast(usesSets ? 'Unesite legove!' : 'Unesite rezultat!', 'error');
         return;
       }
 
       const score = s1 && s2 ? `${s1}-${s2}` : '';
 
+      // AVG lige: setovi odlučuju meč, pa su obavezni (oba polja). Pobjednik mora imati točno ceil(avgSets / 2)
+      // setova, a gubitnik manje (Best of 3 -> 2-0 ili 2-1); bez avgSets u konfiguraciji samo se traži pobjednik.
+      let sets = '';
+      if (usesSets) {
+        if (!score) { showToast('Unesite legove oba igrača!', 'error'); return; }
+        const t1 = document.getElementById(`ss1-${kolo}-${mec}`)?.value?.trim();
+        const t2 = document.getElementById(`ss2-${kolo}-${mec}`)?.value?.trim();
+        if (!t1 || !t2) { showToast('Unesite setove (npr. 2-1)!', 'error'); return; }
+        const a = parseInt(t1), b = parseInt(t2);
+        const need = bracketConfig?.avgSets ? Math.ceil(bracketConfig.avgSets / 2) : null;
+        const valid = !isNaN(a) && !isNaN(b) && a >= 0 && b >= 0 &&
+          (need ? Math.max(a, b) === need && Math.min(a, b) < need : a !== b);
+        if (!valid) {
+          showToast(need ? `Setovi: pobjednik mora imati ${need} seta (npr. ${need}-0 ili ${need}-${need - 1})!` : 'Setovi ne mogu biti neriješeni!', 'error');
+          return;
+        }
+        sets = `${a}-${b}`;
+      }
+
       const data = {
         kolo, mec, player1, player2, score,
+        ...(usesSets ? { sets } : {}),
         average1: parseFloatClampedOrNull(document.getElementById(`avg1-${kolo}-${mec}`)?.value),
         average2: parseFloatClampedOrNull(document.getElementById(`avg2-${kolo}-${mec}`)?.value),
         first9_1: parseFloatClampedOrNull(document.getElementById(`f9_1-${kolo}-${mec}`)?.value),
@@ -1624,7 +1695,7 @@
         // Update score display
         const card = document.getElementById(`match-${kolo}-${mec}`);
         const scoreEl = card.querySelector('.score-display');
-        if (scoreEl) { scoreEl.textContent = score; scoreEl.classList.remove('empty'); }
+        if (scoreEl) { scoreEl.textContent = usesSets ? sets : score; scoreEl.classList.remove('empty'); }
         card.classList.add('has-score');
 
         // Refresh standings
@@ -1671,7 +1742,7 @@
         card.classList.remove('has-score');
 
         // Reset inputs
-        [`s1-${kolo}-${mec}`, `s2-${kolo}-${mec}`, `avg1-${kolo}-${mec}`, `avg2-${kolo}-${mec}`,
+        [`s1-${kolo}-${mec}`, `s2-${kolo}-${mec}`, `ss1-${kolo}-${mec}`, `ss2-${kolo}-${mec}`, `avg1-${kolo}-${mec}`, `avg2-${kolo}-${mec}`,
         `f9_1-${kolo}-${mec}`, `f9_2-${kolo}-${mec}`, `bl1-${kolo}-${mec}`, `bl2-${kolo}-${mec}`,
         `bco1-${kolo}-${mec}`, `bco2-${kolo}-${mec}`, `180_1-${kolo}-${mec}`, `180_2-${kolo}-${mec}`,
         `corate1-${kolo}-${mec}`, `corate2-${kolo}-${mec}`, `coattempts1-${kolo}-${mec}`, `coattempts2-${kolo}-${mec}`

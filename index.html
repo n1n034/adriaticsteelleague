@@ -1485,7 +1485,7 @@
       if (!m || !m.score) return;
       const ts = timestampToMillis(m.timestamp);
       if (!ts) return;
-      recentMatchesPool.push({ player1: m.player1, player2: m.player2, score: m.score, ts, label, d: m, legs, seasonId });
+      recentMatchesPool.push({ player1: m.player1, player2: m.player2, score: m.sets || m.score, ts, label, d: m, legs, seasonId }); // AVG lige: setovi
     }
 
     function renderRecentMatches() {
@@ -1656,19 +1656,30 @@
       return num ? `${base} - Meč ${num}` : base;
     }
 
-    function computeStandings(players, schedule, matchesMap) {
+    // withSets: AVG lige (osim Ženske) - meč odlučuju setovi (polje sets, npr. "2-1"), a score je tada broj legova.
+    // Poredak je bodovi, setovi, legovi, AVG. Stari AVG mečevi bez polja sets imaju setove upisane u score
+    // (nastali prije polja sets), pa se za njih setovi čitaju iz score, a legovi se ne broje.
+    // Ista logika je i u group-detail.html (computeStandings) i index-admin.html (computeStandingsSimple).
+    function computeStandings(players, schedule, matchesMap, withSets = false) {
       const stats = {};
-      players.forEach(p => { stats[p] = {win:0,draw:0,lost:0,total:0,legs:0,pts:0,avgSum:0,avgCount:0,f9Sum:0,f9Count:0,bl:0,bco:0,x180:0,form:[]}; });
+      players.forEach(p => { stats[p] = {win:0,draw:0,lost:0,total:0,sets:0,legs:0,pts:0,avgSum:0,avgCount:0,f9Sum:0,f9Count:0,bl:0,bco:0,x180:0,form:[]}; });
       schedule.forEach(({kolo,matches}) => {
         matches.forEach(({mec,player1,player2}) => {
           const m = matchesMap[`${kolo}_${mec}`];
-          if (!m || !m.score) return;
-          const parts = m.score.split('-'); if (parts.length!==2) return;
+          const res = m && (withSets ? (m.sets || m.score) : m.score); // ishod meča: setovi za AVG lige, inače score
+          if (!res) return;
+          const parts = res.split('-'); if (parts.length!==2) return;
           const s1=parseInt(parts[0]),s2=parseInt(parts[1]); if(isNaN(s1)||isNaN(s2)) return;
           const st1=stats[player1],st2=stats[player2]; if(!st1||!st2) return;
-          st1.total++;st2.total++;st1.legs+=(s1-s2);st2.legs+=(s2-s1);
-          if (m.score === '0-0') {
-          } else if(m.score==='5-5'){st1.draw++;st2.draw++;st1.pts++;st2.pts++;st1.form.push('D');st2.form.push('D');}
+          st1.total++;st2.total++;
+          if (withSets) {
+            st1.sets+=(s1-s2);st2.sets+=(s2-s1);
+            const lp = m.sets && m.score ? m.score.split('-') : [];
+            const l1=parseInt(lp[0]),l2=parseInt(lp[1]);
+            if (lp.length===2 && !isNaN(l1) && !isNaN(l2)) { st1.legs+=(l1-l2); st2.legs+=(l2-l1); }
+          } else { st1.legs+=(s1-s2);st2.legs+=(s2-s1); }
+          if (res === '0-0') {
+          } else if(res==='5-5'){st1.draw++;st2.draw++;st1.pts++;st2.pts++;st1.form.push('D');st2.form.push('D');}
           else if(s1>s2){st1.win++;st2.lost++;st1.pts+=2;st1.form.push('W');st2.form.push('L');}
           else{st2.win++;st1.lost++;st2.pts+=2;st1.form.push('L');st2.form.push('W');}
           // 0 se tretira kao "nema podatka" (isto kao null) - stvaran AVG/First9
@@ -1686,12 +1697,12 @@
         });
       });
       return Object.entries(stats).map(([name,s])=>({
-        name,win:s.win,draw:s.draw,lost:s.lost,total:s.total,legs:s.legs,pts:s.pts,
+        name,win:s.win,draw:s.draw,lost:s.lost,total:s.total,sets:withSets?s.sets:undefined,legs:s.legs,pts:s.pts,
         avg:s.avgCount>0?(s.avgSum/s.avgCount).toFixed(2):'--',
         f9:s.f9Count>0?(s.f9Sum/s.f9Count).toFixed(2):'--',
         bl:s.bl||'--',bco:s.bco||'--',x180:s.x180,
         form:s.form.slice(-5)
-      })).sort((a,b)=>b.pts-a.pts||b.legs-a.legs||(a.avg==='--'?1:b.avg==='--'?-1:parseFloat(b.avg)-parseFloat(a.avg)));
+      })).sort((a,b)=>b.pts-a.pts||(withSets?b.sets-a.sets:0)||b.legs-a.legs||(a.avg==='--'?1:b.avg==='--'?-1:parseFloat(b.avg)-parseFloat(a.avg)));
     }
 
     // -- AVG LIGE --
@@ -1864,7 +1875,7 @@
 
         function considerMVP(mvpByKolo, kolo, match) {
             if (!match.score) return;
-            const parts = match.score.split('-');
+            const parts = (match.sets || match.score).split('-'); // AVG lige: pobjednik po setovima
             if (parts.length !== 2) return;
             const s1 = parseInt(parts[0]), s2 = parseInt(parts[1]);
             if (isNaN(s1) || isNaN(s2) || s1 === s2) return; // bez pobjednika nema MVP-a (remi se ne broji)
@@ -1912,7 +1923,7 @@
                 <div class="popup-match-num">${typeof kolo === 'number' ? `Kolo ${kolo}` : escapeHtml(kolo)} - ${escapeHtml(m.groupName)}</div>
                 <div class="popup-match-top">
                   <span class="popup-player-name">${playerNameLinkHtml(m.player1)}</span>
-                  <span class="popup-score">${escapeHtml(m.score)}</span>
+                  <span class="popup-score">${escapeHtml(m.sets || m.score)}</span>
                   <span class="popup-player-name right">${playerNameLinkHtml(m.player2)}</span>
                 </div>
                 <div class="popup-stats">
@@ -2085,8 +2096,8 @@
           const isP1 = player1 === playerName;
           const opponent = isP1 ? player2 : player1;
 
-          // Normaliziraj rezultat tako da prvi broj bude rezultat ovog igrača
-          const parts = m.score.split('-');
+          // Normaliziraj rezultat tako da prvi broj bude rezultat ovog igrača (AVG lige: setovi)
+          const parts = (m.sets || m.score).split('-');
           const selfScore = isP1 ? parts[0] : parts[1];
           const oppScore  = isP1 ? parts[1] : parts[0];
           const score = `${selfScore}-${oppScore}`;
@@ -3139,8 +3150,18 @@
     // se iz bootstrap prije svake interakcije). Funkcije žive ovdje, u istom
     // non-module scriptu kao popup funkcije koje ih pozivaju - nema window.*
     // exposure koraka koji bi mogao izostati ako modul blok negdje pukne.
-    function getGroupPhaseLegs(isAvg = false) {
-      return isAvg ? window.bracketConfig?.avgLegs : window.bracketConfig?.seasonLegs;
+    // Vraća broj legova (npr. 10) ili { sets: 3 } kad AVG liga igra na setove (config avgSets). Ženska liga
+    // ('zenska') i dalje igra legove (avgLegs). Tekst "Best of ..." gradi bestOfLabel (isti kod i na adminu i group-detail).
+    function getGroupPhaseLegs(isAvg = false, leagueId = null) {
+      const c = window.bracketConfig;
+      if (!isAvg) return c?.seasonLegs;
+      return leagueId !== 'zenska' && c?.avgSets ? { sets: c.avgSets } : c?.avgLegs;
+    }
+
+    // v: broj legova ili { sets } (vidi getGroupPhaseLegs) -> "Best of 10 legs" / "Best of 3 sets"; prazno kad nema podatka
+    function bestOfLabel(v) {
+      if (!v) return '';
+      return v.sets ? `Best of ${v.sets} sets` : `Best of ${v} legs`;
     }
 
     // matchId npr. "R64_3", "QF_1", "LQF_3", "THIRD_1", "LTHIRD_1" -> round key "R64"/"QF"/"THIRD"
@@ -3149,10 +3170,12 @@
       return withoutIndex.startsWith('L') ? withoutIndex.slice(1) : withoutIndex;
     }
 
-    function getPlayoffLegs(matchId, isAvg = false) {
+    // Isto kao getGroupPhaseLegs: { sets } ako AVG liga (ne Ženska) u rounds.{kolo}.sets ima broj setova, inače legs.
+    function getPlayoffLegs(matchId, isAvg = false, leagueId = null) {
       const round = roundKeyFromMatchId(matchId);
       const rounds = isAvg ? window.bracketConfig?.avgPlayoff?.rounds : window.bracketConfig?.playoff?.rounds;
-      return rounds?.[round]?.legs;
+      const r = rounds?.[round];
+      return isAvg && leagueId !== 'zenska' && r?.sets ? { sets: r.sets } : r?.legs;
     }
 
     // -- BRACKET POPUP --
@@ -3176,8 +3199,8 @@
     // Koristi je openKoloPopup, openArchiveKoloPopup, openBracketMatchPopup i
     // openLowerBracketMatchPopup. Prima:
     //   titleLabel   - tekst u plavoj traci (npr. "Kolo 3" ili "Last of 64 - Meč 5")
-    //   legs         - broj legova (Best of X) ili undefined/null (label se ne prikaže)
-    //   matchTimestamp - Date objekt ili null (ispisuje se ispod "Best of X legs")
+    //   legs         - broj legova, { sets: N } ili undefined/null (label se ne prikaže; tekst gradi bestOfLabel)
+    //   matchTimestamp - Date objekt ili null (ispisuje se ispod "Best of X ..." oznake)
     //   p1, p2       - imena igrača
     //   d            - objekt s podatcima meča (score, average1/2, itd.)
     //   seasonId     - sezona kojoj meč pripada (za +/- diff vs sezonski prosjek u statDiffHtml)
@@ -3188,7 +3211,8 @@
     //                  igrača (openPlayerProfile) da profil zna prikazati "Natrag" umjesto
     //                  X i vratiti se baš na ovaj meč u "Zadnji mečevi" popupu.
     function renderMatchPopupCard({ titleLabel, legs, matchTimestamp, p1, p2, d, seasonId, domId, fromRecentMatchIndex }) {
-      const score = d?.score || '';
+      // AVG lige: glavni rezultat su setovi (d.sets), a legovi (d.score) idu u red statistike "Legs"
+      const score = d?.sets || d?.score || '';
       const hasScore = !!score;
       const scoreParts = hasScore ? score.split('-') : ['', ''];
       const s1 = parseInt(scoreParts[0]); const s2 = parseInt(scoreParts[1]);
@@ -3207,7 +3231,7 @@
 
       const legsHtml = legs ? `
         <div class="mpc-legs-block">
-          <div class="mpc-legs-title">Best of ${legs} legs</div>
+          <div class="mpc-legs-title">${bestOfLabel(legs)}</div>
           ${matchTimestamp ? `<div class="mpc-legs-timestamp">${formatMatchTimestamp(matchTimestamp)}</div>` : ''}
         </div>` : '';
 
@@ -3239,7 +3263,9 @@
       }
 
       // Osnovni statovi (uvijek prikazani ako postoji rezultat)
-      const statsHtml = renderMpcStatsHtml(d, p1Winner, p2Winner, p1, p2, seasonId);
+      const legParts = d.sets && d.score ? d.score.split('-') : null;
+      const leadRows = legParts && legParts.length === 2 ? [['Legs', legParts[0], legParts[1]]] : [];
+      const statsHtml = renderMpcStatsHtml(d, p1Winner, p2Winner, p1, p2, seasonId, leadRows);
 
       return `<div class="popup-match"${domIdAttr}>${titlebarHtml}${legsHtml}${playersHtml}${statsHtml}</div>`;
     }
@@ -3269,8 +3295,10 @@
     // player profil matchRow expand sekcija). d mora imati average1/2,
     // first9_1/2, itd. u "player1/player2" konvenciji. p1/p2 (imena) su
     // opcionalni - ako nedostaju, AVG/First9 razlika se jednostavno ne prikazuje.
-    function renderMpcStatsHtml(d, p1Winner, p2Winner, p1, p2, seasonId) {
+    // leadRows: opcionalni redovi ispred ostalih, isti oblik [oznaka, v1, v2] (AVG lige: "Legs" uz setove)
+    function renderMpcStatsHtml(d, p1Winner, p2Winner, p1, p2, seasonId, leadRows = []) {
       const statRows = [
+        ...leadRows,
         ['AVG', d.average1, d.average2, null, null, 'avg'],
         ['First 9', d.first9_1, d.first9_2, null, null, 'f9'],
       ];
@@ -3499,8 +3527,10 @@
     function buildArchiveGroupContentHtml(groupName, uid, standings, schedule, matchesMap) {
       // Identična logika kao buildGroupContentHtml, samo koristi uid (već
       // namespace-an sa seasonId) umjesto golog groupIndex u onclick pozivima.
+      // Stupac Sets (ispred Legs) postoji samo za AVG lige: computeStandings tada vraća polje sets.
+      const showSets = standings.some(p => p.sets !== undefined);
       const standingsHtml = `<div class="table-wrap"><table>
-        <thead><tr><th>#</th><th style="text-align:left;">Igrač</th><th>Forma</th><th>W</th><th>D</th><th>L</th><th>Tot</th><th>Legs</th><th>PTS</th><th>AVG</th><th>First 9</th><th>Best Leg</th><th>Best CO</th><th>180</th></tr></thead>        <tbody>${standings.map((p,i)=>`<tr>
+        <thead><tr><th>#</th><th style="text-align:left;">Igrač</th><th>Forma</th><th>W</th><th>D</th><th>L</th><th>Tot</th>${showSets ? '<th>Sets</th>' : ''}<th>Legs</th><th>PTS</th><th>AVG</th><th>First 9</th><th>Best Leg</th><th>Best CO</th><th>180</th></tr></thead>        <tbody>${standings.map((p,i)=>`<tr>
           <td>${i+1}</td>
           <td style="text-align:left;font-weight:700;cursor:pointer;" onclick="openPlayerProfile('${escapeHtml(p.name).replace(/'/g,"\\'")}')">${escapeHtml(p.name)}</td>
           <td>${formHtml(p.form)}</td>
@@ -3508,11 +3538,12 @@
           <td style="color:#f39c12;font-weight:700;">${p.draw}</td>
           <td style="color:#e74c3c;font-weight:700;">${p.lost}</td>
           <td>${p.total}</td>
+          ${showSets ? `<td style="color:${p.sets>0?'#2ecc71':p.sets<0?'#e74c3c':'inherit'}">${p.sets>0?'+'+p.sets:p.sets}</td>` : ''}
           <td style="color:${p.legs>0?'#2ecc71':p.legs<0?'#e74c3c':'inherit'}">${p.legs>0?'+'+p.legs:p.legs}</td>
           <td style="font-weight:800;color:#7eb8ff;">${p.pts}</td>
           <td>${p.avg}</td><td>${p.f9}</td><td>${p.bl}</td><td>${p.bco}</td><td>${p.x180}</td>
         </tr>`).join('')}</tbody>
-        <tfoot><tr><td colspan="14" class="table-footer-brand">Adriatic steel league ™ ®</td></tr></tfoot>
+        <tfoot><tr><td colspan="${showSets ? 15 : 14}" class="table-footer-brand">Adriatic steel league ™ ®</td></tr></tfoot>
       </table></div>`;
 
       const rasporedHtml = `
@@ -3535,7 +3566,7 @@
                 </div>
 
                 ${matches.map(({mec,player1,player2})=>{
-                  const saved=matchesMap[`${kolo}_${mec}`]; const score=saved?.score||''; const hasScore=!!score;
+                  const saved=matchesMap[`${kolo}_${mec}`]; const score=saved?.sets||saved?.score||''; const hasScore=!!score; // AVG lige: setovi
                   return `<div style="padding:clamp(4px,1.5vw,7px) clamp(6px,2vw,10px); border-bottom:1px solid rgba(255,255,255,0.05);">
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
                       <span style="font-size:clamp(0.7rem,2.5vw,0.9rem); font-weight:${hasScore?'700':'400'}; white-space:nowrap;">${escapeHtml(player1)}</span>
@@ -3623,10 +3654,9 @@
       const seasonMatch = uid.match(/^arch-(.+)-\d+$/);
       const avgMatch = uid.match(/^avg-(.+)-\d+$/);
       const seasonId = seasonMatch ? seasonMatch[1] : (avgMatch ? `avg:${window.ACTIVE_SEASON_ID}:${avgMatch[1]}` : null);
-      // AVG lige se igraju po istom "Best of X legs" konceptu kao sezonske grupe
-      // (samo drugo polje u bracketConfig, vidi getGroupPhaseLegs) - arhivske
+      // AVG lige imaju svoje polje u bracketConfig (avgSets ili avgLegs, vidi getGroupPhaseLegs) - arhivske
       // prošle sezone nemaju taj koncept pa ostaju bez legs bloka.
-      const legs = avgMatch ? getGroupPhaseLegs(true) : null;
+      const legs = avgMatch ? getGroupPhaseLegs(true, avgMatch[1]) : null;
       const byeHtml = bye ? `<div style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">BYE: ${escapeHtml(bye)}</div>` : '';
       const matchesHtml = matches.map(({mec,player1,player2}) => {
         const saved = matchesMap[`${kolo}_${mec}`] || {};
@@ -3849,7 +3879,7 @@
       if (!d) return;
       const body = renderMatchPopupCard({
         titleLabel: d.roundLabel || '',
-        legs: getPlayoffLegs(matchId, true),
+        legs: getPlayoffLegs(matchId, true, leagueId),
         matchTimestamp: d.timestamp || null,
         p1: d.player1 || 'TBD', p2: d.player2 || 'TBD', d,
         seasonId: `avg:${window.ACTIVE_SEASON_ID}:${leagueId}`
@@ -4713,11 +4743,11 @@
         const players = []; playersSnap.forEach(p => players.push(p.data().name));
 
         const matchesSnap = await getDocs(collection(db, ...basePath, group.id, 'matches'));
-        const matchesMap = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; pushRecentMatch(d, `${AVG_LEAGUE_LABELS[leagueId] || leagueId} - ${group.name}`, { legs: getGroupPhaseLegs(true), seasonId: `avg:${seasonId}:${leagueId}` }); });
+        const matchesMap = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; pushRecentMatch(d, `${AVG_LEAGUE_LABELS[leagueId] || leagueId} - ${group.name}`, { legs: getGroupPhaseLegs(true, leagueId), seasonId: `avg:${seasonId}:${leagueId}` }); });
 
         const schedule        = generateAvgSchedule(players);
         const visibleSchedule = schedule.filter(r => visibleAvgRounds.includes(r.kolo));
-        const standings       = computeStandings(players, schedule, matchesMap);
+        const standings       = computeStandings(players, schedule, matchesMap, leagueId !== 'zenska'); // AVG lige: setovi + stupac Sets
         const uid = `avg-${leagueId}-${i+1}`;
 
         // Registriraj igrače za player profile "AVG" tab + AVG-scoped
