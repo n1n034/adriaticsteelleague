@@ -1657,8 +1657,8 @@
     }
 
     // withSets: AVG lige (osim Ženske) - meč odlučuju setovi (polje sets, npr. "2-1"), a score je tada broj legova.
-    // Poredak je bodovi, setovi, legovi, AVG. Stari AVG mečevi bez polja sets imaju setove upisane u score
-    // (nastali prije polja sets), pa se za njih setovi čitaju iz score, a legovi se ne broje.
+    // Poredak je bodovi, setovi, legovi, AVG. AVG mečevi bez polja sets (stari, prije polja, ili spremljeni bez legova)
+    // imaju setove upisane u score, pa se za njih setovi čitaju iz score, a legovi se ne broje.
     // Ista logika je i u group-detail.html (computeStandings) i index-admin.html (computeStandingsSimple).
     function computeStandings(players, schedule, matchesMap, withSets = false) {
       const stats = {};

@@ -1327,7 +1327,8 @@
 
     // -- STANDINGS --
     // AVG lige (osim Ženske) se odlučuju setovima: polje sets ("2-1"), a score je tada broj legova. Poredak je
-    // bodovi, setovi, legovi, AVG (isto kao index.html computeStandings). Stari AVG mečevi bez sets imaju setove u score.
+    // bodovi, setovi, legovi, AVG (isto kao index.html computeStandings). AVG mečevi bez sets (stari ili spremljeni bez
+    // legova) imaju setove u score.
     function leagueUsesSets() {
       return !!leagueParam && leagueParam !== 'zenska';
     }
@@ -1491,8 +1492,8 @@
     function renderMatchCard(kolo, { mec, player1, player2 }) {
       const key = `${kolo}_${mec}`;
       const saved = matchesMap[key] || {};
-      // AVG lige: glavni rezultat su setovi (sets), a score su legovi. Stari mečevi bez sets imaju setove u score,
-      // pa se oni prikazuju u poljima za setove, a legovi ostaju prazni dok se ne upišu.
+      // AVG lige: glavni rezultat su setovi (sets), a score su legovi. Mečevi bez sets (stari ili spremljeni bez legova)
+      // imaju setove u score, pa se oni prikazuju u poljima za setove, a legovi ostaju prazni dok se ne upišu.
       const usesSets = leagueUsesSets();
       const score = usesSets ? (saved.sets || saved.score || '') : (saved.score || '');
       const hasScore = !!score;
@@ -1534,7 +1535,7 @@
               <span class="score-sep">:</span>
               <input class="score-input" type="number" min="0" max="9" id="ss2-${kolo}-${mec}" value="${esc(setsParts[1])}" ${disabled} placeholder="0" onfocus="this.select()">
             </div>
-            <div class="score-caption">Legovi</div>` : ''}
+            <div class="score-caption">Legovi (neobavezno)</div>` : ''}
             <div class="stats-score-row">
               <input class="score-input" type="number" min="0" max="9" id="s1-${kolo}-${mec}" value="${esc(legParts[0])}" ${disabled} placeholder="0" onfocus="this.select()">
               <span class="score-sep">:</span>
@@ -1629,8 +1630,9 @@
       const s2 = document.getElementById(`s2-${kolo}-${mec}`)?.value?.trim();
       const usesSets = leagueUsesSets();
 
-      if (!s1 && !s2) {
-        showToast(usesSets ? 'Unesite legove!' : 'Unesite rezultat!', 'error');
+      // AVG lige odlučuju setovi (provjera niže), pa se tamo prazni legovi ne odbijaju
+      if (!usesSets && !s1 && !s2) {
+        showToast('Unesite rezultat!', 'error');
         return;
       }
 
@@ -1638,9 +1640,9 @@
 
       // AVG lige: setovi odlučuju meč, pa su obavezni (oba polja). Pobjednik mora imati točno ceil(avgSets / 2)
       // setova, a gubitnik manje (Best of 3 -> 2-0 ili 2-1); bez avgSets u konfiguraciji samo se traži pobjednik.
+      // Legovi su neobavezni (oba broja ili nijedan): bez njih meč ostaje u starom obliku (setovi u score, bez sets).
       let sets = '';
       if (usesSets) {
-        if (!score) { showToast('Unesite legove oba igrača!', 'error'); return; }
         const t1 = document.getElementById(`ss1-${kolo}-${mec}`)?.value?.trim();
         const t2 = document.getElementById(`ss2-${kolo}-${mec}`)?.value?.trim();
         if (!t1 || !t2) { showToast('Unesite setove (npr. 2-1)!', 'error'); return; }
@@ -1652,12 +1654,14 @@
           showToast(need ? `Setovi: pobjednik mora imati ${need} seta (npr. ${need}-0 ili ${need}-${need - 1})!` : 'Setovi ne mogu biti neriješeni!', 'error');
           return;
         }
+        if (!s1 !== !s2) { showToast('Unesite legove oba igrača ili ostavite oba polja prazna!', 'error'); return; }
         sets = `${a}-${b}`;
       }
 
       const data = {
-        kolo, mec, player1, player2, score,
-        ...(usesSets ? { sets } : {}),
+        kolo, mec, player1, player2,
+        score: score || sets, // AVG lige bez legova: setovi u score (stari oblik)
+        ...(usesSets && score ? { sets } : {}),
         average1: parseFloatClampedOrNull(document.getElementById(`avg1-${kolo}-${mec}`)?.value),
         average2: parseFloatClampedOrNull(document.getElementById(`avg2-${kolo}-${mec}`)?.value),
         first9_1: parseFloatClampedOrNull(document.getElementById(`f9_1-${kolo}-${mec}`)?.value),

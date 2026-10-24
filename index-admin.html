@@ -2335,7 +2335,7 @@
     }
 
     // withSets: AVG lige (osim Ženske) - meč odlučuju setovi (polje sets), a score je broj legova; poredak je bodovi,
-    // setovi, legovi, AVG. Stari AVG mečevi bez sets imaju setove u score. Ista logika kao computeStandings u index.html
+    // setovi, legovi, AVG. AVG mečevi bez sets (stari ili spremljeni bez legova) imaju setove u score. Ista logika kao computeStandings u index.html
     // i group-detail.html (poredak određuje i prolaznike u playoff podlige).
     function computeStandingsSimple(players, matchesMap, withSets = false) {
       const stats = {};
@@ -3116,7 +3116,7 @@
           <span class="bedit-player-name right">${esc(p2)}</span>
         </div>
         <div class="bedit-section">
-          <div class="bedit-section-title">Rezultat</div>
+          <div class="bedit-section-title">${legs?.sets ? 'Rezultat (setovi)' : 'Rezultat'}</div>
           <div class="bedit-score-row">
             <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(d.score ? d.score.split('-')[0] || '' : '')}" onfocus="this.select()">
             <span class="bedit-score-sep">-</span>
