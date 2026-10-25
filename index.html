@@ -1310,6 +1310,8 @@
 
     // -- NAVIGACIJA (glavna) --
     function switchTab(name) {
+      // Dok se tab učitava (loading-state je kratak) stranica se ne smije skratiti: preglednik bi skrenuo scroll na vrh.
+      document.body.style.minHeight = document.documentElement.scrollHeight + 'px';
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.getElementById('tab-' + name).classList.add('active');
       document.querySelectorAll('.nav-btn').forEach(b => {
@@ -1319,16 +1321,19 @@
       });
       positionNavIndicator(true);
 
+      let loading;
       if (name === 'avg-lige') {
         positionSubTabsLine(document.getElementById('avg-lige-tabs'), false); // panel je do sad bio skriven (širine 0), pa liniju treba odmah izmjeriti
-        window.loadAvgLige(activeAvgLigeTab);
+        loading = window.loadAvgLige(activeAvgLigeTab);
       }
       if (name === 'zenska-liga') {
-        window.loadAvgLige('zenska');
+        loading = window.loadAvgLige('zenska');
       }
       if (name === 'zdrijeb') {
         positionSubTabsLine(document.getElementById('bracket-switch'), false);
       }
+      // Bez učitavanja se minHeight skida još u istom zadatku (prije izračuna rasporeda), pa se ništa ne mijenja.
+      Promise.resolve(loading).finally(() => { document.body.style.minHeight = ''; });
     }
 
     // Klizna crta (navigacija, podtabovi) odnosno pločica (prekidač sezone) ispod aktivnog gumba.
