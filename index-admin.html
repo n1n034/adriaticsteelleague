@@ -21,7 +21,7 @@
   <noscript>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   </noscript>
-  <link rel="icon" href="images/ASL-logo.webp">
+  <link rel="icon" href="images/ASL-logo.webp?v=2">
 
   <style>
     :root {
@@ -72,7 +72,7 @@
       position: fixed;
       inset: 0;
       z-index: 0;
-      background-image: url("images/background.webp");
+      background-image: url("images/background.webp?v=2");
       background-size: cover;
       background-position: center center;
       background-repeat: no-repeat;
@@ -951,27 +951,6 @@
       background: rgba(74, 144, 226, 0.08);
     }
 
-    .bedit-winner-select {
-      width: 100%;
-      padding: 10px 12px;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 10px;
-      color: #fff;
-      font-size: 0.85rem;
-      cursor: pointer;
-      outline: none;
-      margin-bottom: 16px;
-    }
-
-    .bedit-winner-select:focus {
-      border-color: rgba(74, 144, 226, 0.6);
-    }
-
-    .bedit-winner-select option {
-      background: #0a1628;
-    }
-
     .bedit-actions {
       display: flex;
       gap: 8px;
@@ -1372,7 +1351,7 @@
   <!-- LOGIN -->
   <div id="login-screen" style="display: none;">
     <div class="login-card">
-      <a href="index.html"><img class="login-logo" src="images/ASL-logo.webp" alt="ASL Logo" fetchpriority="high"
+      <a href="index.html"><img class="login-logo" src="images/ASL-logo.webp?v=2" alt="ASL Logo" fetchpriority="high"
           loading="eager"></a>
       <div class="login-title">Adriatic Steel League</div>
       <div class="login-subtitle">Admin Panel</div>
@@ -1396,7 +1375,7 @@
     <div class="admin-container">
       <div class="admin-topbar">
         <div class="admin-brand">
-          <a href="index.html"><img src="images/ASL-logo.webp" alt="ASL Logo" fetchpriority="high" loading="eager"></a>
+          <a href="index.html"><img src="images/ASL-logo.webp?v=2" alt="ASL Logo" fetchpriority="high" loading="eager"></a>
           <div>
             <div class="admin-brand-text">ADRIATIC STEEL LEAGUE</div>
             <div class="admin-brand-sub" id="admin-brand-sub">Admin Pristup</div>
@@ -1542,8 +1521,9 @@
     // zahtjeve s localhosta (nije, i ne treba biti, na popisu domena na
     // reCAPTCHA ključu). Prvi put na localhostu ispiše se novi debug token u
     // konzoli - dodati ga u Firebase Console → App Check → "Manage debug tokens".
+    // true = SDK sam napravi token (po pregledniku) i ispiše ga u konzoli; ne upisuje se u kod (korijen je javan).
     if (['localhost', '127.0.0.1'].includes(location.hostname)) {
-      self.FIREBASE_APPCHECK_DEBUG_TOKEN = '12743B0F-CD2A-4254-8324-84AE9E2DF80A';
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     }
     initializeAppCheck(app, {
       provider: new ReCaptchaEnterpriseProvider('6LdfcbktAAAAAGWaLVaJXHIBI8ST_nISw-DSFKuT'),
@@ -1672,6 +1652,10 @@
       if (!v) return '';
       return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
+
+    // Vrijednost za inline handler: onclick="f(${jsArg(x)})". JS string literal pa HTML-escape za atribut.
+    // Samo esc + \' ne radi: parser atributa vrati &#039; u ' prije izvršavanja pa ime s ' lomi poziv.
+    function jsArg(v) { return esc(JSON.stringify(String(v ?? ''))); }
 
     function showToast(msg, type = 'success') {
       const t = document.getElementById('toast');
@@ -1935,6 +1919,15 @@
       return m ? decodeURIComponent(m[1]) : null;
     }
 
+    // photoRequests može pisati svatko (javna stranica), pa zahtjev vrijedi samo ako ga je stvorila
+    // naša stranica: id je slug, a slika je točno player-photos-pending/{id}.jpg. Bez ovoga bi
+    // izmišljen zahtjev s putanjom tuđe slike pri "Odbij" obrisao tu sliku, a ružan id bi
+    // završio u HTML-u i u players/{id}.
+    function validPendingPath(slug, data) {
+      const p = storagePathFromDownloadURL(data.photoURL || '');
+      return /^[a-z0-9-]+$/.test(slug) && p === `player-photos-pending/${slug}.jpg` ? p : null;
+    }
+
     // Web SDK nema "kopiraj/premjesti" na serveru - slika se preuzme i ponovno uploada
     // na novi put. Preuzimanje iz preglednika traži CORS (GET) na Storage bucketu
     // (jednokratna postavka, bez nje fetch ispod pada). Ako izvorni fajl ne postoji,
@@ -1973,7 +1966,7 @@
       const container = document.getElementById('photo-requests-container');
       try {
         const snap = await getDocs(collection(db, 'photoRequests'));
-        const requests = []; snap.forEach(d => requests.push({ id: d.id, ...d.data() }));
+        const requests = []; snap.forEach(d => { if (validPendingPath(d.id, d.data())) requests.push({ id: d.id, ...d.data() }); });
         if (!requests.length) { container.innerHTML = ''; return; }
         requests.sort((a, b) => (a.playerName || '').localeCompare(b.playerName || '', 'hr'));
         // Svježi download URL iz putanje: novi zahtjev za istog igrača prepisuje pending
@@ -1993,8 +1986,8 @@
                   <div class="player-photo-avatar"><img src="${esc(r.photoURL)}" alt=""></div>
                   <div class="player-photo-name">${esc(r.playerName || r.id)}</div>
                   <div class="photo-request-actions">
-                    <button class="photo-request-btn approve" onclick="approvePhotoRequest('${r.id}')">Odobri</button>
-                    <button class="photo-request-btn decline" onclick="declinePhotoRequest('${r.id}')">Odbij</button>
+                    <button class="photo-request-btn approve" onclick="approvePhotoRequest(${jsArg(r.id)})">Odobri</button>
+                    <button class="photo-request-btn decline" onclick="declinePhotoRequest(${jsArg(r.id)})">Odbij</button>
                   </div>
                 </div>`).join('')}
             </div>
@@ -2010,7 +2003,7 @@
       try {
         const reqDoc = await getDoc(doc(db, 'photoRequests', slug));
         if (!reqDoc.exists()) { showToast('Zahtjev više ne postoji.', 'error'); loadPhotoRequests(); return; }
-        const pendingPath = storagePathFromDownloadURL(reqDoc.data().photoURL || '');
+        const pendingPath = validPendingPath(slug, reqDoc.data());
         if (!pendingPath) throw new Error('Zahtjev nema valjanu putanju slike.');
 
         const photoURL = await movePendingPhotoToOfficial(slug, pendingPath);
@@ -2038,7 +2031,7 @@
       try {
         const reqDoc = await getDoc(doc(db, 'photoRequests', slug));
         if (reqDoc.exists()) {
-          const pendingPath = storagePathFromDownloadURL(reqDoc.data().photoURL || '');
+          const pendingPath = validPendingPath(slug, reqDoc.data());
           if (pendingPath) {
             try {
               await copyStorageObject(pendingPath, `${DENIED_PHOTO_DIR}/${slug}-${Date.now()}.jpg`);
@@ -2755,7 +2748,7 @@
         <div class="bedit-actions">
           ${currentIsAdmin ? `
           <button class="bedit-btn-delete" id="bedit-delete-btn" onclick="deleteBracketMatch('${matchId}')"><i class="fas fa-trash"></i> Izbriši</button>
-          <button class="bedit-btn-save" id="bedit-save-btn" onclick="saveBracketMatch('${matchId}', '${esc(p1)}', '${esc(p2)}')">
+          <button class="bedit-btn-save" id="bedit-save-btn" onclick="saveBracketMatch('${matchId}', ${jsArg(p1)}, ${jsArg(p2)})">
             <i class="fas fa-save"></i> Spremi
           </button>` : ''}
         </div>
@@ -2903,7 +2896,7 @@
         <div class="bedit-actions">
           ${currentIsAdmin ? `
           <button class="bedit-btn-delete" id="bedit-delete-btn" onclick="deleteLowerBracketMatch('${matchId}')"><i class="fas fa-trash"></i> Izbriši</button>
-          <button class="bedit-btn-save" id="bedit-save-btn" onclick="saveLowerBracketMatch('${matchId}', '${esc(p1)}', '${esc(p2)}')">
+          <button class="bedit-btn-save" id="bedit-save-btn" onclick="saveLowerBracketMatch('${matchId}', ${jsArg(p1)}, ${jsArg(p2)})">
             <i class="fas fa-save"></i> Spremi
           </button>`: ''}
         </div>
@@ -3290,7 +3283,7 @@
           <div class="group-card-footer">
             <span class="group-card-action">Upravljaj grupom →</span>
             ${currentIsAdmin ? `
-              <button class="btn-chip-delete" onclick="event.stopPropagation(); deleteAvgGroup('${leagueId}','${esc(g.id)}')">
+              <button class="btn-chip-delete" onclick="event.stopPropagation(); deleteAvgGroup('${leagueId}', ${jsArg(g.id)})">
                 <i class="fas fa-trash"></i>
               </button>
             ` : ''}

@@ -13,11 +13,16 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+  <!-- Firebase SDK: verzija mora biti ista kao u importima module skripte pri dnu stranice -->
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore-lite.js">
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.12.0/firebase-app-check.js">
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
-  <link rel="icon" href="images/ASL-logo.webp">
+  <link rel="icon" href="images/ASL-logo.webp?v=2">
 
   <style>
     :root {
@@ -53,7 +58,7 @@
 
     .bg-image {
       position: fixed; inset: 0; z-index: 0;
-      background-image: url("images/background.webp");
+      background-image: url("images/background.webp?v=2");
       background-size: cover; background-position: center center; background-repeat: no-repeat;
     }
 
@@ -539,27 +544,6 @@
         inset 0 1px 0 rgba(255,255,255,0.06);
     }
 
-    .popup-close {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04);
-      color: #fff;
-      font-size: 1rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: .2s ease;
-    }
-
-    .popup-close:hover {
-      background: rgba(126,184,255,0.18);
-      border-color: rgba(126,184,255,0.35);
-      transform: scale(1.05);
-    }
-
     .popup-back-btn {
       display: flex;
       align-items: center;
@@ -582,17 +566,6 @@
       transform: scale(1.05);
     }
 
-    /* .match-popup je max-width:680px i centriran (overlay justify-content:
-       center) - desni rub mu je uvijek na 50vw + 340px čim ima mjesta za pun
-       max-width. calc(50vw - 340px - 58px) računa poziciju gumba 16px desno
-       od tog ruba (58 = 42px širina gumba + 16px razmak). max(20px, ...) je
-       ključan: na uskim ekranima calc ide negativan (nema mjesta sa strane),
-       pa max() vrati 20px i gumb ostane u kutu ekrana - bez toga bi gumb na
-       srednjim širinama (~700-830px) izlazio izvan viewporta jer bi formula
-       gurnula desni rub gumba preko ruba ekrana. Glatko klizi između "u kutu"
-       i "sa strane popupa" bez skoka na točnoj granici, bez potrebe za
-       @media prijelomom za ovo - samo se 480px niže brine za veličinu gumba
-       na sitnim telefonima. */
     .popup-fixed-close {
       position: fixed; top: 55px; right: max(20px, calc(50vw - 252px - 58px)); z-index: 1010;
       width: 42px; height: 42px; border-radius: 50%;
@@ -1186,7 +1159,7 @@
     <div class="container">
       <div class="hero">
         <a href="index-admin.html">
-          <img class="league-logo" src="images/ASL-logo.webp" alt="ASL Logo" width="240" height="240" fetchpriority="high" loading="eager">
+          <img class="league-logo" src="images/ASL-logo.webp?v=2" alt="ASL Logo" width="240" height="240" fetchpriority="high" loading="eager">
         </a>
         <h1>ADRIATIC STEEL LEAGUE</h1>
         <p>3. SEZONA</p>
@@ -1218,7 +1191,6 @@
         <button class="nav-btn" data-tab="zenska-liga" onclick="switchTab('zenska-liga')"><i class="fas fa-venus" aria-hidden="true"></i><span>Ženska liga</span></button>
         <button class="nav-btn" data-tab="avg-lige" onclick="switchTab('avg-lige')"><i class="fas fa-chart-column" aria-hidden="true"></i><span>AVG lige</span></button>
         <button class="nav-btn" data-tab="zdrijeb" onclick="switchTab('zdrijeb')"><i class="fas fa-sitemap" aria-hidden="true"></i><span>Ždrijeb</span></button>
-        <!-- YT-LIVE privremeno isključen (stavka + panel s iframeom ispod su zakomentirani) -->
         <!-- <button class="nav-btn" data-tab="yt-live" onclick="switchTab('yt-live')"><i class="fab fa-youtube" aria-hidden="true"></i><span>YT-LIVE</span></button> -->
         <span class="nav-indicator" id="nav-indicator" aria-hidden="true"></span>
       </nav>
@@ -1239,7 +1211,6 @@
           <button type="button" class="sub-tab" data-bracket="donji" aria-pressed="false" onclick="switchBracketView('donji')">Donji ždrijeb</button>
           <span class="sub-tabs-line" aria-hidden="true"></span>
         </div>
-        <!-- Prikaz (display) gornjeg/donjeg ždrijeba mijenja samo ovaj omotač; unutarnje -content i -archive-content divove postavlja switchGlobalSeasonView -->
         <div id="bracket-gornji">
           <div id="gornji-zdrijeb-content">
             <div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>
@@ -1254,7 +1225,7 @@
         </div>
       </div>
 
-      <!-- YT-LIVE privremeno isključen - za povratak odkomentiraj ovaj panel i stavku u .main-nav gore.
+      <!--  YT-LIVE privremeno isključen - za povratak odkomentiraj ovaj panel i stavku u .main-nav gore.
       <div id="tab-yt-live" class="tab-panel">
         <div id="yt-frame">
           <iframe class="yt" width="100%" height="731px" src="https://www.youtube.com/embed/ULQK_BW6uqY?si=bk6mvLSMDF3zxyEu"
@@ -1263,8 +1234,7 @@
             referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
           </iframe>
         </div>
-      </div>
-      -->
+      </div> -->
 
       <div id="tab-avg-lige" class="tab-panel">
         <div class="sub-tabs sub-tabs-scroll" id="avg-lige-tabs" role="group" aria-label="AVG liga">
@@ -1301,6 +1271,10 @@
       if (v === null || v === undefined) return '';
       return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
     }
+
+    // Vrijednost za inline handler: onclick="f(${jsArg(x)})". JS string literal pa HTML-escape za atribut.
+    // Samo escapeHtml + \' ne radi: parser atributa vrati &#039; u ' prije izvršavanja pa ime s ' lomi poziv.
+    function jsArg(v) { return escapeHtml(JSON.stringify(String(v ?? ''))); }
 
     // -- NAVIGACIJA (glavna) --
     function switchTab(name) {
@@ -1810,8 +1784,7 @@
     function playerNameLinkHtml(name) {
       const safe = escapeHtml(name);
       if (!playerDatabase[name]) return safe;
-      const nameJs = safe.replace(/'/g, "\\'");
-      return `<span class="player-name-link" onclick="openPlayerProfile('${nameJs}')">${safe}</span>`;
+      return `<span class="player-name-link" onclick="openPlayerProfile(${jsArg(name)})">${safe}</span>`;
     }
 
     function renderNajbolji(allPlayersStats) {
@@ -3000,7 +2973,7 @@
       const body = `
         <div class="player-profile-header">
           <div class="player-profile-user">
-            <div class="player-avatar-wrap" onclick="triggerAvatarUpload('${escapeHtml(currentProfilePlayer).replace(/'/g,"\\'")}')" title="Klikni za promjenu slike">
+            <div class="player-avatar-wrap" onclick="triggerAvatarUpload(${jsArg(currentProfilePlayer)})" title="Klikni za promjenu slike">
               <div class="player-avatar">${
                 window.playerPhotos?.[slugify(currentProfilePlayer)]
                   ? `<img src="${escapeHtml(window.playerPhotos[slugify(currentProfilePlayer)])}" alt="">`
@@ -3237,10 +3210,10 @@
 
       const playerColHtml = (name, isLoser, isWinner) => {
         const clickable = name && name !== 'TBD' && playerDatabase[name];
-        const nameJs = escapeHtml(name || '').replace(/'/g, "\\'");
+        const nameJs = jsArg(name || '');
         const profileCallJs = fromRecentMatchIndex != null
-          ? `openPlayerProfile('${nameJs}', ${fromRecentMatchIndex})`
-          : `openPlayerProfile('${nameJs}')`;
+          ? `openPlayerProfile(${nameJs}, ${fromRecentMatchIndex})`
+          : `openPlayerProfile(${nameJs})`;
         return `
           <div class="mpc-player-col ${isLoser ? 'loser' : ''} ${clickable ? 'clickable' : ''}" ${clickable ? `onclick="${profileCallJs}"` : ''}>
             <div class="mpc-avatar">${avatarHtml(name)}</div>
@@ -3395,7 +3368,7 @@
       const standingsHtml = `<div class="table-wrap"><table>
         <thead><tr><th>#</th><th style="text-align:left;">Igrač</th><th>Forma</th><th>W</th><th>D</th><th>L</th><th>Tot</th><th>Legs</th><th>PTS</th><th>AVG</th><th>First 9</th><th>Best Leg</th><th>Best CO</th><th>180</th></tr></thead>        <tbody>${standings.map((p,i)=>`<tr>
           <td>${i+1}</td>
-          <td style="text-align:left;font-weight:700;cursor:pointer;" onclick="openPlayerProfile('${escapeHtml(p.name).replace(/'/g,"\\'")}')">${escapeHtml(p.name)}</td>
+          <td style="text-align:left;font-weight:700;cursor:pointer;" onclick="openPlayerProfile(${jsArg(p.name)})">${escapeHtml(p.name)}</td>
           <td>${formHtml(p.form)}</td>
           <td style="color:#2ecc71;font-weight:700;">${p.win}</td>
           <td style="color:#f39c12;font-weight:700;">${p.draw}</td>
@@ -3532,7 +3505,7 @@
       const standingsHtml = `<div class="table-wrap"><table>
         <thead><tr><th>#</th><th style="text-align:left;">Igrač</th><th>Forma</th><th>W</th><th>D</th><th>L</th><th>Tot</th>${showSets ? '<th>Sets</th>' : ''}<th>Legs</th><th>PTS</th><th>AVG</th><th>First 9</th><th>Best Leg</th><th>Best CO</th><th>180</th></tr></thead>        <tbody>${standings.map((p,i)=>`<tr>
           <td>${i+1}</td>
-          <td style="text-align:left;font-weight:700;cursor:pointer;" onclick="openPlayerProfile('${escapeHtml(p.name).replace(/'/g,"\\'")}')">${escapeHtml(p.name)}</td>
+          <td style="text-align:left;font-weight:700;cursor:pointer;" onclick="openPlayerProfile(${jsArg(p.name)})">${escapeHtml(p.name)}</td>
           <td>${formHtml(p.form)}</td>
           <td style="color:#2ecc71;font-weight:700;">${p.win}</td>
           <td style="color:#f39c12;font-weight:700;">${p.draw}</td>
@@ -4220,10 +4193,11 @@
   <script type="module">
     // -- FIREBASE INIT --
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-    import { getAnalytics }  from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
-    import { getFirestore, collection, getDocs, query, orderBy, getDoc, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-storage.js";
+    // Firestore Lite (REST, bez realtime listenera) - stranica koristi samo getDoc/getDocs/setDoc.
+    // Analytics i Storage se učitavaju naknadno (vidi dolje), pa ne čekaju na kritičnom putu.
+    import { getFirestore, collection, getDocs, query, orderBy, getDoc, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore-lite.js";
     import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app-check.js";
+    const SDK = "https://www.gstatic.com/firebasejs/12.12.0/";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDyG6WN60VOhp-iHq_18vOLDcHP6zHNoRk",
@@ -4249,16 +4223,18 @@
     // Prvi put kad se ovo učita na localhostu, u konzoli će se ispisati novi
     // debug token - taj token treba dodati u Firebase Console → App Check →
     // "Manage debug tokens" da bi lokalno testiranje uopće proradilo.
+    // true = SDK sam napravi token (po pregledniku, u localStorageu) i ispiše ga u konzoli.
+    // Token se NE upisuje u kod: cijeli korijen je javan, pa bi ga svatko mogao iskoristiti.
     if (['localhost', '127.0.0.1'].includes(location.hostname)) {
-      self.FIREBASE_APPCHECK_DEBUG_TOKEN = '12743B0F-CD2A-4254-8324-84AE9E2DF80A';
+      self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     }
     initializeAppCheck(app, {
       provider: new ReCaptchaEnterpriseProvider('6LdfcbktAAAAAGWaLVaJXHIBI8ST_nISw-DSFKuT'),
       isTokenAutoRefreshEnabled: true
     });
-    getAnalytics(app);
+    // Analytics tek nakon load-a (gtag.js ne smije konkurirati podacima za propusnost).
+    addEventListener('load', () => setTimeout(() => import(SDK + 'firebase-analytics.js').then(m => m.getAnalytics(app)), 2000));
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
     // -- AKTIVNA SEZONA (skalabilno rješenje za prelazak sezona) --
     // Jedno mjesto u Firestoreu (config/active-season, polje seasonId) određuje
@@ -4375,7 +4351,8 @@
         // (anonimni posjetitelj ionako ne smije čitati/brisati stare zahtjeve).
         // Pending je samo privremeni folder: admin pri odobrenju sliku premješta u
         // player-photos/{slug}.jpg i briše pending (vidi approvePhotoRequest u adminu).
-        const storageRef = ref(storage, `player-photos-pending/${slug}.jpg`);
+        const { getStorage, ref, uploadBytes, getDownloadURL } = await import(SDK + 'firebase-storage.js');
+        const storageRef = ref(getStorage(app), `player-photos-pending/${slug}.jpg`);
         await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
         const url = await getDownloadURL(storageRef);
         await setDoc(doc(db, 'photoRequests', slug), { playerName: name, photoURL: url, submittedAt: serverTimestamp() });

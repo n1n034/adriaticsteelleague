@@ -9,7 +9,7 @@ Tri samostalne stranice, svaka s inline `<style>` i `<script>`; **nema build kor
 - `index.html` – javna stranica (glavna navigacija TABLICE, NAJBOLJI U LIGI, ŽENSKA LIGA, AVG LIGE, ŽDRIJEB s prekidačem gornji/donji, profili igrača, upload avatara). Ime mora ostati malim slovima.
 - `index-admin.html` – prijava + admin/operater panel (grupe, ždrijeb, AVG lige, igrači, zahtjevi za slike).
 - `group-detail.html` – unos rezultata jedne grupe, otvara se kao `?group=ID` (+ `&league=...` za AVG/žensku ligu).
-- `functions/` je prazan (samo komentar); `404.html`, `robots.txt`, `sitemap.xml` su statični.
+- Nema Cloud Functions (mapa `functions/` ima samo lokalne tajne `.env` i `service-account.json`, ignorirane u gitu i hostingu); `404.html`, `robots.txt`, `sitemap.xml` su statični.
 
 Firebase Hosting služi **cijeli korijen** (`"public": "."`), pa sve u korijenu što nije u `hosting.ignore` postaje javno. Ne dodavaj tajne ni privatne datoteke u korijen.
 
@@ -25,7 +25,8 @@ Firebase Hosting služi **cijeli korijen** (`"public": "."`), pa sve u korijenu 
 - Sezone: `sezona-1`, `sezona-2`, `sezona-3`; aktivna dolazi iz `config/active-season` (rezervna vrijednost `DEFAULT_ACTIVE_SEASON_ID` u kodu).
 - Ždrijeb: gornji `R64…F`, donji `LR64…LF`; parovi iz `R64_DRAW`, fiksno 16 grupa A–P.
 - Firestore/Storage pravila i CORS **nisu u repou** nego u Firebase konzoli. Kad treba promjena, napiši točan blok pravila pa korisnik sam objavi.
-- Na localhostu App Check koristi debug token (blok u `index.html` iznad `initializeAppCheck`); admin stranica na localhostu **piše u produkciju**.
+- Na localhostu App Check koristi debug token (blok u `index.html` iznad `initializeAppCheck`): `FIREBASE_APPCHECK_DEBUG_TOKEN = true`, SDK napravi token po pregledniku i ispiše ga u konzoli, a ti ga jednom upišeš u Firebase konzolu (App Check → Manage debug tokens). **Nikad ga ne upisuj u kod**: cijeli korijen je javan. Admin stranica na localhostu **piše u produkciju**.
+- `photoRequests` može pisati svatko, pa admin prihvaća samo zahtjev s `id` = slug i slikom točno `player-photos-pending/{id}.jpg` (`validPendingPath` u adminu).
 
 ## Dupliciran kod: mijenjaj na svim stranicama
 
@@ -36,6 +37,9 @@ Namjerno nema zajedničke datoteke. Ako mijenjaš nešto od ovoga, provjeri osta
 - index + group: `computeStandings`, `formHtml`, `generateSchedule` (Berger), `getGroupPhaseLegs` (u index prima `isAvg, leagueId`, u group čita `leagueParam`), CSS tablice grupe (`table`, `.table-wrap`, `.form-badge`; podnožje `.table-footer-brand` / `.schedule-footer` ima samo index; raspored nema vlastiti okvir, a njegovo podnožje ide do rubova akordeona)
 - admin + group: `esc`, `groupIdToLetter`
 - sve tri: CSS blok `-- INTERAKCIJE --` na kraju `<style>` (isti prijelazi, pritisak `scale`, fokus i onemogućeno stanje na svakom `button`, `[onclick]` i `a[href]`), `--ease-glide`, traka `.sub-tabs` + `.sub-tabs-line` i `placeIndicator()` (index, group i admin; admin dodaje vlastitu `.admin-tabs` s istom crtom)
+- sve tri: `jsArg(x)` (u indexu preko `escapeHtml`, u adminu i groupu preko `esc`). Podatak u inline handleru ide samo kao `onclick="f(${jsArg(x)})"`, nikad `'${esc(x)}'` ni `.replace(/'/g,"\\'")`: parser atributa vrati `&#039;` u `'` pa ime s apostrofom lomi poziv, a namjerno ime izvrši skriptu.
+- Firebase SDK verzija (`12.12.0`) u `index.html` stoji na više mjesta: `modulepreload` linkovi u `<head>`, importi u module skripti i konstanta `SDK` (dinamički import analyticsa i storagea). Mijenjaj sve odjednom, inače se SDK skida dvaput. `index.html` koristi `firebase-firestore-lite.js` (samo `getDoc`/`getDocs`/`setDoc`; za `onSnapshot` ili `writeBatch` treba pun SDK).
+- Slike u `images/` imaju godišnji `immutable` keš (`firebase.json`), pa svaka referenca ima `?v=N` na sve tri stranice; pri zamjeni slike povećaj `N`.
 
 ## Dizajn
 
