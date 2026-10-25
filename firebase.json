@@ -7,11 +7,12 @@
       "**/.*/**",
       "**/node_modules/**",
       "functions/**",
+      "tools/**",
       "**/*.md"
     ],
     "headers": [
       {
-        "source": "**/*.@(webp|png)",
+        "source": "**/*.@(webp|png|woff2)",
         "headers": [
           { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
         ]

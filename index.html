@@ -12,7 +12,6 @@
   <meta name="author" content="Adriatic Steel League">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
   <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
   <!-- Firebase SDK: verzija mora biti ista kao u importima module skripte pri dnu stranice -->
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js">
@@ -20,9 +19,11 @@
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/12.12.0/firebase-app-check.js">
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700;800&display=swap" rel="stylesheet"></noscript>
-  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
-  <link rel="icon" href="images/ASL-logo.webp?v=2">
+  <!-- IKONE:preload (generira tools/fa-subset.py, ne uređuj ručno) -->
+  <link rel="preload" href="fonts/fa-solid.woff2?v=b14294b6" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/fa-brands.woff2?v=c8cb012e" as="font" type="font/woff2" crossorigin>
+  <!-- /IKONE:preload -->
+  <link rel="icon" href="images/ASL-logo-sm.webp?v=2">
 
   <style>
     :root {
@@ -158,8 +159,35 @@
 
     .last-updated { text-align: left; font-size: 1rem; font-weight: 700;  text-transform: uppercase; letter-spacing: 0.5px; margin: 20px 0; text-shadow: 0 6px 6px rgba(0, 0, 0, 0.5);}
 
+    /* IKONE:css (generira tools/fa-subset.py: Font Awesome 6.5.1 samo s korištenim ikonama, ne uređuj ručno) */
+    @font-face{font-family:"FA Solid";font-style:normal;font-weight:900;font-display:swap;src:url(fonts/fa-solid.woff2?v=b14294b6) format("woff2")}
+    .fas{font-family:"FA Solid";font-weight:900}
+    @font-face{font-family:"FA Brands";font-style:normal;font-weight:400;font-display:swap;src:url(fonts/fa-brands.woff2?v=c8cb012e) format("woff2")}
+    .fab{font-family:"FA Brands";font-weight:400}
+    .fas,.fab{-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased;display:inline-block;font-style:normal;font-variant:normal;line-height:1;text-rendering:auto}
+    .fa-arrow-left:before{content:"\f060"}
+    .fa-bolt:before{content:"\f0e7"}
+    .fa-camera:before{content:"\f030"}
+    .fa-chart-column:before{content:"\e0e3"}
+    .fa-check:before{content:"\f00c"}
+    .fa-equals:before{content:"\3d"}
+    .fa-ranking-star:before{content:"\e561"}
+    .fa-search:before{content:"\f002"}
+    .fa-sitemap:before{content:"\f0e8"}
+    .fa-table-list:before{content:"\f00b"}
+    .fa-times:before{content:"\f00d"}
+    .fa-trophy:before{content:"\f091"}
+    .fa-venus:before{content:"\f221"}
+    .fa-discord:before{content:"\f392"}
+    .fa-facebook-f:before{content:"\f39e"}
+    .fa-instagram:before{content:"\f16d"}
+    .fa-tiktok:before{content:"\e07b"}
+    .fa-youtube:before{content:"\f167"}
+    /* /IKONE:css */
+
     /* -- ZADNJI MEČEVI -- */
     .recent-matches-wrap { margin: 0 0 22px; animation: fadeInUp 0.5s ease both; }
+    .recent-matches-wrap:empty { min-height: 83px; } /* mjesto za slider dok podaci ne stignu (CLS); JS ga sakrije ako nema mečeva */
     .recent-matches-title {
       font-size: 0.82rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; text-shadow: 0 6px 6px rgba(0, 0, 0, 0.5);
       margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
@@ -227,7 +255,8 @@
     /* -- PREKIDAČ SEZONE (uz pretragu; upravlja TABLICE, NAJBOLJI U LIGI i ŽDRIJEB) -- */
     /* Oznaka "Arhiva sezona" stoji iznad prekidača, desno poravnata; pretraga i prekidač ostaju u istoj liniji */
     .season-toggle { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
-    .season-toggle:empty { display: none; } /* nema arhive - nema ni prekidača, pretraga zauzme cijeli red */
+    /* Rezervira visinu prekidača dok se ne učita (inače pretraga skoči kad stignu sezone: CLS). Bez arhive ostaje samo ~17px viška. */
+    .season-toggle:empty { min-height: calc(var(--bar-h) + 5px + 0.86rem); }
     /* Stoji izravno na fotografiji (nema stakla iza), pa treba sjenu kao ostali naslovi na stranici */
     .season-toggle-caption {
       padding-right: 6px; font-size: 0.86rem; font-weight: 700; line-height: 1; letter-spacing: 0.2px; white-space: nowrap;
@@ -1114,6 +1143,7 @@
       .player-search-box { padding: 0 14px; gap: 8px; }
       .seg-btn { padding: 0 10px; }
       .season-toggle-caption { font-size: 0.76rem; }
+      .season-toggle:empty { min-height: calc(var(--bar-h) + 5px + 0.76rem); }
       .stat-ring-dial { width: min(100%, 92px); }
       .stat-ring-val { font-size: 1.15rem; }
       .popup-match-top {column-gap: 0px;}
@@ -1159,7 +1189,7 @@
     <div class="container">
       <div class="hero">
         <a href="index-admin.html">
-          <img class="league-logo" src="images/ASL-logo.webp?v=2" alt="ASL Logo" width="240" height="240" fetchpriority="high" loading="eager">
+          <img class="league-logo" src="images/ASL-logo.webp?v=2" srcset="images/ASL-logo-sm.webp?v=2 240w, images/ASL-logo.webp?v=2 480w" sizes="(max-width: 480px) 135px, (max-width: 768px) 170px, 240px" alt="ASL Logo" width="240" height="251" fetchpriority="high" loading="eager">
         </a>
         <h1>ADRIATIC STEEL LEAGUE</h1>
         <p>3. SEZONA</p>
@@ -1174,7 +1204,7 @@
 
       <div class="last-updated">Zadnje ažuriranje: <span id="updated-time">-</span></div>
 
-      <div class="recent-matches-wrap" id="recent-matches-wrap" style="display:none;"></div>
+      <div class="recent-matches-wrap" id="recent-matches-wrap"></div>
 
       <div class="player-search-wrap">
         <div class="player-search-box">
