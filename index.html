@@ -71,7 +71,8 @@
     .page { position: relative; min-height: 100vh; width: 100%; padding: 26px; }
 
     /* backwards (ne both): trajni transform bi fiksnu navigaciju (.main-nav) vezao uz .container umjesto uz zaslon */
-    .container { max-width: 1300px; margin: 0 auto; animation: fadeInUp 0.5s ease backwards; }
+    /* Samo opacity (bez transforma): transform na roditelju bi tijekom animacije postao containing block za fiksnu navigaciju, pa bi na kraju skočila (CLS) */
+    .container { max-width: 1300px; margin: 0 auto; animation: fadeIn 0.5s ease backwards; }
 
     .hero { text-align: center; margin-bottom: 40px; }
     .hero p { margin: 15px 0 15px 0; font-size: 2rem; font-weight: 600; letter-spacing: 1px; text-align: center; text-shadow: 0 6px 6px rgba(0, 0, 0, 0.5); }
@@ -339,6 +340,7 @@
     .loading-text { font-size: 1rem; font-weight: 500; letter-spacing: 0.5px; }
 
     @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 
     .accordion-item {
@@ -4258,7 +4260,9 @@
     if (['localhost', '127.0.0.1'].includes(location.hostname)) {
       self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
     }
-    initializeAppCheck(app, {
+    // reCAPTCHA povlači ~350 KB i dugo zauzima glavnu nit, pa App Check i dohvat podataka kreću tek nakon
+    // load-a (prvi prikaz ga ne čeka). Podaci čekaju App Check jer bi bez tokena bili "unverified".
+    const startAppCheck = () => initializeAppCheck(app, {
       provider: new ReCaptchaEnterpriseProvider('6LdfcbktAAAAAGWaLVaJXHIBI8ST_nISw-DSFKuT'),
       isTokenAutoRefreshEnabled: true
     });
@@ -5116,7 +5120,13 @@
       tryOpen();
     }
 
-    bootstrap();
+    // Kreće nakon što je nacrtan najveći element (logo), ili najkasnije za 3 s. `load` bi ovdje bio prerano:
+    // na brzoj vezi nastupi prije LCP-a pa reCAPTCHA opet uđe u prvi prikaz (Lighthouse LCP 5,5 s umjesto 3,2 s).
+    // shortcut: klik na tab prije toga pokrene dohvat bez App Check tokena; kad se uključi Enforce, odgoditi i tab-loadere
+    let started = false;
+    const start = () => { if (!started) { started = true; startAppCheck(); bootstrap(); } };
+    new PerformanceObserver(() => setTimeout(start, 50)).observe({ type: 'largest-contentful-paint', buffered: true });
+    setTimeout(start, 3000);
   </script>
 </body>
 </html>
