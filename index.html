@@ -335,11 +335,31 @@
 
     .player-search-empty { padding: 16px; text-align: center; color: var(--muted); font-size: 0.88rem; }
 
-    .loading-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 20px; gap: 16px; }
-    .loading-spinner { width: 34px; height: 34px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid rgba(120,170,255,0.85); border-radius: 50%; animation: spin 1s linear infinite; }
-    .loading-text { font-size: 1rem; font-weight: 500; letter-spacing: 0.5px; }
+    /* -- SKELETON (lazy učitavanje) -- */
+    /* Obris sadržaja koji stiže: ista kartica akordeona/tablice/ždrijeba, samo sa svjetlucavim trakama (skeletonHtml()). */
+    .skel { display: block; border-radius: 8px; background: linear-gradient(90deg, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.16) 50%, rgba(255,255,255,0.06) 70%) 100% 0 / 250% 100%; animation: skelShimmer 1.5s linear infinite; }
+    .skel-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .skel-item { pointer-events: none; }
+    .skel-head { display: flex; align-items: center; gap: 12px; padding: 15px; background: var(--header); }
+    .skel-badge { width: 36px; height: 36px; border-radius: 999px; flex-shrink: 0; }
+    .skel-title { height: 16px; width: min(180px, 45%); }
+    .skel-body { padding: 16px; background: rgba(6,12,24,0.50); }
+    .skel-table { border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; background: var(--panel-2); overflow: hidden; }
+    .skel-row { display: grid; grid-template-columns: var(--skel-cols); gap: 14px; align-items: center; padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .skel-row:last-child { border-bottom: none; }
+    .skel-row.head { background: var(--table-head); }
+    .skel-cell { height: 14px; }
+    .skel-bracket { display: flex; align-items: stretch; gap: 28px; overflow: hidden; padding: 4px 0; animation: fadeInUp 0.5s ease both; }
+    .skel-bracket-round { flex: 1 0 130px; display: flex; flex-direction: column; justify-content: space-around; gap: 14px; }
+    .skel-match { height: 64px; border-radius: 12px; background-color: var(--panel-2); border: 1px solid var(--line); }
+    @media (max-width: 480px) {
+      .skel-body { padding: 10px; }
+      .skel-row { gap: 8px; padding: 12px 10px; }
+      .skel-bracket { gap: 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
 
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes skelShimmer { to { background-position: 0 0; } }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -1244,15 +1264,11 @@
           <span class="sub-tabs-line" aria-hidden="true"></span>
         </div>
         <div id="bracket-gornji">
-          <div id="gornji-zdrijeb-content">
-            <div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>
-          </div>
+          <div id="gornji-zdrijeb-content"></div>
           <div id="gornji-zdrijeb-archive-content" style="display:none;"></div>
         </div>
         <div id="bracket-donji" style="display:none;">
-          <div id="donji-zdrijeb-content">
-            <div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>
-          </div>
+          <div id="donji-zdrijeb-content"></div>
           <div id="donji-zdrijeb-archive-content" style="display:none;"></div>
         </div>
       </div>
@@ -1308,9 +1324,37 @@
     // Samo escapeHtml + \' ne radi: parser atributa vrati &#039; u ' prije izvršavanja pa ime s ' lomi poziv.
     function jsArg(v) { return escapeHtml(JSON.stringify(String(v ?? ''))); }
 
+    // -- SKELETON (lazy učitavanje) --
+    // Zamjena za spinner: obris sadržaja koji stiže sa svjetlucavim trakama (CSS: SKELETON).
+    // kind: 'groups' (akordeoni s tablicom grupe), 'najbolji' (tablica top 5), 'bracket' (stablo ždrijeba).
+    // label čitaju samo čitači ekrana.
+    function skeletonHtml(kind, label = 'Učitavanje podataka...') {
+      const cells = n => '<span class="skel skel-cell"></span>'.repeat(n);
+      const item = (cols, n, rows, i) => `
+        <div class="accordion-item skel-item" style="animation-delay:${i * 0.08}s">
+          <div class="skel-head"><span class="skel skel-badge"></span><span class="skel skel-title"></span></div>
+          <div class="skel-body"><div class="skel-table" style="--skel-cols:${cols}">
+            <div class="skel-row head">${cells(n)}</div>
+            ${`<div class="skel-row">${cells(n)}</div>`.repeat(rows)}
+          </div></div>
+        </div>`;
+      let inner;
+      if (kind === 'bracket') {
+        inner = `<div class="skel-bracket">${[4, 2, 1].map(c =>
+          `<div class="skel-bracket-round">${'<span class="skel skel-match"></span>'.repeat(c)}</div>`).join('')}</div>`;
+      } else if (kind === 'najbolji') {
+        inner = item('repeat(5, 1fr)', 5, 5, 0);
+      } else {
+        inner = [0, 1, 2, 3].map(i => item('28px 1fr 44px 44px 44px 56px', 6, 6, i)).join('');
+      }
+      return `<div class="skeleton" role="status" aria-busy="true"><span class="skel-sr">${escapeHtml(label)}</span>${inner}</div>`;
+    }
+    document.getElementById('gornji-zdrijeb-content').innerHTML = skeletonHtml('bracket', 'Učitavanje ždrijeba...');
+    document.getElementById('donji-zdrijeb-content').innerHTML = skeletonHtml('bracket', 'Učitavanje ždrijeba...');
+
     // -- NAVIGACIJA (glavna) --
     function switchTab(name) {
-      // Dok se tab učitava (loading-state je kratak) stranica se ne smije skratiti: preglednik bi skrenuo scroll na vrh.
+      // Dok se tab učitava (skeleton je kratak) stranica se ne smije skratiti: preglednik bi skrenuo scroll na vrh.
       document.body.style.minHeight = document.documentElement.scrollHeight + 'px';
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.getElementById('tab-' + name).classList.add('active');
@@ -2293,6 +2337,13 @@
         return;
       }
 
+      // Igrači koji nisu u aktivnoj sezoni dolaze iz lijeno učitane povijesti: prvo tipkanje je pokreće, pa se pretraga osvježi
+      if (!window.historyLoaded) {
+        window.ensureHistoryLoaded().then(() => {
+          if (document.getElementById('player-search-input').value.trim().toLowerCase() === term) handlePlayerSearch(value, true);
+        });
+      }
+
       const names = Object.keys(playerDatabase)
         .filter(name => name.toLowerCase().includes(term))
         .sort((a,b) => a.localeCompare(b))
@@ -2345,6 +2396,8 @@
       document.getElementById('player-search-results').style.display = 'none';
       document.getElementById('player-search-input').value = '';
       renderPlayerProfile();
+      // Povijest (sezona 1, arhiva, AVG lige) je lijena: profil se odmah iscrta s onim što je učitano pa se dopuni
+      if (!window.historyLoaded) window.ensureHistoryLoaded().then(() => { if (currentProfilePlayer === playerName) renderPlayerProfile(); });
     }
 
     // "Natrag" gumb na profilu (vidi renderPlayerProfile) - vraća na "Zadnji
@@ -4405,7 +4458,7 @@
     // -- TABLICE: UČITAVANJE (aktivna sezona) --
     async function loadStandings(seasonId) {
       const content = document.getElementById('content');
-      content.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje podataka...</span></div>`;
+      content.innerHTML = skeletonHtml('groups');
       try {
         const visibleRounds = getVisibleRounds(window.activeSeasonConfig?.trenutnoKolo);
         const seasonDoc = await getDoc(doc(db, 'seasons', seasonId));
@@ -4475,7 +4528,14 @@
       } catch(err) { showError(err); }
     }
 
-    async function loadSezona1Data() {
+    // Sezona 1 se učitava lijeno (profil/pretraga, vidi ensureHistoryLoaded), jednom
+    let sezona1Promise = null;
+    function loadSezona1Data() {
+      if (!sezona1Promise) sezona1Promise = fetchSezona1Data();
+      return sezona1Promise;
+    }
+
+    async function fetchSezona1Data() {
       try {
         const groupsSnap = await getDocs(collection(db, 'seasons', 'sezona-1', 'groups'));
         const groups = []; groupsSnap.forEach(d => groups.push({id:d.id,...d.data()}));
@@ -4605,18 +4665,15 @@
     }
 
     // -- NAJBOLJI U LIGI: VIŠE SEZONA --
-    // Sve sezone iz SEASON_ORDER osim trenutno aktivne se pokušavaju učitati
-    // za "Najbolji u ligi" tab (aktivna se već puni kroz loadStandings/
-    // loadBracket/loadLowerBracket). Izvodi se iz SEASON_ORDER umjesto ručne
-    // liste, tako da dodavanje sezona-4 u SEASON_ORDER bude dovoljno - ništa
-    // se ovdje ne mora ručno dirati. Sezone bez podataka (prazne grupe) se
-    // jednostavno tiho preskaču u loadLeagueStatsForSeason.
-    function getAdditionalLeagueStatSeasons() {
+    // Arhivske sezone (sve iz SEASON_ORDER osim aktivne i sezone-1) učitavaju se lijeno: tek kad ih netko odabere u
+    // prekidaču sezone ili otvori profil/pretragu igrača. Jedan dohvat (loadArchiveSeason) puni tablice, ždrijeb i
+    // "Najbolji u ligi". Dodavanje sezona-4 u SEASON_ORDER je dovoljno, ništa se ovdje ne mora ručno dirati.
+    function getArchiveSeasonIds() {
       return SEASON_ORDER.filter(s => s !== ACTIVE_SEASON_ID && s !== 'sezona-1'); // sezona-1 ima svoj poseban arhivski format (bez matches subcollectiona)
     }
 
     // leagueStatsCache[ACTIVE_SEASON_ID] se puni postojećim tokom (latestGroupStats itd.),
-    // dodatne sezone pune se kroz loadLeagueStatsForSeason ispod.
+    // arhivske sezone pune se kroz loadArchiveSeason.
     const leagueStatsCache = {};
     let activeNajboljiSeason = ACTIVE_SEASON_ID;
 
@@ -4625,7 +4682,7 @@
 
       // playerName -> {avg, f9} za OVU sezonu (uključuje playoff kad je
       // dostupan - groupStats je već spojen s playoffom i za aktivnu i za
-      // arhivske sezone, vidi refreshNajboljiWithPlayoffs/loadLeagueStatsForSeason).
+      // arhivske sezone, vidi refreshNajboljiWithPlayoffs/loadArchiveSeason).
       // Namespace-ano po sezoni jer statDiffHtml u match popupu mora uspoređivati
       // meč sa PRAVOM sezonom tog meča, ne uvijek s aktivnom sezonom.
       window.playerSeasonAvgMap = window.playerSeasonAvgMap || {};
@@ -4636,78 +4693,20 @@
       if (seasonId === activeNajboljiSeason) renderActiveNajboljiSeason();
     }
 
+    function showNajboljiPlaceholder(html) {
+      document.getElementById('najbolji-content').innerHTML = html;
+      document.getElementById('best-matches-content').innerHTML = '';
+    }
+
     function renderActiveNajboljiSeason() {
       const data = leagueStatsCache[activeNajboljiSeason];
-      if (!data) return;
+      if (!data) {
+        // arhivska sezona se još učitava (lijeno): ne ostavljaj prikaz prethodne sezone
+        if (activeNajboljiSeason !== ACTIVE_SEASON_ID) showNajboljiPlaceholder(skeletonHtml('najbolji'));
+        return;
+      }
       renderNajbolji(data.groupStats);
       renderBestMatches(data.bestMatchByRound, data.mvpByRound);
-    }
-
-    // Generički loader za sezone koje NISU trenutno aktivna sezona (npr. sezona-3
-    // dok se igra usporedno ili nakon što sezona-2 završi). Ne dira TABLICE tab,
-    // koloDataMap, playerDatabase ni bilo koji postojeći sezona-2 kod - samo
-    // izračunava iste agregate (standings + best match/MVP + playoff) za tu sezonu
-    // i puni leagueStatsCache preko setLeagueStatsForSeason.
-    async function loadLeagueStatsForSeason(seasonId) {
-      try {
-        const groupsSnap = await getDocs(collection(db, 'seasons', seasonId, 'groups'));
-        const groups = []; groupsSnap.forEach(d => groups.push({id:d.id,...d.data()}));
-        if (!groups.length) return; // sezona još nema grupa - preskoči tiho
-        groups.sort((a,b) => a.id.localeCompare(b.id));
-
-        const bestMatchByKolo = {};
-        const mvpByKolo = {};
-
-        const groupsData = await Promise.all(groups.map(async group => {
-          const playersSnap = await getDocs(query(collection(db,'seasons',seasonId,'groups',group.id,'players'), orderBy('position')));
-          const players = []; playersSnap.forEach(p => players.push(p.data().name));
-
-          const matchesSnap = await getDocs(collection(db,'seasons',seasonId,'groups',group.id,'matches'));
-          const matchesMap  = {}; matchesSnap.forEach(m => { const d=m.data(); matchesMap[`${d.kolo}_${d.mec}`]=d; });
-
-          const schedule  = generateSchedule(players);
-          const standings = computeStandings(players, schedule, matchesMap);
-
-          schedule.forEach(({ kolo, matches }) => {
-            matches.forEach(({ mec }) => {
-              const m = matchesMap[`${kolo}_${mec}`];
-              if (m) {
-                considerBestMatch(bestMatchByKolo, kolo, m, group.name);
-                considerMVP(mvpByKolo, kolo, m);
-              }
-            });
-          });
-
-          return standings;
-        }));
-
-        const groupStats = groupsData.flat();
-
-        // Playoff (gornji/donji ždrijeb) za tu sezonu, ako postoji - koristi
-        // odvojene mape (ne globalne bracketMatchData/lowerBracketMatchData
-        // koje su rezervirane za trenutno aktivnu sezonu i njen popup/profil prikaz).
-        const [bracketSnap, lowerBracketSnap] = await Promise.all([
-          getDocs(collection(db,'seasons',seasonId,'bracket')).catch(() => null),
-          getDocs(collection(db,'seasons',seasonId,'lower-bracket')).catch(() => null)
-        ]);
-        const bracketDataMap = {};
-        if (bracketSnap) bracketSnap.forEach(d => { bracketDataMap[d.id] = d.data(); });
-        const lowerBracketDataMap = {};
-        if (lowerBracketSnap) lowerBracketSnap.forEach(d => { lowerBracketDataMap[d.id] = d.data(); });
-
-        const playoffData = collectPlayoffStatsAndBestMatch(bracketDataMap, lowerBracketDataMap);
-        const combinedStats = mergePlayerStats([...groupStats, ...playoffData.perPlayerStats]);
-        const combinedBestMatchByKolo = { ...bestMatchByKolo, ...playoffData.bestMatchByRound };
-        const combinedMvpByKolo = { ...mvpByKolo, ...playoffData.mvpByRound };
-
-        setLeagueStatsForSeason(seasonId, combinedStats, combinedBestMatchByKolo, combinedMvpByKolo);
-      } catch(err) {
-        console.error(`Greška pri učitavanju "Najbolji u ligi" za ${seasonId}:`, err);
-      }
-    }
-
-    function loadAdditionalLeagueStatSeasons() {
-      getAdditionalLeagueStatSeasons().forEach(seasonId => loadLeagueStatsForSeason(seasonId));
     }
 
     // -- AVG LIGE (Diamond/Gold/Silver/Bronze/Ženska, Firestore avg-leagues/{seasonId}/{leagueId}/...) --
@@ -4744,8 +4743,17 @@
       return getVisibleRounds(leagueId === 'zenska' ? cfg.trenutnoKoloZenska : cfg.trenutnoKoloAvg);
     }
 
-    async function fetchAvgLeagueData(leagueId) {
-      if (avgLigeDataCache[leagueId]) return; // već učitano
+    // Isti dohvat ne ide dvaput kad ga istovremeno traže tab lige i profil igrača
+    const avgFetchPromises = {}; // leagueId -> Promise
+    function fetchAvgLeagueData(leagueId) {
+      if (avgLigeDataCache[leagueId]) return Promise.resolve(); // već učitano
+      if (!avgFetchPromises[leagueId]) {
+        avgFetchPromises[leagueId] = readAvgLeagueData(leagueId).catch(err => { delete avgFetchPromises[leagueId]; throw err; });
+      }
+      return avgFetchPromises[leagueId];
+    }
+
+    async function readAvgLeagueData(leagueId) {
       const seasonId = ACTIVE_SEASON_ID;
       const visibleAvgRounds = getAvgKolo(leagueId);
       const basePath = leagueGroupsPath(seasonId, leagueId);
@@ -4792,7 +4800,7 @@
       // Ženska liga ima vlastiti glavni tab i kontejner, ostale lige dijele AVG LIGE tab.
       const contentEl = document.getElementById(leagueId === 'zenska' ? 'zenska-liga-content' : 'avg-lige-content');
       if (!avgLigeDataCache[leagueId]) {
-        contentEl.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje podataka...</span></div>`;
+        contentEl.innerHTML = skeletonHtml('groups');
         try {
           await fetchAvgLeagueData(leagueId);
         } catch(err) {
@@ -4853,13 +4861,27 @@
       }
     }
 
-    function loadAllAvgLeagues() {
-      Object.keys(AVG_LEAGUE_LABELS).forEach(leagueId => {
-        fetchAvgLeagueData(leagueId).catch(err => console.error(`Greška pri učitavanju AVG lige ${leagueId}:`, err));
-        loadAvgBracket(leagueId);
-        SEASON_ORDER.forEach(seasonId => loadAvgHistoryForSeason(seasonId, leagueId));
-      });
+    // -- LIJENO UČITAVANJE POVIJESTI --
+    // Sezona 1, arhivske sezone i AVG lige (uključujući povijesne rezultate i ždrijebe) ne čitaju se pri otvaranju stranice.
+    // Učitaju se jednom, kad ih netko zatraži: profil igrača, pretraga ili ?player= poveznica. Tabovi AVG LIGE / ŽENSKA LIGA
+    // i prekidač sezone učitavaju samo svoj dio (loadAvgLige, loadArchiveSeason). Svi dohvati su deduplicirani.
+    // "Zadnji mečevi" AVG liga pojavljuju se tek nakon što se dohvate podaci te lige.
+    let historyPromise = null;
+    function ensureHistoryLoaded() {
+      if (!historyPromise) {
+        historyPromise = bootstrapDone.then(() => Promise.all([
+          loadSezona1Data(),
+          ...getArchiveSeasonIds().map(seasonId => loadArchiveSeason(seasonId)),
+          ...Object.keys(AVG_LEAGUE_LABELS).flatMap(leagueId => [
+            fetchAvgLeagueData(leagueId).catch(err => console.error(`Greška pri učitavanju AVG lige ${leagueId}:`, err)),
+            loadAvgBracket(leagueId),
+            ...SEASON_ORDER.map(seasonId => loadAvgHistoryForSeason(seasonId, leagueId))
+          ])
+        ])).then(() => { window.historyLoaded = true; renderRecentMatches(); });
+      }
+      return historyPromise;
     }
+    window.ensureHistoryLoaded = ensureHistoryLoaded;
 
     // -- TABLICE ARHIVA (prošle sezone, puni standings + raspored, read-only) --
     // Odvojeno od aktivne sezone (koja koristi koloDataMap/createAccordion) -
@@ -4867,11 +4889,20 @@
     // (archiveKoloDataMap, createArchiveAccordion...), tako da nikad ne kolidira
     // s DOM-om ili globalnim mapama aktivne sezone.
     const archiveDataCache = {}; // seasonId -> html string (izgrađen jednom, keširan)
+    const archiveLoadPromises = {}; // seasonId -> Promise (jedan dohvat, koliko god mjesta ga traži)
+    const archiveBracketRawData = {};      // seasonId -> {matchId: podaci} gornjeg ždrijeba (za "Najbolji u ligi")
+    const archiveLowerBracketRawData = {}; // isto za donji ždrijeb
     const archiveGroupStandingsMap = {}; // seasonId -> {slovo: standings[]} - treba ga i arhivski bracket (loadArchiveBracket)
     let activeSeasonView = 'active'; // 'active' | seasonId arhive - jedini izvor istine za TABLICE/NAJBOLJI/ŽDRIJEB toggle
 
-    async function loadArchiveSeason(seasonId) {
-      if (archiveDataCache[seasonId]) return; // već učitano
+    // Lijeno: poziva se tek kad netko odabere sezonu ili otvori profil. Jedan dohvat puni tablice, ždrijeb i "Najbolji u ligi".
+    function loadArchiveSeason(seasonId) {
+      if (archiveDataCache[seasonId]) return Promise.resolve(); // već učitano
+      if (!archiveLoadPromises[seasonId]) archiveLoadPromises[seasonId] = readArchiveSeason(seasonId);
+      return archiveLoadPromises[seasonId];
+    }
+
+    async function readArchiveSeason(seasonId) {
       try {
         const groupsSnap = await getDocs(collection(db, 'seasons', seasonId, 'groups'));
         const groups = []; groupsSnap.forEach(d => groups.push({id:d.id,...d.data()}));
@@ -4880,6 +4911,9 @@
         groups.sort((a,b) => a.id.localeCompare(b.id));
 
         const groupStandingsMap = {};
+        const bestMatchByKolo = {};
+        const mvpByKolo = {};
+        const groupStats = [];
         const groupsHtml = await Promise.all(groups.map(async (group, i) => {
           const playersSnap = await getDocs(query(collection(db,'seasons',seasonId,'groups',group.id,'players'), orderBy('position')));
           const players = []; playersSnap.forEach(p => players.push(p.data().name));
@@ -4890,6 +4924,17 @@
           const schedule  = generateSchedule(players);
           const standings = computeStandings(players, schedule, matchesMap);
           const uid = `arch-${seasonId}-${i+1}`;
+
+          groupStats.push(...standings);
+          schedule.forEach(({ kolo, matches }) => {
+            matches.forEach(({ mec }) => {
+              const m = matchesMap[`${kolo}_${mec}`];
+              if (m) {
+                considerBestMatch(bestMatchByKolo, kolo, m, group.name);
+                considerMVP(mvpByKolo, kolo, m);
+              }
+            });
+          });
 
           const letter = group.id.replace(/[^a-zA-Z]/g,'').slice(-1).toUpperCase();
           groupStandingsMap[letter] = standings;
@@ -4915,6 +4960,15 @@
         // koriste se i tamo, pa se HTML ne gradi dvaput.
         await ensureArchiveBracketBuilt(seasonId, groupStandingsMap);
         await ensureArchiveLowerBracketBuilt(seasonId, groupStandingsMap);
+
+        // "Najbolji u ligi" za ovu sezonu iz istih podataka (grupe + playoff), bez ponovnog čitanja
+        const playoffData = collectPlayoffStatsAndBestMatch(archiveBracketRawData[seasonId] || {}, archiveLowerBracketRawData[seasonId] || {});
+        setLeagueStatsForSeason(
+          seasonId,
+          mergePlayerStats([...groupStats, ...playoffData.perPlayerStats]),
+          { ...bestMatchByKolo, ...playoffData.bestMatchByRound },
+          { ...mvpByKolo, ...playoffData.mvpByRound }
+        );
       } catch (err) {
         console.error(`Greška pri učitavanju arhive za ${seasonId}:`, err);
       }
@@ -4925,6 +4979,7 @@
       try {
         const bracketSnap = await getDocs(collection(db, 'seasons', seasonId, 'bracket'));
         const matchesByRound = {}; bracketSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
+        archiveBracketRawData[seasonId] = matchesByRound;
         archiveBracketMatchData[seasonId] = {};
         archiveBracketDataCache[seasonId] = buildBracketHtml(
           matchesByRound, groupStandingsMap || archiveGroupStandingsMap[seasonId] || {}, archiveBracketMatchData[seasonId],
@@ -4940,6 +4995,7 @@
       try {
         const lowerSnap = await getDocs(collection(db, 'seasons', seasonId, 'lower-bracket'));
         const matchesByRound = {}; lowerSnap.forEach(d => { matchesByRound[d.id] = d.data(); });
+        archiveLowerBracketRawData[seasonId] = matchesByRound;
         archiveLowerBracketMatchData[seasonId] = {};
         archiveLowerBracketDataCache[seasonId] = buildLowerBracketHtml(
           matchesByRound, groupStandingsMap || archiveGroupStandingsMap[seasonId] || {}, archiveLowerBracketMatchData[seasonId],
@@ -4955,7 +5011,7 @@
     // oznaka "Arhiva sezona" iznad njega (desno poravnata) pokazuje da se tu bira i prošla sezona.
     // Bracket arhiva ostaje lijena (fetch tek na klik + cache u
     // archiveBracketDataCache/archiveLowerBracketDataCache), TABLICE i Najbolji
-    // su već eager učitani (loadArchiveSeason/loadLeagueStatsForSeason u bootstrapu).
+    // se učitavaju lijeno, jednim dohvatom (loadArchiveSeason) pri prvom odabiru sezone.
     // renderGlobalSeasonToggle se zove više puta (kad stigne podatak sezone i pri svakom
     // prebacivanju), pa DOM gradi samo kad se promijeni skup sezona - inače bi se pločica
     // svaki put stvarala ispočetka i nikad ne bi kliznula između segmenata.
@@ -4967,7 +5023,7 @@
     }
 
     function renderGlobalSeasonToggle() {
-      const archiveSeasons = Object.keys(archiveDataCache).filter(s => SEASON_ORDER.includes(s));
+      const archiveSeasons = getArchiveSeasonIds(); // arhiva je lijena, pa prekidač ne čeka podatke
       if (!archiveSeasons.length) { seasonToggleEl.innerHTML = ''; seasonToggleEl.dataset.keys = ''; return; } // nema arhive - ne prikazuj toggle (današnje ponašanje)
 
       // Kronološki (2, 3, ...); view 'active' je pogled na aktivnu sezonu, ostali su arhivski
@@ -5002,6 +5058,17 @@
       positionSeasonThumb(!rebuilt);
     }
 
+    // Arhivske tablice: prvi odabir sezone povlači podatke (lijeno), svaki sljedeći je iz memorije.
+    async function showArchiveTables(seasonId, archiveEl) {
+      if (!archiveDataCache[seasonId]) {
+        archiveEl.innerHTML = skeletonHtml('groups');
+        await loadArchiveSeason(seasonId);
+      }
+      if (activeSeasonView !== seasonId) return; // korisnik je u međuvremenu otišao na drugu sezonu
+      archiveEl.innerHTML = archiveDataCache[seasonId] || '<div class="empty-state">Nema podataka za ovu sezonu.</div>';
+      if (!leagueStatsCache[seasonId] && activeNajboljiSeason === seasonId) showNajboljiPlaceholder('<div class="empty-state">Nema podataka za ovu sezonu.</div>');
+    }
+
     function switchGlobalSeasonView(target) {
       // Sačuvaj scroll poziciju - bez ovoga, ako novi prikaz ima manje sadržaja
       // od trenutnog (npr. TABLICE žive sezone dok još nema grupa), browser
@@ -5019,7 +5086,7 @@
       const archiveEl = document.getElementById('archive-content');
       contentEl.style.display = isActive ? '' : 'none';
       archiveEl.style.display = isActive ? 'none' : '';
-      if (!isActive) archiveEl.innerHTML = archiveDataCache[target] || '<div class="empty-state">Nema podataka za ovu sezonu.</div>';
+      if (!isActive) showArchiveTables(target, archiveEl);
 
       const gornjiContentEl = document.getElementById('gornji-zdrijeb-content');
       const gornjiArchiveEl = document.getElementById('gornji-zdrijeb-archive-content');
@@ -5048,7 +5115,7 @@
         window.__observeBracketWrap('archive-bracket-wrap-upper');
         return;
       }
-      contentEl.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>`;
+      contentEl.innerHTML = skeletonHtml('bracket', 'Učitavanje ždrijeba...');
       try {
         await loadArchiveSeason(seasonId); // osigurava archiveGroupStandingsMap[seasonId] + poziva ensureArchiveBracketBuilt
         await ensureArchiveBracketBuilt(seasonId, archiveGroupStandingsMap[seasonId] || {});
@@ -5068,9 +5135,10 @@
         window.__observeBracketWrap('archive-bracket-wrap-lower');
         return;
       }
-      contentEl.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span></div>`;
+      contentEl.innerHTML = skeletonHtml('bracket', 'Učitavanje ždrijeba...');
       try {
-        await ensureArchiveLowerBracketBuilt(seasonId);
+        await loadArchiveSeason(seasonId); // isti dohvat kao gornji ždrijeb, da se donji ne čita dvaput
+        await ensureArchiveLowerBracketBuilt(seasonId, archiveGroupStandingsMap[seasonId] || {});
         contentEl.innerHTML = archiveLowerBracketDataCache[seasonId] || '<div class="empty-state">Nema podataka o ždrijebu.</div>';
         requestAnimationFrame(() => scheduleAllPairOffsets());
         window.__observeBracketWrap('archive-bracket-wrap-lower');
@@ -5079,18 +5147,13 @@
       }
     }
 
-    function loadArchiveSeasons() {
-      // Sezona 1 ima poseban legacy oblik (standings polja izravno na igraču,
-      // bez matches subcollectiona) i već ima svoj prikaz kroz playerDatabase/
-      // profil popup - generateSchedule+computeStandings bi za nju dao krive
-      // (nul-ove) rezultate jer nema mečeva za izračun, pa se ovdje preskače.
-      SEASON_ORDER.filter(s => s !== ACTIVE_SEASON_ID && s !== 'sezona-1').forEach(seasonId => loadArchiveSeason(seasonId));
-    }
-
     // -- BOOTSTRAP --
     // Redoslijed je bitan: prvo se pročita koja je sezona aktivna, tek onda
     // se pokreću svi loaderi koji o tome ovise (TABLICE, bracketovi, Najbolji
-    // u ligi, arhiva). Sezona 1 (posebni legacy oblik) učitava se neovisno.
+    // u ligi). Sezona 1, arhiva i AVG lige su lijeni (ensureHistoryLoaded, tabovi, prekidač sezone).
+    let bootstrapReady;
+    const bootstrapDone = new Promise(resolve => { bootstrapReady = resolve; });
+
     async function bootstrap() {
       ACTIVE_SEASON_ID = await resolveActiveSeasonId();
       window.ACTIVE_SEASON_ID = ACTIVE_SEASON_ID;
@@ -5098,12 +5161,10 @@
       activeNajboljiSeason = ACTIVE_SEASON_ID;
 
       await loadBracketConfig();
+      bootstrapReady();
       loadPlayerPhotos();
-      loadSezona1Data();
       loadStandings(ACTIVE_SEASON_ID); // sad interno zove i loadBracket i loadLowerBracket (trebaju groupStandingsMap)
-      loadAdditionalLeagueStatSeasons();
-      loadArchiveSeasons();
-      loadAllAvgLeagues();
+      renderGlobalSeasonToggle();
 
       openProfileFromUrl();
     }
@@ -5116,6 +5177,7 @@
     function openProfileFromUrl() {
       const name = new URLSearchParams(window.location.search).get('player');
       if (!name) return;
+      ensureHistoryLoaded(); // igrač može biti samo u arhivi/AVG ligi
       let attempts = 0;
       const tryOpen = () => {
         if (playerDatabase[name]) { openPlayerProfile(name); return; }

@@ -762,35 +762,24 @@
       cursor: not-allowed;
     }
 
-    .loading-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 60px 20px;
-      gap: 16px;
-    }
+    /* -- SKELETON (lazy učitavanje) -- */
+    /* Obris sadržaja koji stiže (skeletonHtml()), umjesto spinnera. Osnova je ista kao na index.html; strukture su po stranici. */
+    .skel { display: block; border-radius: 8px; background: linear-gradient(90deg, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.16) 50%, rgba(255,255,255,0.06) 70%) 100% 0 / 250% 100%; animation: skelShimmer 1.5s linear infinite; }
+    .skel-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .skel-card { pointer-events: none; }
+    .skel-title { height: 16px; width: min(180px, 45%); }
+    .skel-line { height: 12px; }
+    .skel-table { background: var(--panel-2); }
+    .skel-row { display: grid; grid-template-columns: var(--skel-cols); gap: 14px; align-items: center; padding: 14px 20px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .skel-row:last-child { border-bottom: none; }
+    .skel-row.head { background: var(--table-head); }
+    .skel-cell { height: 14px; }
+    .skel-badge { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; }
+    .skel-section-body { background: var(--panel-2); }
+    @media (max-width: 480px) { .skel-row { gap: 8px; padding: 12px 10px; } }
 
-    .loading-spinner {
-      width: 34px;
-      height: 34px;
-      border: 4px solid rgba(255, 255, 255, 0.1);
-      border-top: 4px solid rgba(120, 170, 255, 0.85);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    .loading-text {
-      font-size: 0.95rem;
-      font-weight: 500;
-      color: var(--muted);
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
+    @keyframes skelShimmer { to { background-position: 0 0; } }
+    @media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
 
     @keyframes fadeInUp {
       from {
@@ -942,22 +931,12 @@
 
       <!-- TAB: STANDINGS -->
       <div id="tab-standings" class="tab-panel active">
-        <div id="standings-container">
-          <div class="loading-state">
-            <div class="loading-spinner"></div>
-            <span class="loading-text">Učitavanje tablica...</span>
-          </div>
-        </div>
+        <div id="standings-container"></div>
       </div>
 
       <!-- TAB: RASPORED -->
       <div id="tab-raspored" class="tab-panel">
-        <div id="raspored-container">
-          <div class="loading-state">
-            <div class="loading-spinner"></div>
-            <span class="loading-text">Učitavanje rasporeda...</span>
-          </div>
-        </div>
+        <div id="raspored-container"></div>
       </div>
 
     </div>
@@ -965,6 +944,37 @@
 
   <!-- TOAST -->
   <div class="toast" id="toast"></div>
+
+  <script>
+    // -- SKELETON (lazy učitavanje) --
+    // Obris sadržaja koji stiže umjesto spinnera (CSS: SKELETON). kind: 'standings' | 'raspored'; label čitaju samo čitači ekrana.
+    function skeletonHtml(kind, label) {
+      const cells = n => '<span class="skel skel-cell"></span>'.repeat(n);
+      let inner;
+      if (kind === 'raspored') {
+        const section = i => `
+          <div class="kolo-section skel-card" style="animation-delay:${i * 0.08}s">
+            <div class="kolo-header">
+              <div class="kolo-header-left"><span class="skel skel-badge"></span><span class="skel skel-title"></span></div>
+            </div>
+            <div class="skel-section-body">${`<div class="skel-row" style="--skel-cols:1fr 56px 1fr">${cells(3)}</div>`.repeat(3)}</div>
+          </div>`;
+        inner = [0, 1, 2].map(section).join('');
+      } else {
+        inner = `
+          <div class="standings-wrap skel-card">
+            <div class="standings-header"><span class="skel skel-title"></span></div>
+            <div class="skel-table" style="--skel-cols:28px 1fr 44px 44px 44px 56px">
+              <div class="skel-row head">${cells(6)}</div>
+              ${`<div class="skel-row">${cells(6)}</div>`.repeat(6)}
+            </div>
+          </div>`;
+      }
+      return `<div role="status" aria-busy="true"><span class="skel-sr">${label}</span>${inner}</div>`;
+    }
+    document.getElementById('standings-container').innerHTML = skeletonHtml('standings', 'Učitavanje tablica...');
+    document.getElementById('raspored-container').innerHTML = skeletonHtml('raspored', 'Učitavanje rasporeda...');
+  </script>
 
   <script type="module">
     // -- FIREBASE INIT --

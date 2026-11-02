@@ -97,12 +97,6 @@
       }
     }
 
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
     /* -- LOGIN -- */
     #login-screen {
       position: relative;
@@ -1215,31 +1209,27 @@
       background: rgba(231, 76, 60, 0.25);
     }
 
-    /* -- LOADING / TOAST -- */
-    .loading-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 60px 20px;
-      gap: 16px;
-    }
+    /* -- SKELETON (lazy učitavanje) -- */
+    /* Obris sadržaja koji stiže (skeletonHtml()), umjesto spinnera. Osnova je ista kao na index.html; strukture su po stranici. */
+    .skel { display: block; border-radius: 8px; background: linear-gradient(90deg, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0.16) 50%, rgba(255,255,255,0.06) 70%) 100% 0 / 250% 100%; animation: skelShimmer 1.5s linear infinite; }
+    .skel-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .skel-card { pointer-events: none; }
+    .skel-title { height: 16px; width: min(180px, 45%); }
+    .skel-line { height: 12px; }
+    .skeleton-contents { display: contents; }
+    .skel-pill { height: 20px; width: 64px; border-radius: 999px; }
+    .skel-card-lines { display: flex; flex-direction: column; gap: 10px; }
+    .skel-action { height: 12px; width: 120px; }
+    .skel-avatar { width: 72px; height: 72px; border-radius: 50%; }
+    .skel-bracket { display: flex; align-items: stretch; gap: 28px; overflow: hidden; padding: 4px 0; animation: fadeInUp 0.4s ease both; }
+    .skel-bracket-round { flex: 1 0 130px; display: flex; flex-direction: column; justify-content: space-around; gap: 14px; }
+    .skel-match { height: 64px; border-radius: 12px; background-color: var(--panel-2); border: 1px solid var(--line); }
+    @media (max-width: 480px) { .skel-bracket { gap: 18px; } }
 
-    .loading-spinner {
-      width: 34px;
-      height: 34px;
-      border: 4px solid rgba(255, 255, 255, 0.1);
-      border-top: 4px solid rgba(120, 170, 255, 0.85);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
+    @keyframes skelShimmer { to { background-position: 0 0; } }
+    @media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
 
-    .loading-text {
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--muted);
-    }
-
+    /* -- TOAST -- */
     .toast {
       position: fixed;
       bottom: 24px;
@@ -1419,27 +1409,15 @@
       </div>
 
       <div id="admin-tab-grupe" class="admin-tab-panel active">
-        <div id="groups-container">
-          <div class="loading-state">
-            <div class="loading-spinner"></div><span class="loading-text">Učitavanje grupa...</span>
-          </div>
-        </div>
+        <div id="groups-container"></div>
       </div>
 
       <div id="admin-tab-bracket" class="admin-tab-panel">
-        <div id="bracket-admin-container">
-          <div class="loading-state">
-            <div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span>
-          </div>
-        </div>
+        <div id="bracket-admin-container"></div>
       </div>
 
       <div id="admin-tab-lower-bracket" class="admin-tab-panel">
-        <div id="lower-bracket-admin-container">
-          <div class="loading-state">
-            <div class="loading-spinner"></div><span class="loading-text">Učitavanje ždrijeba...</span>
-          </div>
-        </div>
+        <div id="lower-bracket-admin-container"></div>
       </div>
 
       <div id="admin-tab-avg-lige" class="admin-tab-panel">
@@ -1478,11 +1456,7 @@
         <div id="photo-requests-container"></div>
         <input class="form-input" type="text" placeholder="Pretraži igrače..." style="margin-bottom:14px;"
           oninput="filterPlayersPhotoGrid(this)">
-        <div id="players-photo-grid" class="players-photo-grid">
-          <div class="loading-state">
-            <div class="loading-spinner"></div><span class="loading-text">Učitavanje igrača...</span>
-          </div>
-        </div>
+        <div id="players-photo-grid" class="players-photo-grid"></div>
       </div>
     </div>
   </div>
@@ -1492,6 +1466,38 @@
   </div>
 
   <div class="toast" id="toast"></div>
+
+  <script>
+    // -- SKELETON (lazy učitavanje) --
+    // Obris sadržaja koji stiže umjesto spinnera (CSS: SKELETON). kind: 'cards' (kartice grupa) | 'bracket' | 'players';
+    // label čitaju samo čitači ekrana.
+    function skeletonHtml(kind, label) {
+      let inner;
+      if (kind === 'bracket') {
+        inner = `<div class="skel-bracket">${[4, 2, 1].map(c =>
+          `<div class="skel-bracket-round">${'<span class="skel skel-match"></span>'.repeat(c)}</div>`).join('')}</div>`;
+      } else if (kind === 'players') {
+        inner = Array.from({ length: 12 }, (_, i) => `
+          <div class="player-photo-card skel-card" style="animation:fadeInUp 0.4s ease both;animation-delay:${i * 0.03}s">
+            <span class="skel skel-avatar"></span>
+            <span class="skel skel-line" style="width:70%"></span>
+          </div>`).join('');
+      } else {
+        const widths = [70, 55, 80, 45];
+        inner = '<div class="groups-grid">' + Array.from({ length: 8 }, (_, i) => `
+          <div class="group-card skel-card" style="animation-delay:${i * 0.04}s">
+            <div class="group-card-header"><span class="skel skel-title"></span><span class="skel skel-pill"></span></div>
+            <div class="group-card-body"><div class="skel-card-lines">${widths.map(w => `<span class="skel skel-line" style="width:${w}%"></span>`).join('')}</div></div>
+            <div class="group-card-footer"><span class="skel skel-action"></span></div>
+          </div>`).join('') + '</div>';
+      }
+      return `<div class="${kind === 'players' ? 'skeleton-contents' : ''}" role="status" aria-busy="true"><span class="skel-sr">${label}</span>${inner}</div>`;
+    }
+    document.getElementById('groups-container').innerHTML = skeletonHtml('cards', 'Učitavanje grupa...');
+    document.getElementById('bracket-admin-container').innerHTML = skeletonHtml('bracket', 'Učitavanje ždrijeba...');
+    document.getElementById('lower-bracket-admin-container').innerHTML = skeletonHtml('bracket', 'Učitavanje ždrijeba...');
+    document.getElementById('players-photo-grid').innerHTML = skeletonHtml('players', 'Učitavanje igrača...');
+  </script>
 
   <script type="module">
     // -- FIREBASE INIT --
@@ -3220,7 +3226,7 @@
 
     async function loadAvgLeague(leagueId) {
       const container = document.getElementById('avg-container-' + leagueId);
-      container.innerHTML = `<div class="loading-state"><div class="loading-spinner"></div><span class="loading-text">Učitavanje...</span></div>`;
+      container.innerHTML = skeletonHtml('cards', 'Učitavanje...');
 
       try {
         if (AVG_CREATE_FORM_ENABLED) await loadAllPlayers();
