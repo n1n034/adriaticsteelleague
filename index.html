@@ -4285,7 +4285,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
     // Firestore Lite (REST, bez realtime listenera) - stranica koristi samo getDoc/getDocs/setDoc.
     // Analytics i Storage se učitavaju naknadno (vidi dolje), pa ne čekaju na kritičnom putu.
-    import { getFirestore, collection, getDocs, query, orderBy, getDoc, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore-lite.js";
+    import { getFirestore, collection, getDocs as fsGetDocs, query, orderBy, getDoc as fsGetDoc, doc, setDoc as fsSetDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore-lite.js";
     import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app-check.js";
     const SDK = "https://www.gstatic.com/firebasejs/12.12.0/";
 
@@ -4320,10 +4320,21 @@
     }
     // reCAPTCHA povlači ~350 KB i dugo zauzima glavnu nit, pa App Check i dohvat podataka kreću tek nakon
     // load-a (prvi prikaz ga ne čeka). Podaci čekaju App Check jer bi bez tokena bili "unverified".
-    const startAppCheck = () => initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider('6LdfcbktAAAAAGWaLVaJXHIBI8ST_nISw-DSFKuT'),
-      isTokenAutoRefreshEnabled: true
-    });
+    // -- APP CHECK VRATA --
+    // Svaki Firestore i Storage poziv čeka da App Check bude pokrenut (`appCheckReady`), pa klik na tab prije starta
+    // ne ide bez tokena (potrebno kad je Enforce uključen). Start je zajamčen najkasnije za 3 s (vidi `start()` pri dnu).
+    let appCheckStarted;
+    const appCheckReady = new Promise(resolve => { appCheckStarted = resolve; });
+    const startAppCheck = () => {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider('6LdfcbktAAAAAGWaLVaJXHIBI8ST_nISw-DSFKuT'),
+        isTokenAutoRefreshEnabled: true
+      });
+      appCheckStarted();
+    };
+    const getDoc = async (...args) => { await appCheckReady; return fsGetDoc(...args); };
+    const getDocs = async (...args) => { await appCheckReady; return fsGetDocs(...args); };
+    const setDoc = async (...args) => { await appCheckReady; return fsSetDoc(...args); };
     // Analytics tek nakon load-a (gtag.js ne smije konkurirati podacima za propusnost).
     addEventListener('load', () => setTimeout(() => import(SDK + 'firebase-analytics.js').then(m => m.getAnalytics(app)), 2000));
     const db = getFirestore(app);
@@ -4443,6 +4454,7 @@
         // (anonimni posjetitelj ionako ne smije čitati/brisati stare zahtjeve).
         // Pending je samo privremeni folder: admin pri odobrenju sliku premješta u
         // player-photos/{slug}.jpg i briše pending (vidi approvePhotoRequest u adminu).
+        await appCheckReady;
         const { getStorage, ref, uploadBytes, getDownloadURL } = await import(SDK + 'firebase-storage.js');
         const storageRef = ref(getStorage(app), `player-photos-pending/${slug}.jpg`);
         await uploadBytes(storageRef, blob, { contentType: 'image/jpeg' });
@@ -5189,7 +5201,7 @@
 
     // Kreće nakon što je nacrtan najveći element (logo), ili najkasnije za 3 s. `load` bi ovdje bio prerano:
     // na brzoj vezi nastupi prije LCP-a pa reCAPTCHA opet uđe u prvi prikaz (Lighthouse LCP 5,5 s umjesto 3,2 s).
-    // shortcut: klik na tab prije toga pokrene dohvat bez App Check tokena; kad se uključi Enforce, odgoditi i tab-loadere
+    // Klik na tab prije toga čeka na `appCheckReady` (vidi APP CHECK VRATA), pa dohvat uvijek ide s tokenom.
     let started = false;
     const start = () => { if (!started) { started = true; startAppCheck(); bootstrap(); } };
     new PerformanceObserver(() => setTimeout(start, 50)).observe({ type: 'largest-contentful-paint', buffered: true });
