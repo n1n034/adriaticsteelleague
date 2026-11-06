@@ -1669,6 +1669,25 @@
       setTimeout(() => t.classList.remove('show'), 3000);
     }
 
+    // Provjera raspona prije spremanja: max/min na <input type="number"> ne sprječavaju ručno utipkan
+    // broj izvan raspona, pa se ovdje traži prvo polje koje je :out-of-range i prikazuje upozorenje.
+    // Vrijednost 0 se ne računa kao greška - 0 znači "nema podatka" (npr. Best Leg ima min 9, a 0 = nije uneseno).
+    function hasOutOfRangeInput(container) {
+      const bad = [...(container?.querySelectorAll('input[type="number"]:out-of-range') || [])]
+        .find(el => parseFloat(el.value) !== 0);
+      if (!bad) return false;
+      const v = parseFloat(bad.value);
+      const tooBig = bad.max !== '' && v > parseFloat(bad.max);
+      showToast(
+        tooBig ? `Vrijednost ${v} je veća od dopuštenog maksimuma (${bad.max})!`
+               : `Vrijednost ${v} je manja od dopuštenog minimuma (${bad.min})!`,
+        'error'
+      );
+      bad.focus();
+      bad.select();
+      return true;
+    }
+
     // Prazno/nevaljano/negativno -> 0 (ne null). Ovo je jedino mjesto koje
     // stvarno JAMČI da statistika nikad ne ostane prazna u bazi - onblur
     // (clampNonNegative niže) samo daje trenutnu vizualnu povratnu informaciju
@@ -2720,9 +2739,9 @@
         <div class="bedit-section">
           <div class="bedit-section-title">Rezultat</div>
           <div class="bedit-score-row">
-            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[0] || '' : '')}" onfocus="this.select()">
+            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="15" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[0] || '' : '')}" onfocus="this.select()">
             <span class="bedit-score-sep">-</span>
-            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[1] || '' : '')}" onfocus="this.select()">
+            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="15" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[1] || '' : '')}" onfocus="this.select()">
           </div>
         </div>
         <div class="bedit-section">
@@ -2734,21 +2753,21 @@
             <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_1 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
             <span class="bedit-stat-label">First 9</span>
             <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_2 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
-            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(saved.checkoutrate1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" min="0" max="100" placeholder="CO rate %" value="${esc(saved.checkoutrate1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">CO rate %</span>
-            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(saved.checkoutrate2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" min="0" max="100" placeholder="CO rate %" value="${esc(saved.checkoutrate2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <input class="bedit-stat-input" id="bedit-coatt1" type="text" placeholder="6/30" value="${esc(saved.checkouts1 ?? '')}">
             <span class="bedit-stat-label">Checkouts</span>
             <input class="bedit-stat-input" id="bedit-coatt2" type="text" placeholder="6/30" value="${esc(saved.checkouts2 ?? '')}">
-            <input class="bedit-stat-input" id="bedit-bco1" type="number" min="0" placeholder="Best CO" value="${esc(saved.bestcheckout1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bco1" type="number" min="0" max="170" placeholder="Best CO" value="${esc(saved.bestcheckout1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">Best CO</span>
-            <input class="bedit-stat-input" id="bedit-bco2" type="number" min="0" placeholder="Best CO" value="${esc(saved.bestcheckout2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
-            <input class="bedit-stat-input" id="bedit-bl1" type="number" min="0" placeholder="Best Leg" value="${esc(saved.bestleg1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bco2" type="number" min="0" max="170" placeholder="Best CO" value="${esc(saved.bestcheckout2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bl1" type="number" min="9" placeholder="Best Leg" value="${esc(saved.bestleg1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">Best Leg</span>
-            <input class="bedit-stat-input" id="bedit-bl2" type="number" min="0" placeholder="Best Leg" value="${esc(saved.bestleg2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
-            <input class="bedit-stat-input" id="bedit-180_1" type="number" min="0" placeholder="180s" value="${esc(saved['180_1'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bl2" type="number" min="9" placeholder="Best Leg" value="${esc(saved.bestleg2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-180_1" type="number" min="0" max="10" placeholder="180s" value="${esc(saved['180_1'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">180s</span>
-            <input class="bedit-stat-input" id="bedit-180_2" type="number" min="0" placeholder="180s" value="${esc(saved['180_2'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-180_2" type="number" min="0" max="10" placeholder="180s" value="${esc(saved['180_2'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
           </div>
         </div>
         <div class="bedit-actions">
@@ -2778,6 +2797,7 @@
     });
 
     window.saveBracketMatch = async function (matchId, p1, p2) {
+      if (hasOutOfRangeInput(document.getElementById('bedit-popup-content'))) return;
       const btn = document.getElementById('bedit-save-btn');
       const s1 = parseInt(document.getElementById('bedit-s1')?.value) || 0;
       const s2 = parseInt(document.getElementById('bedit-s2')?.value) || 0;
@@ -2866,9 +2886,9 @@
         <div class="bedit-section">
           <div class="bedit-section-title">Rezultat</div>
           <div class="bedit-score-row">
-            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[0] || '' : '')}" onfocus="this.select()">
+            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="15" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[0] || '' : '')}" onfocus="this.select()">
             <span class="bedit-score-sep">-</span>
-            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="9" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[1] || '' : '')}" onfocus="this.select()">
+            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="15" placeholder="0" value="${esc(saved.score ? saved.score.split('-')[1] || '' : '')}" onfocus="this.select()">
           </div>
         </div>
 
@@ -2881,21 +2901,21 @@
             <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_1 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
             <span class="bedit-stat-label">First 9</span>
             <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(saved.first9_2 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
-            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(saved.checkoutrate1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" min="0" max="100" placeholder="CO rate %" value="${esc(saved.checkoutrate1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">CO rate %</span>
-            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(saved.checkoutrate2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" min="0" max="100" placeholder="CO rate %" value="${esc(saved.checkoutrate2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <input class="bedit-stat-input" id="bedit-coatt1" type="text" placeholder="6/30" value="${esc(saved.checkouts1 ?? '')}">
             <span class="bedit-stat-label">Checkouts</span>
             <input class="bedit-stat-input" id="bedit-coatt2" type="text" placeholder="6/30" value="${esc(saved.checkouts2 ?? '')}">
-            <input class="bedit-stat-input" id="bedit-bco1" type="number" min="0" placeholder="Best CO" value="${esc(saved.bestcheckout1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bco1" type="number" min="0" max="170" placeholder="Best CO" value="${esc(saved.bestcheckout1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">Best CO</span>
-            <input class="bedit-stat-input" id="bedit-bco2" type="number" min="0" placeholder="Best CO" value="${esc(saved.bestcheckout2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
-            <input class="bedit-stat-input" id="bedit-bl1" type="number" min="0" placeholder="Best Leg" value="${esc(saved.bestleg1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bco2" type="number" min="0" max="170" placeholder="Best CO" value="${esc(saved.bestcheckout2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bl1" type="number" min="9" placeholder="Best Leg" value="${esc(saved.bestleg1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">Best Leg</span>
-            <input class="bedit-stat-input" id="bedit-bl2" type="number" min="0" placeholder="Best Leg" value="${esc(saved.bestleg2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
-            <input class="bedit-stat-input" id="bedit-180_1" type="number" min="0" placeholder="180s" value="${esc(saved['180_1'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bl2" type="number" min="9" placeholder="Best Leg" value="${esc(saved.bestleg2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-180_1" type="number" min="0" max="10" placeholder="180s" value="${esc(saved['180_1'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">180s</span>
-            <input class="bedit-stat-input" id="bedit-180_2" type="number" min="0" placeholder="180s" value="${esc(saved['180_2'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-180_2" type="number" min="0" max="10" placeholder="180s" value="${esc(saved['180_2'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
           </div>
         </div>
 
@@ -2914,6 +2934,7 @@
     window.openLBEditPopup = openLBEditPopup;
 
     window.saveLowerBracketMatch = async function (matchId, p1, p2) {
+      if (hasOutOfRangeInput(document.getElementById('bedit-popup-content'))) return;
       const btn = document.getElementById('bedit-save-btn');
       const s1 = parseInt(document.getElementById('bedit-s1')?.value) || 0;
       const s2 = parseInt(document.getElementById('bedit-s2')?.value) || 0;
@@ -3117,9 +3138,9 @@
         <div class="bedit-section">
           <div class="bedit-section-title">${legs?.sets ? 'Rezultat (setovi)' : 'Rezultat'}</div>
           <div class="bedit-score-row">
-            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="9" placeholder="0" value="${esc(d.score ? d.score.split('-')[0] || '' : '')}" onfocus="this.select()">
+            <input class="bedit-score-input" id="bedit-s1" type="number" min="0" max="15" placeholder="0" value="${esc(d.score ? d.score.split('-')[0] || '' : '')}" onfocus="this.select()">
             <span class="bedit-score-sep">-</span>
-            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="9" placeholder="0" value="${esc(d.score ? d.score.split('-')[1] || '' : '')}" onfocus="this.select()">
+            <input class="bedit-score-input" id="bedit-s2" type="number" min="0" max="15" placeholder="0" value="${esc(d.score ? d.score.split('-')[1] || '' : '')}" onfocus="this.select()">
           </div>
         </div>
         <div class="bedit-section">
@@ -3131,21 +3152,21 @@
             <input class="bedit-stat-input" id="bedit-f9_1" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(d.first9_1 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
             <span class="bedit-stat-label">First 9</span>
             <input class="bedit-stat-input" id="bedit-f9_2" type="number" step="0.01" min="0" placeholder="First 9" value="${esc(d.first9_2 ?? '')}" onblur="clampNonNegativeOrEmpty(this)" onfocus="this.select()">
-            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(d.checkoutrate1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-corate1" type="number" step="0.01" min="0" max="100" placeholder="CO rate %" value="${esc(d.checkoutrate1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">CO rate %</span>
-            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" min="0" placeholder="CO rate %" value="${esc(d.checkoutrate2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-corate2" type="number" step="0.01" min="0" max="100" placeholder="CO rate %" value="${esc(d.checkoutrate2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <input class="bedit-stat-input" id="bedit-coatt1" type="text" placeholder="6/30" value="${esc(d.checkouts1 ?? '')}">
             <span class="bedit-stat-label">Checkouts</span>
             <input class="bedit-stat-input" id="bedit-coatt2" type="text" placeholder="6/30" value="${esc(d.checkouts2 ?? '')}">
-            <input class="bedit-stat-input" id="bedit-bco1" type="number" min="0" placeholder="Best CO" value="${esc(d.bestcheckout1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bco1" type="number" min="0" max="170" placeholder="Best CO" value="${esc(d.bestcheckout1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">Best CO</span>
-            <input class="bedit-stat-input" id="bedit-bco2" type="number" min="0" placeholder="Best CO" value="${esc(d.bestcheckout2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
-            <input class="bedit-stat-input" id="bedit-bl1" type="number" min="0" placeholder="Best Leg" value="${esc(d.bestleg1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bco2" type="number" min="0" max="170" placeholder="Best CO" value="${esc(d.bestcheckout2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bl1" type="number" min="9" placeholder="Best Leg" value="${esc(d.bestleg1 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">Best Leg</span>
-            <input class="bedit-stat-input" id="bedit-bl2" type="number" min="0" placeholder="Best Leg" value="${esc(d.bestleg2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
-            <input class="bedit-stat-input" id="bedit-180_1" type="number" min="0" placeholder="180s" value="${esc(d['180_1'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-bl2" type="number" min="9" placeholder="Best Leg" value="${esc(d.bestleg2 ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-180_1" type="number" min="0" max="10" placeholder="180s" value="${esc(d['180_1'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
             <span class="bedit-stat-label">180s</span>
-            <input class="bedit-stat-input" id="bedit-180_2" type="number" min="0" placeholder="180s" value="${esc(d['180_2'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
+            <input class="bedit-stat-input" id="bedit-180_2" type="number" min="0" max="10" placeholder="180s" value="${esc(d['180_2'] ?? '')}" onblur="clampNonNegative(this)" onfocus="this.select()">
           </div>
         </div>
         <div class="bedit-actions">
@@ -3164,6 +3185,7 @@
     window.saveLeaguePlayoffMatch = async function (leagueId, matchId) {
       const d = leaguePlayoffData[leagueId]?.[matchId];
       if (!d || !d.player1 || !d.player2) { showToast('Igrači još nisu poznati.', 'error'); return; }
+      if (hasOutOfRangeInput(document.getElementById('bedit-popup-content'))) return;
       const btn = document.getElementById('bedit-save-btn');
       const s1 = parseInt(document.getElementById('bedit-s1')?.value) || 0;
       const s2 = parseInt(document.getElementById('bedit-s2')?.value) || 0;
