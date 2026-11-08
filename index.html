@@ -59,7 +59,7 @@
 
     .bg-image {
       position: fixed; inset: 0; z-index: 0;
-      background-image: url("images/background.webp?v=2");
+      background-image: url("images/background.webp");
       background-size: cover; background-position: center center; background-repeat: no-repeat;
     }
 
@@ -3920,10 +3920,10 @@
             ${ri === last ? `<div class="bracket-final-title">🏆 FINALE</div>` : ''}
             ${matches.map((m, i) => matchHtml(m, i % 2 === 0 ? 'pair-top' : 'pair-bottom')).join('')}
             ${ri === last && tree.third ? `
-<div class="third-wrap">
+            <div class="third-wrap">
               <div class="bracket-third-title">🥉 UTAKMICA ZA 3. MJESTO</div>
               ${matchHtml(tree.third, 'third-match')}
-</div>
+            </div>
             ` : ''}
           </div>
         </div>`).join('');
@@ -4206,10 +4206,10 @@
             ${ri === rounds.length - 1 ? `<div class="bracket-final-title">🏆 DONJE FINALE</div>` : ''}
             ${matches.map((m,i) => matchHtml(m, i%2===0?'pair-top':'pair-bottom')).join('')}
             ${ri === rounds.length - 1 ? `
-<div class="third-wrap">
+            <div class="third-wrap">
               <div class="bracket-third-title">🥉 DONJA UTAKMICA ZA 3. MJESTO</div>
               ${matchHtml({id: thirdId, player1: thirdMatch.player1, player2: thirdMatch.player2}, 'third-match')}
-</div>
+            </div>
             ` : ''}
           </div>
         </div>`).join('');

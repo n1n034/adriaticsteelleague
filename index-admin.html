@@ -1394,10 +1394,10 @@
             <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('avg-lige', this)">
               <i class="fas fa-chart-bar" style="margin-right:6px;"></i>AVG Lige
             </button>
-            <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('bracket', this)">
+            <button class="admin-tab-btn admin-only-tab" id="tab-btn-bracket" onclick="switchAdminTab('bracket', this)">
               <i class="fas fa-trophy" style="margin-right:6px;"></i>Gornji ždrijeb
             </button>
-            <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('lower-bracket', this)">
+            <button class="admin-tab-btn admin-only-tab" id="tab-btn-lower-bracket" onclick="switchAdminTab('lower-bracket', this)">
               <i class="fas fa-trophy" style="margin-right:6px;"></i>Donji ždrijeb
             </button>
             <button class="admin-tab-btn admin-only-tab" onclick="switchAdminTab('igraci', this)">
@@ -1541,6 +1541,9 @@
     getAnalytics(app);
 
     let currentIsAdmin = false;
+    let canUpperBracket = false;  // admin ili playoff sadrži "upperbracket"
+    let canLowerBracket = false;  // admin ili playoff sadrži "lowerbracket"
+
 
     // -- AKTIVNA SEZONA --
     // Isti config/active-season dokument koji čita index.html. Admin panel
@@ -2109,9 +2112,14 @@
         badge.className = 'admin-role-badge ' + (currentIsAdmin ? 'admin' : 'operator');
         document.getElementById('admin-brand-sub').textContent = currentIsAdmin ? 'Admin Pristup' : 'Operater Pristup';
 
+        const playoff = [].concat(userData.playoff || []);   // string ili niz -> uvijek niz
+        canUpperBracket = currentIsAdmin || playoff.includes('upperbracket');
+        canLowerBracket = currentIsAdmin || playoff.includes('lowerbracket');
+
         document.querySelectorAll('.admin-only-tab').forEach(b => b.style.display = currentIsAdmin ? '' : 'none');
-        positionAdminTabs(false, false); // vidljivi tabovi su se promijenili
-        if (!currentIsAdmin) switchAdminTab('grupe', document.getElementById('tab-btn-grupe'));
+        document.getElementById('tab-btn-bracket').style.display = canUpperBracket ? '' : 'none';
+        document.getElementById('tab-btn-lower-bracket').style.display = canLowerBracket ? '' : 'none';
+        positionAdminTabs(false, false);
 
         ACTIVE_SEASON_ID = await resolveActiveSeasonId();
         // Nova sezona ne traži izmjenu koda: bez unosa u SEASON_LABELS oznaka se izvede iz ID-ja.
@@ -2120,8 +2128,9 @@
 
         await loadBracketConfig();
         await loadGroups(currentIsAdmin, userData.groups || []);
-        if (currentIsAdmin) { await loadBracketAdmin(); await loadLowerBracketAdmin(); }
-      } else {
+        if (canUpperBracket) await loadBracketAdmin();
+        if (canLowerBracket) await loadLowerBracketAdmin();} 
+        else {
         document.getElementById('login-screen').style.display = 'flex';
         document.getElementById('admin-screen').style.display = 'none';
         document.getElementById('btn-login').disabled = false;
@@ -2771,7 +2780,7 @@
           </div>
         </div>
         <div class="bedit-actions">
-          ${currentIsAdmin ? `
+          ${canUpperBracket ? `
           <button class="bedit-btn-delete" id="bedit-delete-btn" onclick="deleteBracketMatch('${matchId}')"><i class="fas fa-trash"></i> Izbriši</button>
           <button class="bedit-btn-save" id="bedit-save-btn" onclick="saveBracketMatch('${matchId}', ${jsArg(p1)}, ${jsArg(p2)})">
             <i class="fas fa-save"></i> Spremi
@@ -2920,7 +2929,7 @@
         </div>
 
         <div class="bedit-actions">
-          ${currentIsAdmin ? `
+          ${canLowerBracket ? `
           <button class="bedit-btn-delete" id="bedit-delete-btn" onclick="deleteLowerBracketMatch('${matchId}')"><i class="fas fa-trash"></i> Izbriši</button>
           <button class="bedit-btn-save" id="bedit-save-btn" onclick="saveLowerBracketMatch('${matchId}', ${jsArg(p1)}, ${jsArg(p2)})">
             <i class="fas fa-save"></i> Spremi
